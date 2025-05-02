@@ -33,6 +33,64 @@ CLASS_NAMES = [
 # 2. Mapping nom → indice
 class2idx = {name: i for i, name in enumerate(CLASS_NAMES)}
 
+# ---------------------------Create density_maps----------------------------------
+
+# 3. Précompute the Gaussian kernel
+kern_size = int(6 * SIGMA) | 1   # kernel size, ensure odd
+g1d = scipy_gaussian(kern_size, SIGMA)
+kernel2d = np.outer(g1d, g1d)
+kernel2d /= kernel2d.sum()       # normalize sum to 1
+half_k = kern_size // 2
+
+# 4. Charger le CSV
+df = pd.read_csv(CSV_PATH)
+# 5. Créer le dossier de sortie
+os.makedirs(OUT_DIR, exist_ok=True)
+
+# 6. Boucle sur chaque image
+for fname, group in df.groupby("filename"):
+    # 6.1 Lire l'image pour connaître ses dimensions
+    img_path = os.path.join(IMG_DIR, fname)
+    img = cv2.imread(img_path)
+    if img is None:
+        print(f"[ERROR] Impossible de lire l'image : {img_path}")
+        continue
+    H, W = img.shape[:2]
+    
+    # 6.2 Initialiser le tenseur de density maps
+    density = np.zeros((H, W, len(CLASS_NAMES)), dtype=np.float32)
+    
+    # 6.3 Pour chaque point annoté, scatter-add le kernel
+    for _, row in group.iterrows():
+        shape_attr = json.loads(row["region_shape_attributes"])
+        x = int(shape_attr["cx"])
+        y = int(shape_attr["cy"])
+        choco_type = json.loads(row["region_attributes"])["Choco_Type"]
+        c = class2idx.get(choco_type, None)
+        if c is None:
+            continue
+        
+        # bounds for scatter-add
+        y0 = max(0,   y - half_k)
+        y1 = min(H,   y + half_k + 1)
+        x0 = max(0,   x - half_k)
+        x1 = min(W,   x + half_k + 1)
+        ky0 = half_k - (y - y0)
+        ky1 = half_k + (y1 - y)
+        kx0 = half_k - (x - x0)
+        kx1 = half_k + (x1 - x)
+        
+        density[y0:y1, x0:x1, c] += kernel2d[ky0:ky1, kx0:kx1]
+    
+    # 6.4 Conversion en float16 pour réduire la taille
+    density = density.astype(np.float16)
+    
+    # 6.5 Sauvegarder au format compressé .npz
+    out_path = os.path.join(OUT_DIR, fname.replace(".JPG", ".npz"))
+    np.savez_compressed(out_path, density=density)
+    
+    print(f"Saved compressed density map for {fname} → {out_path}")
+
 
 # ─── 1. CONFIG ────────────────────────────────────────────────────────────────
 DM_DIR      = "density_maps"
