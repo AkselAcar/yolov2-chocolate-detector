@@ -21,9 +21,12 @@ from datetime import datetime
 
 
 # 1. Paramètres
-CSV_PATH    = "../label_annotated.csv"   # votre export CSV de VIA
-IMG_DIR     = "../dataset_project_iapr2025/train"                # dossier de vos .JPG
-OUT_DIR     = "../density_maps/"                                 # dossier où sauver les .npz
+
+PROJ_DIR = os.environ["HOME"] + "/IAPR_Group_14/project/"
+
+CSV_PATH    = PROJ_DIR + "label_annotated.csv"   # votre export CSV de VIA
+IMG_DIR     = PROJ_DIR + "dataset_project_iapr2025/train"                # dossier de vos .JPG
+OUT_DIR     = PROJ_DIR + "density_maps/"                                 # dossier où sauver les .npz
 SIGMA       = 150                                             # écart-type de la gaussienne
 CLASS_NAMES = [
     "Jelly_White","Jelly_Milk","Jelly_Black","Amandina","Crème_brûlée",
