@@ -159,16 +159,34 @@ class ChocolateDataset(Dataset):
             patch     = cv2.resize(dm_chw[c], (self.Tw, self.Th), interpolation=cv2.INTER_AREA)
             dm_rs[c]  = patch * scale_area
 
-        # 3) Générer le mask binaire d'impulsions (avant blur)
-        mask = np.zeros((dm_chw.shape[0], self.Th, self.Tw), dtype=np.uint8)
+        # 3) Générer le mask d'impulsions gaussiennes (pour supervision des logits)
+        mask = np.zeros((dm_chw.shape[0], self.Th, self.Tw), dtype=np.float32)
+
         for (cx, cy, cidx) in self.annots.get(fname, []):
             # coordonnée redimensionnée
             x0 = cx * (self.Tw / W0)
             y0 = cy * (self.Th / H0)
             ix = int(round(x0))
             iy = int(round(y0))
+
             if 0 <= ix < self.Tw and 0 <= iy < self.Th:
-                mask[cidx, iy, ix] = 1
+                x1, x2 = ix - half_k, ix + half_k + 1
+                y1, y2 = iy - half_k, iy + half_k + 1
+
+                # Découper si nécessaire pour rester dans l'image
+                x1_clip, x2_clip = max(0, x1), min(self.Tw, x2)
+                y1_clip, y2_clip = max(0, y1), min(self.Th, y2)
+
+                # Portion utile du kernel
+                kx1 = x1_clip - x1
+                kx2 = kernel2d.shape[1] - (x2 - x2_clip)
+                ky1 = y1_clip - y1
+                ky2 = kernel2d.shape[0] - (y2 - y2_clip)
+
+                patch = kernel2d[ky1:kernel2d.shape[0]-ky2, kx1:kernel2d.shape[1]-kx2]
+
+                # Additionner dans la carte
+                mask[cidx, y1_clip:y2_clip, x1_clip:x2_clip] += patch
 
         # 4) Application éventuelle des mêmes affines à img, dm_rs et mask
         if self.augment:
@@ -196,7 +214,7 @@ class ChocolateDataset(Dataset):
                                     ) * det
                                     
                 mask[c] = cv2.warpAffine(mask[c], M, (self.Tw, self.Th),
-                                        flags=cv2.INTER_NEAREST,
+                                        flags=cv2.INTER_LINEAR,
                                         borderMode=cv2.BORDER_CONSTANT,
                                         borderValue=0
                                     )
@@ -380,9 +398,9 @@ class FocalLoss(nn.Module):
             
 
 def train_epoch(loader, model,
-                mse_criterion, focal_criterion,
+                mse_criterion, impulse_criterion,
                 optimizer,
-                lambda_focal=0.1,
+                lambda_imp=0.5,
                 lambda_l1=1e-3):
     model.train()
     running_loss = 0.0
@@ -394,12 +412,12 @@ def train_epoch(loader, model,
         density, logits = model(imgs)
 
         # compute each loss term
-        loss_mse   = mse_criterion(density, dms)
-        loss_focal = focal_criterion(logits, mask)
-        loss_l1    = lambda_l1 * logits.abs().mean()
+        loss_mse   = mse_criterion(density, dms)         # sur la density floutée
+        loss_imp   = impulse_criterion(logits, mask)     # supervision directe des impulsions
+        loss_l1    = lambda_l1 * logits.abs().mean()     # régularisation L1
 
         # total loss
-        loss = loss_mse + lambda_focal * loss_focal + loss_l1
+        loss = loss_mse + lambda_imp * loss_imp + loss_l1
 
         optimizer.zero_grad()
         loss.backward()
@@ -409,15 +427,15 @@ def train_epoch(loader, model,
 
     return running_loss / len(loader.dataset)
 
+
 SAVE_DIR = "images_training"
 os.makedirs(SAVE_DIR, exist_ok=True)
 def eval_epoch(loader, model,
-               mse_criterion, focal_criterion,
-               lambda_focal=0.1,
+               mse_criterion, impulse_criterion,
+               lambda_imp=0.5,
                lambda_l1=1e-3):
     model.eval()
     running_loss = 0.0
-    all_true, all_pred = [], []
     visualized = True
 
     with torch.no_grad():
@@ -427,31 +445,32 @@ def eval_epoch(loader, model,
             # forward → density & logits
             density, logits = model(imgs)
 
-            # same loss as in train
-            loss_mse   = mse_criterion(density, dms)
-            loss_focal = focal_criterion(logits, mask)
-            loss_l1    = lambda_l1 * logits.abs().mean()
-            loss       = loss_mse + lambda_focal * loss_focal + loss_l1
+            # losses
+            loss_mse = mse_criterion(density, dms)
+            loss_imp = impulse_criterion(logits, mask)
+            loss_l1  = lambda_l1 * logits.abs().mean()
+            loss     = loss_mse + lambda_imp * loss_imp + loss_l1
 
             running_loss += loss.item() * imgs.size(0)
 
-            if visualized:
-                img_np   = imgs[0].cpu().permute(1,2,0).numpy()
-                gt_den   = dms[0].sum(dim=0).cpu().numpy()
-                imp_sum  = torch.sigmoid(logits[0]).sum(dim=0).cpu().numpy()
-                pred_den = density[0].sum(dim=0).cpu().numpy()
+            # visualisation
+            for i in range(imgs.size(0)):
+                img_np   = imgs[i].cpu().permute(1,2,0).numpy()
+                gt_den   = dms[i].sum(dim=0).cpu().numpy()
+                imp_sum  = logits[i].sum(dim=0).cpu().numpy()
+                pred_den = density[i].sum(dim=0).cpu().numpy()
 
-                fig, axes = plt.subplots(1,3,figsize=(18,6))
+                fig, axes = plt.subplots(1, 3, figsize=(18, 6))
                 axes[0].imshow(img_np)
-                axes[0].imshow(gt_den,  cmap="jet", alpha=0.5)
+                axes[0].imshow(gt_den, cmap="jet", alpha=0.5)
                 axes[0].set_title("GT : total density"); axes[0].axis("off")
 
                 axes[1].imshow(img_np)
                 axes[1].imshow(imp_sum, cmap="hot", alpha=0.5)
-                axes[1].set_title("Impulsions");     axes[1].axis("off")
+                axes[1].set_title("Impulsions"); axes[1].axis("off")
 
                 axes[2].imshow(img_np)
-                axes[2].imshow(pred_den,cmap="jet", alpha=0.5)
+                axes[2].imshow(pred_den, cmap="jet", alpha=0.5)
                 axes[2].set_title("Prédiction : density"); axes[2].axis("off")
 
                 plt.tight_layout()
@@ -468,22 +487,21 @@ def eval_epoch(loader, model,
     return loss
 
 
-
 # ─── 6. BOUCLE PRINCIPALE ───────────────────────────────────────────────────────
 best_val_loss = float('inf')
 mse_criterion   = nn.MSELoss(reduction="sum")
-focal_criterion = FocalLoss(alpha=0.25, gamma=2.0, reduction="mean")
-lambda_focal         = 0.5
+impulse_criterion = nn.MSELoss(reduction="sum")  # ou "mean"
+lambda_imp = 0.5  # poids de la perte sur les impulsions
 lambda_l1            = 1e-3
 
 for epoch in range(1, EPOCHS+1):
     tr_loss = train_epoch(train_loader, model,
-                          mse_criterion, focal_criterion,
-                          optimizer, lambda_focal, lambda_l1)
+                          mse_criterion, impulse_criterion,
+                          optimizer, lambda_imp, lambda_l1)
     val_loss = eval_epoch(
                           val_loader, model,
-                          mse_criterion, focal_criterion,
-                          lambda_focal, lambda_l1)
+                          mse_criterion, impulse_criterion,
+                          lambda_imp, lambda_l1)
     scheduler.step(val_loss)
 
     print(f"Époch {epoch:02d} | "
