@@ -53,7 +53,7 @@ for fname, group in df.groupby("filename"):
     img_path = os.path.join(IMG_DIR, fname)
     img = cv2.imread(img_path)
     if img is None:
-        print(f"[ERROR] Impossible de lire l'image : {img_path}")
+        print(f"[ERROR] Impossible de lire l'image : {img_path}")
         continue
     H, W = img.shape[:2]
     
@@ -183,16 +183,21 @@ class ChocolateDataset(Dataset):
 
             img = cv2.warpAffine(img, M, (self.Tw,self.Th),
                                  flags=cv2.INTER_LINEAR,
-                                 borderMode=cv2.BORDER_REFLECT)
+                                 borderMode=cv2.BORDER_CONSTANT,
+                                 borderValue=0)
 
             for c in range(dm_rs.shape[0]):
-                dm_rs[c] = cv2.warpAffine(dm_rs[c], M, (self.Tw,self.Th),
-                                         flags=cv2.INTER_LINEAR,
-                                         borderMode=cv2.BORDER_REFLECT) * det
-                # warp le mask en nearest (pas de det pour le mask)
-                mask[c] = cv2.warpAffine(mask[c], M, (self.Tw,self.Th),
-                                         flags=cv2.INTER_NEAREST,
-                                         borderMode=cv2.BORDER_REFLECT)
+                dm_rs[c] = cv2.warpAffine(dm_rs[c], M, (self.Tw, self.Th),
+                                        flags=cv2.INTER_LINEAR,
+                                        borderMode=cv2.BORDER_CONSTANT,
+                                        borderValue=0
+                                    ) * det
+                                    
+                mask[c] = cv2.warpAffine(mask[c], M, (self.Tw, self.Th),
+                                        flags=cv2.INTER_NEAREST,
+                                        borderMode=cv2.BORDER_CONSTANT,
+                                        borderValue=0
+                                    )
 
         # 5) Conversion en Tensors
         img_t   = torch.from_numpy(img.transpose(2,0,1)).float()   # (3,H,W)
