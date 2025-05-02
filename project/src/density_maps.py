@@ -313,24 +313,28 @@ class FocalLoss(nn.Module):
         else:
             return loss
             
-mse_criterion   = nn.MSELoss(reduction="sum")
-focal_criterion = FocalLoss(alpha=0.25, gamma=2.0, reduction="mean")
-λ_focal         = 0.1
-λ_l1            = 1e-3
 
-def train_epoch(loader, model, mse_criterion, focal_criterion, lambda_focal=0.1, lambda_l1=1e-3):
+def train_epoch(loader, model,
+                mse_criterion, focal_criterion,
+                optimizer,
+                lambda_focal=0.1,
+                lambda_l1=1e-3):
     model.train()
     running_loss = 0.0
 
     for imgs, dms, mask in tqdm(loader, desc="Train", leave=False):
         imgs, dms, mask = imgs.to(DEVICE), dms.to(DEVICE), mask.to(DEVICE)
 
+        # forward → density & logits
         density, logits = model(imgs)
 
-        loss_mse    = mse_criterion(density, dms)
-        loss_focal  = focal_criterion(logits, mask)
-        loss_l1     = λ_l1 * logits.abs().mean()
-        loss        = loss_mse + λ_focal * loss_focal + loss_l1
+        # compute each loss term
+        loss_mse   = mse_criterion(density, dms)
+        loss_focal = focal_criterion(logits, mask)
+        loss_l1    = lambda_l1 * logits.abs().mean()
+
+        # total loss
+        loss = loss_mse + lambda_focal * loss_focal + loss_l1
 
         optimizer.zero_grad()
         loss.backward()
@@ -340,36 +344,33 @@ def train_epoch(loader, model, mse_criterion, focal_criterion, lambda_focal=0.1,
 
     return running_loss / len(loader.dataset)
 
-SAVE_DIR = "training_images"
-
+SAVE_DIR = "images_training"
+os.makedirs(SAVE_DIR, exist_ok=True)
 def eval_epoch(loader, model,
-               mse_criterion,
-               focal_criterion,
-               λ_focal=0.1,
-               λ_l1=1e-3):
+               mse_criterion, focal_criterion,
+               lambda_focal=0.1,
+               lambda_l1=1e-3):
     model.eval()
     running_loss = 0.0
     all_true, all_pred = [], []
     visualized = True
 
-    os.makedirs(SAVE_DIR, exist_ok=True)
-
     with torch.no_grad():
         for imgs, dms, mask in tqdm(loader, desc="Validation", leave=False):
             imgs, dms, mask = imgs.to(DEVICE), dms.to(DEVICE), mask.to(DEVICE)
 
-            # 1) forward → density & logits (impulsions avant sigmoid)
+            # forward → density & logits
             density, logits = model(imgs)
 
-            # 2) loss = MSE(density, gt) + λ_focal * Focal(logits, mask) + λ_l1 * |logits|
-            loss_mse    = mse_criterion(density, dms)
-            loss_focal  = focal_criterion(logits, mask)
-            loss_l1     = λ_l1 * logits.abs().mean()
-            loss        = loss_mse + λ_focal * loss_focal + loss_l1
+            # same loss as in train
+            loss_mse   = mse_criterion(density, dms)
+            loss_focal = focal_criterion(logits, mask)
+            loss_l1    = lambda_l1 * logits.abs().mean()
+            loss       = loss_mse + lambda_focal * loss_focal + loss_l1
 
             running_loss += loss.item() * imgs.size(0)
 
-            # 3) visualisation (première itération)
+            # visualiser la première image du loader
             if visualized:
                 img_np   = imgs[0].cpu().permute(1,2,0).numpy()
                 gt_den   = dms[0].sum(dim=0).cpu().numpy()
@@ -380,14 +381,16 @@ def eval_epoch(loader, model,
                 axes[0].imshow(img_np)
                 axes[0].imshow(gt_den,  cmap="jet", alpha=0.5)
                 axes[0].set_title("GT : total density"); axes[0].axis("off")
+
                 axes[1].imshow(img_np)
                 axes[1].imshow(imp_sum, cmap="hot", alpha=0.5)
-                axes[1].set_title("Impulsions");         axes[1].axis("off")
+                axes[1].set_title("Impulsions");     axes[1].axis("off")
+
                 axes[2].imshow(img_np)
                 axes[2].imshow(pred_den,cmap="jet", alpha=0.5)
                 axes[2].set_title("Prédiction : density"); axes[2].axis("off")
-                plt.tight_layout()
 
+                plt.tight_layout()
                 # génération d’un nom de fichier unique
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 filename = f"validation_{timestamp}.png"
@@ -397,16 +400,26 @@ def eval_epoch(loader, model,
                 fig.savefig(save_path, dpi=150)
                 plt.close(fig)
 
-    # loss moyenne
     loss = running_loss / len(loader.dataset)
-
     return loss
+
+
 
 # ─── 6. BOUCLE PRINCIPALE ───────────────────────────────────────────────────────
 best_val_loss = float('inf')
+mse_criterion   = nn.MSELoss(reduction="sum")
+focal_criterion = FocalLoss(alpha=0.25, gamma=2.0, reduction="mean")
+lambda_focal         = 0.5
+lambda_l1            = 1e-3
+
 for epoch in range(1, EPOCHS+1):
-    tr_loss = train_epoch(train_loader, model, mse_criterion, focal_criterion)
-    val_loss = eval_epoch(val_loader, model, mse_criterion, focal_criterion)
+    tr_loss = train_epoch(train_loader, model,
+                          mse_criterion, focal_criterion,
+                          optimizer, lambda_focal, lambda_l1)
+    val_loss, val_mae, val_f1_pc, val_f1_macro = eval_epoch(
+                          val_loader, model,
+                          mse_criterion, focal_criterion,
+                          lambda_focal, lambda_l1)
     scheduler.step(val_loss)
 
     print(f"Époch {epoch:02d} | "
