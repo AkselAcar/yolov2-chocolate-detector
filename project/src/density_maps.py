@@ -416,7 +416,7 @@ for epoch in range(1, EPOCHS+1):
     tr_loss = train_epoch(train_loader, model,
                           mse_criterion, focal_criterion,
                           optimizer, lambda_focal, lambda_l1)
-    val_loss, val_mae, val_f1_pc, val_f1_macro = eval_epoch(
+    val_loss = eval_epoch(
                           val_loader, model,
                           mse_criterion, focal_criterion,
                           lambda_focal, lambda_l1)
