@@ -48,8 +48,8 @@ df = pd.read_csv(CSV_PATH)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # 6. Boucle sur chaque image
-'''
 
+"""
 for fname, group in df.groupby("filename"):
     # 6.1 Lire l'image pour connaître ses dimensions
     img_path = os.path.join(IMG_DIR, fname)
@@ -93,7 +93,7 @@ for fname, group in df.groupby("filename"):
     
     print(f"Saved compressed density map for {fname} → {out_path}")
 
-'''
+"""
 # ─── 1. CONFIG ────────────────────────────────────────────────────────────────
 DM_DIR      = OUT_DIR
 N_CLASSES = len(CLASS_NAMES)
@@ -119,9 +119,8 @@ class ChocolateDataset(Dataset):
         self.dm_dir      = dm_dir
         self.Th, self.Tw = target_size
         self.ap = affine_params or {
-            'translate_frac':0.1,
-            'scale_range':(0.9,1.1),
-            'shear_deg':10
+            'translate_frac': 0.1,
+            'rotate_deg': 15  # rotation aléatoire entre -15° et +15°
         }
         self.augment = augment
 
@@ -163,7 +162,7 @@ class ChocolateDataset(Dataset):
         mask = np.zeros((dm_chw.shape[0], self.Th, self.Tw), dtype=np.float32)
 
         for (cx, cy, cidx) in self.annots.get(fname, []):
-            # coordonnée redimensionnée
+            # redimensionnement des coordonnées
             x0 = cx * (self.Tw / W0)
             y0 = cy * (self.Th / H0)
             ix = int(round(x0))
@@ -173,11 +172,11 @@ class ChocolateDataset(Dataset):
                 x1, x2 = ix - half_k, ix + half_k + 1
                 y1, y2 = iy - half_k, iy + half_k + 1
 
-                # Découper si nécessaire pour rester dans l'image
+                # clips pour rester dans l'image
                 x1_clip, x2_clip = max(0, x1), min(self.Tw, x2)
                 y1_clip, y2_clip = max(0, y1), min(self.Th, y2)
 
-                # Portion utile du kernel
+                # portions du kernel à utiliser
                 kx1 = x1_clip - x1
                 kx2 = kernel2d.shape[1] - (x2 - x2_clip)
                 ky1 = y1_clip - y1
@@ -185,38 +184,40 @@ class ChocolateDataset(Dataset):
 
                 patch = kernel2d[ky1:kernel2d.shape[0]-ky2, kx1:kernel2d.shape[1]-kx2]
 
-                # Additionner dans la carte
-                mask[cidx, y1_clip:y2_clip, x1_clip:x2_clip] += patch
+                # sécurité : ne rien faire si patch vide (cas rare aux bords)
+                if patch.shape[0] > 0 and patch.shape[1] > 0:
+                    mask[cidx, y1_clip:y2_clip, x1_clip:x2_clip] += patch
 
         # 4) Application éventuelle des mêmes affines à img, dm_rs et mask
         if self.augment:
             tx = random.uniform(-self.ap['translate_frac'], self.ap['translate_frac']) * self.Tw
             ty = random.uniform(-self.ap['translate_frac'], self.ap['translate_frac']) * self.Th
-            sc = random.uniform(*self.ap['scale_range'])
-            sh = random.uniform(-self.ap['shear_deg'], self.ap['shear_deg'])
-            a, d = sc, sc
-            b     = np.tan(np.deg2rad(sh))
-            c_    = 0.0
-            M     = np.array([[a, b, tx],
-                              [c_, d, ty]], dtype=np.float32)
-            det   = a*d - b*c_
+            angle_deg = random.uniform(-self.ap.get('rotate_deg', 0), self.ap.get('rotate_deg', 0))
+            angle_rad = np.deg2rad(angle_deg)
+
+            # Matrice de rotation + translation (autour du centre de l’image)
+            center = (self.Tw / 2, self.Th / 2)
+            M_rot = cv2.getRotationMatrix2D(center, angle_deg, 1.0)  # pas de zoom (scale=1)
+
+            # Ajouter la translation manuelle
+            M_rot[0,2] += tx
+            M_rot[1,2] += ty
+            M = M_rot
+            det   = 1
 
             img = cv2.warpAffine(img, M, (self.Tw,self.Th),
                                  flags=cv2.INTER_LINEAR,
-                                 borderMode=cv2.BORDER_CONSTANT,
-                                 borderValue=0)
+                                 borderMode=cv2.BORDER_REFLECT)
 
             for c in range(dm_rs.shape[0]):
                 dm_rs[c] = cv2.warpAffine(dm_rs[c], M, (self.Tw, self.Th),
                                         flags=cv2.INTER_LINEAR,
-                                        borderMode=cv2.BORDER_CONSTANT,
-                                        borderValue=0
+                                        borderMode=cv2.BORDER_REFLECT
                                     ) * det
                                     
                 mask[c] = cv2.warpAffine(mask[c], M, (self.Tw, self.Th),
                                         flags=cv2.INTER_LINEAR,
-                                        borderMode=cv2.BORDER_CONSTANT,
-                                        borderValue=0
+                                        borderMode=cv2.BORDER_REFLECT
                                     )
 
         # 5) Conversion en Tensors
@@ -241,9 +242,6 @@ train_ds = ChocolateDataset(
     csv_path=CSV_PATH,           # <-- nouveau
     class2idx=class2idx,         # <-- nouveau
     target_size=(400,600),
-    affine_params={'translate_frac':0.1,
-                   'scale_range':(0.99,1.01),
-                   'shear_deg':10},
     augment=True
 )
 
@@ -255,8 +253,8 @@ val_ds = ChocolateDataset(
     class2idx=class2idx,
     target_size=(400,600),
     affine_params={'translate_frac':0.1,
-                   'scale_range':(0.9,1.1),
-                   'shear_deg':10},
+                   'scale_range':(0.99,1.01),
+                   'shear_deg':0},
     augment=False
 )
 # 4) DataLoaders
@@ -466,11 +464,12 @@ def eval_epoch(loader, model,
                 axes[0].set_title("GT : total density"); axes[0].axis("off")
 
                 axes[1].imshow(img_np)
-                axes[1].imshow(imp_sum, cmap="hot", alpha=0.5)
+                axes[1].imshow(imp_sum, cmap="hot", alpha=0.5, interpolation="nearest")
                 axes[1].set_title("Impulsions"); axes[1].axis("off")
+                
 
                 axes[2].imshow(img_np)
-                axes[2].imshow(pred_den, cmap="jet", alpha=0.5)
+                axes[2].imshow(pred_den, cmap="jet", alpha=0.5, interpolation="nearest")
                 axes[2].set_title("Prédiction : density"); axes[2].axis("off")
 
                 plt.tight_layout()
