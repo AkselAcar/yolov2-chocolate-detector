@@ -41,7 +41,7 @@ class YOLODataset(Dataset):
 
         annots = self.annotations[self.annotations['filename'] == fname]  # lignes de cette image
         for _, row in annots.iterrows():
-            cx = row['rescaled_cx'] / IMG_RESIZED_W  # position x normalisée (0-1)
+            cx = row['rescaled_cx'] / IMG_RESIZED_W  # position x normalisée (0-1) ATTENTION A CHANGER SI LES CX ET CY SONT PLUS DIVISES PAR 10 DE BASE DANS LE CSV
             cy = row['rescaled_cy'] / IMG_RESIZED_H  # position y normalisée
             class_id = int(row['class'])  # id de classe
 
@@ -204,6 +204,8 @@ valid_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO
 
 train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False)
+
+print("Data_loaders created")
 
 model = YOLOv4Small()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
