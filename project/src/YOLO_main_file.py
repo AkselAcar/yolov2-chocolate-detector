@@ -41,8 +41,8 @@ class YOLODataset(Dataset):
 
         annots = self.annotations[self.annotations['filename'] == fname]  # lignes de cette image
         for _, row in annots.iterrows():
-            cx = row['rescaled_cx'] / IMG_RESIZED_W  # position x normalisée (0-1) ATTENTION A CHANGER SI LES CX ET CY SONT PLUS DIVISES PAR 10 DE BASE DANS LE CSV
-            cy = row['rescaled_cy'] / IMG_RESIZED_H  # position y normalisée
+            cx = row['cx'] / IMG_W  # position x normalisée (0-1) ATTENTION A CHANGER SI LES CX ET CY SONT PLUS DIVISES PAR 10 DE BASE DANS LE CSV
+            cy = row['cy'] / IMG_H  # position y normalisée
             class_id = int(row['class'])  # id de classe
 
             grid_x = int(cx * S)  # index colonne de la cellule
