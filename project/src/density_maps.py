@@ -21,9 +21,9 @@ from datetime import datetime
 
 
 # 1. Paramètres
-CSV_PATH    = "label_annotated.csv"   # votre export CSV de VIA
-IMG_DIR     = "dataset_project_iapr2025/train"                # dossier de vos .JPG
-OUT_DIR     = "density_maps/"                                 # dossier où sauver les .npz
+CSV_PATH    = "../label_annotated.csv"   # votre export CSV de VIA
+IMG_DIR     = "../dataset_project_iapr2025/train"                # dossier de vos .JPG
+OUT_DIR     = "../density_maps/"                                 # dossier où sauver les .npz
 SIGMA       = 150                                             # écart-type de la gaussienne
 CLASS_NAMES = [
     "Jelly_White","Jelly_Milk","Jelly_Black","Amandina","Crème_brûlée",
@@ -48,6 +48,8 @@ df = pd.read_csv(CSV_PATH)
 os.makedirs(OUT_DIR, exist_ok=True)
 
 # 6. Boucle sur chaque image
+'''
+
 for fname, group in df.groupby("filename"):
     # 6.1 Lire l'image pour connaître ses dimensions
     img_path = os.path.join(IMG_DIR, fname)
@@ -91,12 +93,12 @@ for fname, group in df.groupby("filename"):
     
     print(f"Saved compressed density map for {fname} → {out_path}")
 
-
+'''
 # ─── 1. CONFIG ────────────────────────────────────────────────────────────────
-DM_DIR      = "density_maps"
+DM_DIR      = OUT_DIR
 N_CLASSES = len(CLASS_NAMES)
 DEVICE    = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-BATCH     = 4
+BATCH     = 32
 EPOCHS    = 30
 LR        = 1e-4
 
@@ -240,8 +242,8 @@ val_ds = ChocolateDataset(
     augment=False
 )
 # 4) DataLoaders
-train_loader = DataLoader(train_ds, batch_size=2, shuffle=True,  num_workers=0, pin_memory=False)
-val_loader   = DataLoader(val_ds,   batch_size=2, shuffle=False, num_workers=0, pin_memory=False)
+train_loader = DataLoader(train_ds, batch_size=BATCH, shuffle=True,  num_workers=0, pin_memory=False)
+val_loader   = DataLoader(val_ds,   batch_size=BATCH, shuffle=False, num_workers=0, pin_memory=False)
 
 #----------------------------------MODELE----------------------------------
 # ─── 1. PARAMÈTRES GAUSSIEN ─────────────────────────────────────────────────────
@@ -433,7 +435,6 @@ def eval_epoch(loader, model,
 
             running_loss += loss.item() * imgs.size(0)
 
-            # visualiser la première image du loader
             if visualized:
                 img_np   = imgs[0].cpu().permute(1,2,0).numpy()
                 gt_den   = dms[0].sum(dim=0).cpu().numpy()
