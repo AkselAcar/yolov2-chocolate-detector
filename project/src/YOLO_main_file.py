@@ -15,10 +15,11 @@ from sklearn.model_selection import train_test_split
 # Paramètres globaux
 IMG_W, IMG_H = 6000, 4000  # dimensions originales des images
 IMG_RESIZED_W, IMG_RESIZED_H = 640, 416  # divisible par 32
-S_W = IMG_RESIZED_W // 32  # 640 / 32 = 20
+S_W = IMG_RESIZED_W // 32  # 640 / 32 = 20, 32 psk on fait 5 maxpool dans le CNN qui nous sort une image de 20x13
 S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
-B = 2   # nombre de boîtes par cellule (YOLOv1-style)
+B = 2   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # === Dataset YOLO ===
@@ -38,61 +39,81 @@ class YOLODataset(Dataset):
         img_path = os.path.join(self.img_dir, fname)  # chemin complet
         image = Image.open(img_path).convert("RGB")  # ouverture et conversion RGB
         image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))  # redimensionnement
-        boxes = torch.zeros((S_H, S_W, B * 5 + C))  # target vide de forme (S, S, 23)
-
+        
+        boxes = torch.zeros((S_H, S_W, B * 5 + C))  # TARGET = GROUND TRUTH (vide pour l'instant, construite plus tard) de forme (S_H, S_W, 23). Le NN voudra trouver ces boxes
+                            #(13,  20, (x1, y1, w1, h1, conf1, x2, y2, w2, h2, conf2, class1, class2, ..., class13))
         annots = self.annotations[self.annotations['filename'] == fname]  # lignes de cette image
         for _, row in annots.iterrows():
-            cx = row['cx'] / IMG_W  # position x normalisée (0-1)
-            cy = row['cy'] / IMG_H  # position y normalisée
-            class_id = int(row['class'])  # id de classe
+            cx = row['cx'] / IMG_W # position x normalisée (0-1) sur l'image entière
+            cy = row['cy'] / IMG_H # position y normalisée
+            class_id = int(row['class']) # id de classe entre 0 et C-1 (=12 ici)
 
-            grid_x = int(cx * S_W)  # index colonne de la cellule
-            grid_y = int(cy * S_H)  # index ligne de la cellule
+            grid_x = int(cx * S_W) # index colonne de la cellule qui contient le centre de la box
+            grid_y = int(cy * S_H) # index ligne de la cellule qui contient le centre de la box
             if grid_x >= S_W or grid_y >= S_H:
-                continue  # hors grille, on saute
+                continue # hors grille, on saute (safety)
 
-            x_cell = cx * S_W - grid_x  # position relative dans la cellule (0-1)
+            x_cell = cx * S_W - grid_x # position relative dans la cellule (0-1)
             y_cell = cy * S_H - grid_y
-            w = row['width'] / IMG_W  # largeur relative des boîtes
-            h = row['height'] / IMG_H  # hauteur relative des boîtes
+            w = row['width'] / IMG_W # largeur relative des boîtes par rapport à l'image entière
+            h = row['height'] / IMG_H # hauteur relative des boîtes
 
-            if boxes[grid_y, grid_x, 4] == 0:  # seulement si aucune boîte n'est présente (indice 4 est la confidence)
-                boxes[grid_y, grid_x, 0:5] = torch.tensor([x_cell, y_cell, w, h, 1])  # x,y,w,h,conf
-                boxes[grid_y, grid_x, 5 + class_id] = 1  # encodage one-hot de la classe
+            # Génère la target
+            gt_box = torch.tensor([x_cell, y_cell, w, h])
+
+            # Calcule l'IoU avec les B boites possibles
+            ious = []
+            for b in range(B):
+                pred_box = boxes[grid_y, grid_x, b * 5 : b * 5 + 4]
+                if boxes[grid_y, grid_x, b * 5 + 4] == 1:
+                    ious.append(bbox_iou(pred_box.unsqueeze(0), gt_box.unsqueeze(0)))
+                else:
+                    ious.append(torch.tensor(0.0))
+
+            best_b = torch.tensor(ious).argmax().item()
+
+            boxes[grid_y, grid_x, best_b * 5 : best_b * 5 + 5] = torch.tensor([x_cell, y_cell, w, h, 1])
+            boxes[grid_y, grid_x, B * 5 + class_id] = 1
+
 
         if self.transform:
             image = self.transform(image)  # transformation image (ToTensor)
 
         return image, boxes, fname  # image: (3,H,W), target: (S,S,23)
 
-# === Réseau YOLOv4 simplifié ===
+    
 class YOLOv4Small(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = nn.Sequential(  # feature extractor simple
-            nn.Conv2d(3, 16, 3, padding=1), nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2),
-            nn.Conv2d(16, 32, 3, padding=1), nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2),
-            nn.Conv2d(32, 64, 3, padding=1), nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2),
-            nn.Conv2d(64, 128, 3, padding=1), nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2),
-            nn.Conv2d(128, 256, 3, padding=1), nn.LeakyReLU(0.1),
-            nn.MaxPool2d(2),
+        self.backbone = nn.Sequential( # feature extractor simple, stride=2 est équivalent à un maxpool 2x2 => réduit l'image de moitié 5 fois D d'où les 32
+            nn.Conv2d(3, 32, 3, padding=1), nn.BatchNorm2d(32), nn.LeakyReLU(0.1),
+            nn.Conv2d(32, 64, 3, stride=2, padding=1), nn.BatchNorm2d(64), nn.LeakyReLU(0.1),
+
+            nn.Conv2d(64, 128, 3, padding=1), nn.BatchNorm2d(128), nn.LeakyReLU(0.1),
+            nn.Conv2d(128, 128, 3, stride=2, padding=1), nn.BatchNorm2d(128), nn.LeakyReLU(0.1),
+
+            nn.Conv2d(128, 256, 3, padding=1), nn.BatchNorm2d(256), nn.LeakyReLU(0.1),
+            nn.Conv2d(256, 256, 3, stride=2, padding=1), nn.BatchNorm2d(256), nn.LeakyReLU(0.1),
+
+            nn.Conv2d(256, 512, 3, padding=1), nn.BatchNorm2d(512), nn.LeakyReLU(0.1),
+            nn.Conv2d(512, 512, 3, stride=2, padding=1), nn.BatchNorm2d(512), nn.LeakyReLU(0.1),
+
+            nn.Conv2d(512, 1024, 3, stride=2, padding=1), nn.BatchNorm2d(1024), nn.LeakyReLU(0.1),
         )
-        self.head = nn.Sequential(  # prédiction directe des (x,y,w,h,conf,classes)
-            nn.Conv2d(256, (B * 5 + C), 1)  # 1x1 conv, 23 sorties par cellule
+
+        self.head = nn.Sequential( # prédiction directe des (x,y,w,h,conf,classes)
+            nn.Conv2d(1024, 512, 1), nn.LeakyReLU(0.1), # 1x1 conv, 23 sorties par cellule
+            nn.Conv2d(512, (B * 5 + C), 1)
         )
 
     def forward(self, x):
-        x = self.backbone(x)  # (B, 256, H/32, W/32)
-        x = self.head(x)      # (B, 23, S, S)
-        x = x.permute(0, 2, 3, 1)  # (B, S, S, 23) pour correspondre au target
+        x = self.backbone(x) # (B, 256, H/32, W/32)
+        x = self.head(x) # (B, 23, S_H, S_W)
+        x = x.permute(0, 2, 3, 1) # (B, S_H, S_W, 23) pour correspondre au target
         return x
 
 
-# === Fonction IOU ===
+# === Fonction IOU === convertit (x, y, w, h) en coins (x1, y1, x2, y2) et calcule le rapport intersection over union de target et prediction
 def bbox_iou(box1, box2):
     # box1 et box2 sont des tenseurs contenant (x, y, w, h)
     x1, y1, w1, h1 = box1[..., 0], box1[..., 1], box1[..., 2], box1[..., 3]
@@ -108,41 +129,61 @@ def bbox_iou(box1, box2):
     b2_x2 = x2 + w2 / 2
     b2_y2 = y2 + h2 / 2
 
-    # Intersection
+    # détermine les coins du rectangle d'intersection
     inter_x1 = torch.max(b1_x1, b2_x1)
     inter_y1 = torch.max(b1_y1, b2_y1)
     inter_x2 = torch.min(b1_x2, b2_x2)
     inter_y2 = torch.min(b1_y2, b2_y2)
 
+    # calcule l'aire d'intersection (0 si pas d'intersection)
     inter_area = (inter_x2 - inter_x1).clamp(0) * (inter_y2 - inter_y1).clamp(0)
+    # calcule l'aire d'union (A1 + A2 - A_intersection)
     area1 = (b1_x2 - b1_x1) * (b1_y2 - b1_y1)
     area2 = (b2_x2 - b2_x1) * (b2_y2 - b2_y1)
     union_area = area1 + area2 - inter_area
 
     return inter_area / (union_area + 1e-6)  # pour éviter division par 0
 
-# === Fonction de perte simplifiée YOLO ===
-def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5):
-    obj_mask = target[..., 4] == 1  # masque pour cellules contenant un objet
-    noobj_mask = target[..., 4] == 0  # masque pour les autres
+# === Nouvelle fonction de perte YOLO avec B boîtes ===
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5): # pred et target sont de forme (B, S_H, S_W, 23) = sortie du réseau
+    total_loss = 0.0
 
-    # perte de localisation sur x, y, w, h
-    coord_loss = lambda_coord * F.mse_loss(pred[obj_mask][..., 0:2], target[obj_mask][..., 0:2]) + \
-                 lambda_coord * F.mse_loss(torch.sqrt(torch.clamp(pred[obj_mask][..., 2:4], min=1e-6)),
-                                           torch.sqrt(target[obj_mask][..., 2:4] + 1e-6))
+    for b in range(B): # => b = 0 ou 1 si B=2
+        # Indices pour la boîte b
+        box_pred = pred[..., b * 5 : b * 5 + 5]
+        box_target = target[..., b * 5 : b * 5 + 5]
 
-    # perte sur la confiance (objet présent / absent)
-    conf_loss_obj = F.mse_loss(pred[obj_mask][..., 4], target[obj_mask][..., 4])
-    conf_loss_noobj = lambda_noobj * F.mse_loss(pred[noobj_mask][..., 4], target[noobj_mask][..., 4])
+        obj_mask = box_target[..., 4] == 1 # target = 1 si la boîte b est présente
+        noobj_mask = box_target[..., 4] == 0 # target = 0 si la boîte b n'est pas présente
 
-    # perte de classification (cross entropy entre classes)
-    class_loss = F.cross_entropy(pred[obj_mask][..., 5:], torch.argmax(target[obj_mask][..., 5:], dim=-1))
+    # Coordonnées
+        if obj_mask.sum() > 0:
+            coord_loss = lambda_coord * F.mse_loss(box_pred[obj_mask][..., 0:2], box_target[obj_mask][..., 0:2]) + \
+                         lambda_coord * F.mse_loss(
+                            torch.sqrt(torch.clamp(box_pred[obj_mask][..., 2:4], min=1e-6)),# compare sqrt(w,h) comme dans le paper pour stabiliser l'apprentissage, et clamp pour éviter les valeurs négatives (le réseau doit sortir des valeurs positives mais il n'a aucune contrainte à le faire)
+                            torch.sqrt(box_target[obj_mask][..., 2:4])
+                         )
+            # Confiance : on veut que la boite responsable prévoie une confiance proche de 1 et les autres boites proches de 0
+            conf_loss_obj = F.mse_loss(box_pred[obj_mask][..., 4], box_target[obj_mask][..., 4])
+        else: # Si pas d'objet dans la cellule, on ne calcule pas la perte (pour éviter loss nan)
+            coord_loss = torch.tensor(0.0, device=pred.device)
+            conf_loss_obj = torch.tensor(0.0, device=pred.device)
 
-    total_loss = coord_loss + conf_loss_obj + conf_loss_noobj + class_loss
+        conf_loss_noobj = lambda_noobj * F.mse_loss(box_pred[noobj_mask][..., 4], box_target[noobj_mask][..., 4])
+
+        total_loss += coord_loss + conf_loss_obj + conf_loss_noobj
+    # Classification : partagée entre les B boîtes
+    class_mask = target[..., B * 5 + 0 : B * 5 + C].sum(dim=-1) > 0 # on sélectionne les indices du one hot encoding pour sélectionner les cellules qui contiennent au moins un objet
+    class_loss = F.cross_entropy(
+        pred[class_mask][..., B * 5 : B * 5 + C],
+        torch.argmax(target[class_mask][..., B * 5 : B * 5 + C], dim=-1)
+    ) if class_mask.sum() > 0 else torch.tensor(0.0, device=pred.device)
+
+    total_loss += class_loss
     return total_loss
 
 
-# === Affichage et sauvegarde des prédictions ===
+# === Affichage et sauvegarde des prédictions === affiche les boites prédites avec un score de confiance supérieur à un seuil
 def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3):
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
@@ -219,7 +260,6 @@ model = YOLOv4Small()
 print(model)
 print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}")
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
