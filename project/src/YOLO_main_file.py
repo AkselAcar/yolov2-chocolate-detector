@@ -117,7 +117,9 @@ class YOLOv4Small(nn.Module):
             x[..., b * 5 + 0] = torch.sigmoid(x[..., b * 5 + 0])  # x
             x[..., b * 5 + 1] = torch.sigmoid(x[..., b * 5 + 1])  # y
             x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf
-
+            
+            x[..., b * 5 + 2] = w_min + (w_max - w_min) * torch.sigmoid(x[..., b * 5 + 2])  # w
+            x[..., b * 5 + 3] = h_min + (h_max - h_min) * torch.sigmoid(x[..., b * 5 + 3])  # h
         return x
     
     def _initialize_weights(self):
@@ -260,6 +262,7 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         plt.axis('off')
         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
         plt.close()
+        
 
 def non_max_suppression(boxes, scores, iou_threshold=0.5):
     if len(boxes) == 0:
