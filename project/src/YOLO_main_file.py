@@ -12,13 +12,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 
-
 # Paramètres globaux
 IMG_W, IMG_H = 6000, 4000  # dimensions originales des images
-IMG_RESIZED_W, IMG_RESIZED_H = 600, 400  # dimensions d'entraînement
-S = 10  # grille SxS pour YOLOv1
+IMG_RESIZED_W, IMG_RESIZED_H = 640, 416  # divisible par 32
+S_W = IMG_RESIZED_W // 32  # 640 / 32 = 20
+S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
 B = 2   # nombre de boîtes par cellule (YOLOv1-style)
+
 
 # === Dataset YOLO ===
 class YOLODataset(Dataset):
@@ -37,23 +38,23 @@ class YOLODataset(Dataset):
         img_path = os.path.join(self.img_dir, fname)  # chemin complet
         image = Image.open(img_path).convert("RGB")  # ouverture et conversion RGB
         image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))  # redimensionnement
-        boxes = torch.zeros((S, S, B * 5 + C))  # target vide de forme (S, S, 23)
+        boxes = torch.zeros((S_H, S_W, B * 5 + C))  # target vide de forme (S, S, 23)
 
         annots = self.annotations[self.annotations['filename'] == fname]  # lignes de cette image
         for _, row in annots.iterrows():
-            cx = row['cx'] / IMG_W  # position x normalisée (0-1) ATTENTION A CHANGER SI LES CX ET CY SONT PLUS DIVISES PAR 10 DE BASE DANS LE CSV
+            cx = row['cx'] / IMG_W  # position x normalisée (0-1)
             cy = row['cy'] / IMG_H  # position y normalisée
             class_id = int(row['class'])  # id de classe
 
-            grid_x = int(cx * S)  # index colonne de la cellule
-            grid_y = int(cy * S)  # index ligne de la cellule
-            if grid_x >= S or grid_y >= S:
+            grid_x = int(cx * S_W)  # index colonne de la cellule
+            grid_y = int(cy * S_H)  # index ligne de la cellule
+            if grid_x >= S_W or grid_y >= S_H:
                 continue  # hors grille, on saute
 
-            x_cell = cx * S - grid_x  # position relative dans la cellule (0-1)
-            y_cell = cy * S - grid_y
-            w = row['width'] / IMG_RESIZED_W  # largeur relative
-            h = row['height'] / IMG_RESIZED_H  # hauteur relative
+            x_cell = cx * S_W - grid_x  # position relative dans la cellule (0-1)
+            y_cell = cy * S_H - grid_y
+            w = row['width'] / IMG_W  # largeur relative des boîtes
+            h = row['height'] / IMG_H  # hauteur relative des boîtes
 
             if boxes[grid_y, grid_x, 4] == 0:  # seulement si aucune boîte n'est présente (indice 4 est la confidence)
                 boxes[grid_y, grid_x, 0:5] = torch.tensor([x_cell, y_cell, w, h, 1])  # x,y,w,h,conf
@@ -127,7 +128,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5):
 
     # perte de localisation sur x, y, w, h
     coord_loss = lambda_coord * F.mse_loss(pred[obj_mask][..., 0:2], target[obj_mask][..., 0:2]) + \
-                 lambda_coord * F.mse_loss(torch.sqrt(pred[obj_mask][..., 2:4] + 1e-6),
+                 lambda_coord * F.mse_loss(torch.sqrt(torch.clamp(pred[obj_mask][..., 2:4], min=1e-6)),
                                            torch.sqrt(target[obj_mask][..., 2:4] + 1e-6))
 
     # perte sur la confiance (objet présent / absent)
@@ -156,15 +157,20 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3):
         plt.imshow(img_np) # "dessine" l'image en mémoire, ne la dessine pas vraiment comme plt.show()
         ax = plt.gca()
 
-        for row in range(S):
-            for col in range(S):
+        for x in range(1, S_W):
+            plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.5)
+        for y in range(1, S_H):
+            plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.5)
+
+        for row in range(S_H):
+            for col in range(S_W):
                 cell = pred[row, col]
                 conf = cell[4]
                 if conf > score_thresh:
                     x, y, w, h = cell[0], cell[1], cell[2], cell[3]
                     class_id = np.argmax(cell[5:])
-                    cx = (col + x) / S
-                    cy = (row + y) / S
+                    cx = (col + x) / S_W
+                    cy = (row + y) / S_H
                     bw = w
                     bh = h
                     x1 = (cx - bw / 2) * IMG_RESIZED_W
@@ -205,9 +211,14 @@ valid_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO
 train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False)
 
-print("Data_loaders created")
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 model = YOLOv4Small()
+print(model)
+print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}")
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
