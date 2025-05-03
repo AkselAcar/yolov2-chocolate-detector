@@ -1,585 +1,585 @@
-filename,file_size,file_attributes,region_count,region_id,region_shape_attributes,region_attributes,cx,cy,class,width,height
-L1000756.JPG,6769152,{},6,0,"{'name': 'point', 'cx': 2253, 'cy': 1584}",{'Choco_Type': 'Jelly_White'},2253,1584,0,500,500
-L1000756.JPG,6769152,{},6,1,"{'name': 'point', 'cx': 3723, 'cy': 2620}",{'Choco_Type': 'Jelly_White'},3723,2620,0,500,500
-L1000756.JPG,6769152,{},6,2,"{'name': 'point', 'cx': 2880, 'cy': 2175}",{'Choco_Type': 'Noblesse'},2880,2175,8,500,500
-L1000756.JPG,6769152,{},6,3,"{'name': 'point', 'cx': 4090, 'cy': 1404}",{'Choco_Type': 'Stracciatella'},4090,1404,12,500,500
-L1000756.JPG,6769152,{},6,4,"{'name': 'point', 'cx': 2024, 'cy': 2946}",{'Choco_Type': 'Stracciatella'},2024,2946,12,500,500
-L1000756.JPG,6769152,{},6,5,"{'name': 'point', 'cx': 3181, 'cy': 819}",{'Choco_Type': 'Triangolo'},3181,819,5,500,500
-L1000763.JPG,7394304,{},8,0,"{'name': 'point', 'cx': 717, 'cy': 1994}",{'Choco_Type': 'Jelly_Black'},717,1994,2,500,500
-L1000763.JPG,7394304,{},8,1,"{'name': 'point', 'cx': 2807, 'cy': 2108}",{'Choco_Type': 'Jelly_Black'},2807,2108,2,500,500
-L1000763.JPG,7394304,{},8,2,"{'name': 'point', 'cx': 4831, 'cy': 2277}",{'Choco_Type': 'Jelly_Black'},4831,2277,2,500,500
-L1000763.JPG,7394304,{},8,3,"{'name': 'point', 'cx': 2446, 'cy': 669}",{'Choco_Type': 'Jelly_Milk'},2446,669,1,500,500
-L1000763.JPG,7394304,{},8,4,"{'name': 'point', 'cx': 5313, 'cy': 807}",{'Choco_Type': 'Jelly_Milk'},5313,807,1,500,500
-L1000763.JPG,7394304,{},8,5,"{'name': 'point', 'cx': 5241, 'cy': 3512}",{'Choco_Type': 'Jelly_Milk'},5241,3512,1,500,500
-L1000763.JPG,7394304,{},8,6,"{'name': 'point', 'cx': 3771, 'cy': 1127}",{'Choco_Type': 'Jelly_White'},3771,1127,0,500,500
-L1000763.JPG,7394304,{},8,7,"{'name': 'point', 'cx': 1928, 'cy': 3331}",{'Choco_Type': 'Jelly_White'},1928,3331,0,500,500
-L1000765.JPG,7727104,{},5,0,"{'name': 'point', 'cx': 3892, 'cy': 1422}",{'Choco_Type': 'Passion_au_lait'},3892,1422,10,500,500
-L1000765.JPG,7727104,{},5,1,"{'name': 'point', 'cx': 4627, 'cy': 2548}",{'Choco_Type': 'Passion_au_lait'},4627,2548,10,500,500
-L1000765.JPG,7727104,{},5,2,"{'name': 'point', 'cx': 2849, 'cy': 1608}",{'Choco_Type': 'Triangolo'},2849,1608,5,500,500
-L1000765.JPG,7727104,{},5,3,"{'name': 'point', 'cx': 3404, 'cy': 2506}",{'Choco_Type': 'Triangolo'},3404,2506,5,500,500
-L1000765.JPG,7727104,{},5,4,"{'name': 'point', 'cx': 2072, 'cy': 2476}",{'Choco_Type': 'Triangolo'},2072,2476,5,500,500
-L1000768.JPG,7463936,{},4,0,"{'name': 'point', 'cx': 3964, 'cy': 2187}",{'Choco_Type': 'Comtesse'},3964,2187,7,500,500
-L1000768.JPG,7463936,{},4,1,"{'name': 'point', 'cx': 5283, 'cy': 3163}",{'Choco_Type': 'Noblesse'},5283,3163,8,500,500
-L1000768.JPG,7463936,{},4,2,"{'name': 'point', 'cx': 5229, 'cy': 1187}",{'Choco_Type': 'Stracciatella'},5229,1187,12,500,500
-L1000768.JPG,7463936,{},4,3,"{'name': 'point', 'cx': 2205, 'cy': 2669}",{'Choco_Type': 'Stracciatella'},2205,2669,12,500,500
-L1000772.JPG,7352320,{},6,0,"{'name': 'point', 'cx': 3392, 'cy': 2096}",{'Choco_Type': 'Jelly_Black'},3392,2096,2,500,500
-L1000772.JPG,7352320,{},6,1,"{'name': 'point', 'cx': 1807, 'cy': 2747}",{'Choco_Type': 'Jelly_Milk'},1807,2747,1,500,500
-L1000772.JPG,7352320,{},6,2,"{'name': 'point', 'cx': 4127, 'cy': 3211}",{'Choco_Type': 'Jelly_Milk'},4127,3211,1,500,500
-L1000772.JPG,7352320,{},6,3,"{'name': 'point', 'cx': 1711, 'cy': 1386}",{'Choco_Type': 'Jelly_White'},1711,1386,0,500,500
-L1000772.JPG,7352320,{},6,4,"{'name': 'point', 'cx': 4139, 'cy': 530}",{'Choco_Type': 'Jelly_White'},4139,530,0,500,500
-L1000772.JPG,7352320,{},6,5,"{'name': 'point', 'cx': 4843, 'cy': 1729}",{'Choco_Type': 'Jelly_White'},4843,1729,0,500,500
-L1000779.JPG,7858176,{},6,0,"{'name': 'point', 'cx': 2367, 'cy': 1566}",{'Choco_Type': 'Amandina'},2367,1566,3,500,500
-L1000779.JPG,7858176,{},6,1,"{'name': 'point', 'cx': 4434, 'cy': 2861}",{'Choco_Type': 'Arabia'},4434,2861,11,500,500
-L1000779.JPG,7858176,{},6,2,"{'name': 'point', 'cx': 4910, 'cy': 3012}",{'Choco_Type': 'Arabia'},4910,3012,11,500,500
-L1000779.JPG,7858176,{},6,3,"{'name': 'point', 'cx': 1940, 'cy': 2639}",{'Choco_Type': 'Creme_brulee'},1940,2639,4,500,500
-L1000779.JPG,7858176,{},6,4,"{'name': 'point', 'cx': 3235, 'cy': 3343}",{'Choco_Type': 'Jelly_Black'},3235,3343,2,500,500
-L1000779.JPG,7858176,{},6,5,"{'name': 'point', 'cx': 4578, 'cy': 1241}",{'Choco_Type': 'Stracciatella'},4578,1241,12,500,500
-L1000780.JPG,8207872,{},13,0,"{'name': 'point', 'cx': 3566, 'cy': 3319}",{'Choco_Type': 'Amandina'},3566,3319,3,500,500
-L1000780.JPG,8207872,{},13,1,"{'name': 'point', 'cx': 4831, 'cy': 2639}",{'Choco_Type': 'Arabia'},4831,2639,11,500,500
-L1000780.JPG,8207872,{},13,2,"{'name': 'point', 'cx': 5120, 'cy': 1669}",{'Choco_Type': 'Comtesse'},5120,1669,7,500,500
-L1000780.JPG,8207872,{},13,3,"{'name': 'point', 'cx': 2530, 'cy': 711}",{'Choco_Type': 'Creme_brulee'},2530,711,4,500,500
-L1000780.JPG,8207872,{},13,4,"{'name': 'point', 'cx': 2916, 'cy': 1464}",{'Choco_Type': 'Jelly_Milk'},2916,1464,1,500,500
-L1000780.JPG,8207872,{},13,5,"{'name': 'point', 'cx': 2199, 'cy': 3482}",{'Choco_Type': 'Jelly_Milk'},2199,3482,1,500,500
-L1000780.JPG,8207872,{},13,6,"{'name': 'point', 'cx': 3783, 'cy': 2223}",{'Choco_Type': 'Jelly_White'},3783,2223,0,500,500
-L1000780.JPG,8207872,{},13,7,"{'name': 'point', 'cx': 681, 'cy': 928}",{'Choco_Type': 'Noblesse'},681,928,8,500,500
-L1000780.JPG,8207872,{},13,8,"{'name': 'point', 'cx': 1241, 'cy': 3054}",{'Choco_Type': 'Noir_authentique'},1241,3054,9,500,500
-L1000780.JPG,8207872,{},13,9,"{'name': 'point', 'cx': 2373, 'cy': 1867}",{'Choco_Type': 'Passion_au_lait'},2373,1867,10,500,500
-L1000780.JPG,8207872,{},13,10,"{'name': 'point', 'cx': 5024, 'cy': 867}",{'Choco_Type': 'Stracciatella'},5024,867,12,500,500
-L1000780.JPG,8207872,{},13,11,"{'name': 'point', 'cx': 3765, 'cy': 1084}",{'Choco_Type': 'Tentation_noir'},3765,1084,6,500,500
-L1000780.JPG,8207872,{},13,12,"{'name': 'point', 'cx': 4873, 'cy': 3602}",{'Choco_Type': 'Triangolo'},4873,3602,5,500,500
-L1000785.JPG,7945728,{},5,0,"{'name': 'point', 'cx': 2645, 'cy': 1777}",{'Choco_Type': 'Amandina'},2645,1777,3,500,500
-L1000785.JPG,7945728,{},5,1,"{'name': 'point', 'cx': 5446, 'cy': 3211}",{'Choco_Type': 'Jelly_White'},5446,3211,0,500,500
-L1000785.JPG,7945728,{},5,2,"{'name': 'point', 'cx': 3530, 'cy': 1946}",{'Choco_Type': 'Noir_authentique'},3530,1946,9,500,500
-L1000785.JPG,7945728,{},5,3,"{'name': 'point', 'cx': 1464, 'cy': 1301}",{'Choco_Type': 'Stracciatella'},1464,1301,12,500,500
-L1000785.JPG,7945728,{},5,4,"{'name': 'point', 'cx': 1554, 'cy': 1753}",{'Choco_Type': 'Stracciatella'},1554,1753,12,500,500
-L1000788.JPG,8185856,{},7,0,"{'name': 'point', 'cx': 4572, 'cy': 2434}",{'Choco_Type': 'Jelly_Black'},4572,2434,2,500,500
-L1000788.JPG,8185856,{},7,1,"{'name': 'point', 'cx': 1831, 'cy': 2982}",{'Choco_Type': 'Jelly_Black'},1831,2982,2,500,500
-L1000788.JPG,8185856,{},7,2,"{'name': 'point', 'cx': 3349, 'cy': 3380}",{'Choco_Type': 'Jelly_Black'},3349,3380,2,500,500
-L1000788.JPG,8185856,{},7,3,"{'name': 'point', 'cx': 1916, 'cy': 1645}",{'Choco_Type': 'Jelly_Milk'},1916,1645,1,500,500
-L1000788.JPG,8185856,{},7,4,"{'name': 'point', 'cx': 4958, 'cy': 1530}",{'Choco_Type': 'Jelly_Milk'},4958,1530,1,500,500
-L1000788.JPG,8185856,{},7,5,"{'name': 'point', 'cx': 3578, 'cy': 1030}",{'Choco_Type': 'Jelly_White'},3578,1030,0,500,500
-L1000788.JPG,8185856,{},7,6,"{'name': 'point', 'cx': 3428, 'cy': 2120}",{'Choco_Type': 'Jelly_White'},3428,2120,0,500,500
-L1000791.JPG,7308800,{},5,0,"{'name': 'point', 'cx': 4590, 'cy': 2422}",{'Choco_Type': 'Arabia'},4590,2422,11,500,500
-L1000791.JPG,7308800,{},5,1,"{'name': 'point', 'cx': 4217, 'cy': 1199}",{'Choco_Type': 'Noblesse'},4217,1199,8,500,500
-L1000791.JPG,7308800,{},5,2,"{'name': 'point', 'cx': 1735, 'cy': 1548}",{'Choco_Type': 'Stracciatella'},1735,1548,12,500,500
-L1000791.JPG,7308800,{},5,3,"{'name': 'point', 'cx': 3114, 'cy': 2428}",{'Choco_Type': 'Triangolo'},3114,2428,5,500,500
-L1000791.JPG,7308800,{},5,4,"{'name': 'point', 'cx': 2759, 'cy': 2741}",{'Choco_Type': 'Triangolo'},2759,2741,5,500,500
-L1000792.JPG,7276544,{},5,0,"{'name': 'point', 'cx': 2747, 'cy': 1741}",{'Choco_Type': 'Noblesse'},2747,1741,8,500,500
-L1000792.JPG,7276544,{},5,1,"{'name': 'point', 'cx': 3289, 'cy': 1801}",{'Choco_Type': 'Noblesse'},3289,1801,8,500,500
-L1000792.JPG,7276544,{},5,2,"{'name': 'point', 'cx': 2970, 'cy': 530}",{'Choco_Type': 'Noir_authentique'},2970,530,9,500,500
-L1000792.JPG,7276544,{},5,3,"{'name': 'point', 'cx': 1518, 'cy': 2813}",{'Choco_Type': 'Noir_authentique'},1518,2813,9,500,500
-L1000792.JPG,7276544,{},5,4,"{'name': 'point', 'cx': 4753, 'cy': 2873}",{'Choco_Type': 'Noir_authentique'},4753,2873,9,500,500
-L1000793.JPG,7500288,{},6,0,"{'name': 'point', 'cx': 4066, 'cy': 1946}",{'Choco_Type': 'Amandina'},4066,1946,3,500,500
-L1000793.JPG,7500288,{},6,1,"{'name': 'point', 'cx': 2133, 'cy': 2572}",{'Choco_Type': 'Arabia'},2133,2572,11,500,500
-L1000793.JPG,7500288,{},6,2,"{'name': 'point', 'cx': 4584, 'cy': 1036}",{'Choco_Type': 'Creme_brulee'},4584,1036,4,500,500
-L1000793.JPG,7500288,{},6,3,"{'name': 'point', 'cx': 4602, 'cy': 2265}",{'Choco_Type': 'Passion_au_lait'},4602,2265,10,500,500
-L1000793.JPG,7500288,{},6,4,"{'name': 'point', 'cx': 3886, 'cy': 3404}",{'Choco_Type': 'Stracciatella'},3886,3404,12,500,500
-L1000793.JPG,7500288,{},6,5,"{'name': 'point', 'cx': 2373, 'cy': 1253}",{'Choco_Type': 'Tentation_noir'},2373,1253,6,500,500
-L1000797.JPG,7169024,{},6,0,"{'name': 'point', 'cx': 2735, 'cy': 922}",{'Choco_Type': 'Creme_brulee'},2735,922,4,500,500
-L1000797.JPG,7169024,{},6,1,"{'name': 'point', 'cx': 5470, 'cy': 2120}",{'Choco_Type': 'Creme_brulee'},5470,2120,4,500,500
-L1000797.JPG,7169024,{},6,2,"{'name': 'point', 'cx': 1880, 'cy': 2108}",{'Choco_Type': 'Noblesse'},1880,2108,8,500,500
-L1000797.JPG,7169024,{},6,3,"{'name': 'point', 'cx': 3054, 'cy': 2861}",{'Choco_Type': 'Noblesse'},3054,2861,8,500,500
-L1000797.JPG,7169024,{},6,4,"{'name': 'point', 'cx': 3651, 'cy': 1578}",{'Choco_Type': 'Noir_authentique'},3651,1578,9,500,500
-L1000797.JPG,7169024,{},6,5,"{'name': 'point', 'cx': 4452, 'cy': 2410}",{'Choco_Type': 'Noir_authentique'},4452,2410,9,500,500
-L1000799.JPG,6912512,{},8,0,"{'name': 'point', 'cx': 2482, 'cy': 2747}",{'Choco_Type': 'Arabia'},2482,2747,11,500,500
-L1000799.JPG,6912512,{},8,1,"{'name': 'point', 'cx': 4988, 'cy': 2687}",{'Choco_Type': 'Arabia'},4988,2687,11,500,500
-L1000799.JPG,6912512,{},8,2,"{'name': 'point', 'cx': 2729, 'cy': 3078}",{'Choco_Type': 'Jelly_Black'},2729,3078,2,500,500
-L1000799.JPG,6912512,{},8,3,"{'name': 'point', 'cx': 4807, 'cy': 3096}",{'Choco_Type': 'Jelly_Black'},4807,3096,2,500,500
-L1000799.JPG,6912512,{},8,4,"{'name': 'point', 'cx': 2572, 'cy': 1319}",{'Choco_Type': 'Jelly_Milk'},2572,1319,1,500,500
-L1000799.JPG,6912512,{},8,5,"{'name': 'point', 'cx': 4639, 'cy': 1849}",{'Choco_Type': 'Jelly_Milk'},4639,1849,1,500,500
-L1000799.JPG,6912512,{},8,6,"{'name': 'point', 'cx': 2235, 'cy': 886}",{'Choco_Type': 'Noblesse'},2235,886,8,500,500
-L1000799.JPG,6912512,{},8,7,"{'name': 'point', 'cx': 4855, 'cy': 1380}",{'Choco_Type': 'Noblesse'},4855,1380,8,500,500
-L1000802.JPG,7172608,{},4,0,"{'name': 'point', 'cx': 4157, 'cy': 2024}",{'Choco_Type': 'Comtesse'},4157,2024,7,500,500
-L1000802.JPG,7172608,{},4,1,"{'name': 'point', 'cx': 1602, 'cy': 2440}",{'Choco_Type': 'Comtesse'},1602,2440,7,500,500
-L1000802.JPG,7172608,{},4,2,"{'name': 'point', 'cx': 3048, 'cy': 1024}",{'Choco_Type': 'Passion_au_lait'},3048,1024,10,500,500
-L1000802.JPG,7172608,{},4,3,"{'name': 'point', 'cx': 3229, 'cy': 3139}",{'Choco_Type': 'Passion_au_lait'},3229,3139,10,500,500
-L1000804.JPG,7116800,{},5,0,"{'name': 'point', 'cx': 5542, 'cy': 1145}",{'Choco_Type': 'Creme_brulee'},5542,1145,4,500,500
-L1000804.JPG,7116800,{},5,1,"{'name': 'point', 'cx': 2512, 'cy': 1994}",{'Choco_Type': 'Noir_authentique'},2512,1994,9,500,500
-L1000804.JPG,7116800,{},5,2,"{'name': 'point', 'cx': 2645, 'cy': 2548}",{'Choco_Type': 'Noir_authentique'},2645,2548,9,500,500
-L1000804.JPG,7116800,{},5,3,"{'name': 'point', 'cx': 1145, 'cy': 1006}",{'Choco_Type': 'Triangolo'},1145,1006,5,500,500
-L1000804.JPG,7116800,{},5,4,"{'name': 'point', 'cx': 4042, 'cy': 3536}",{'Choco_Type': 'Triangolo'},4042,3536,5,500,500
-L1000808.JPG,8381440,{},9,0,"{'name': 'point', 'cx': 4283, 'cy': 1277}",{'Choco_Type': 'Jelly_Black'},4283,1277,2,500,500
-L1000808.JPG,8381440,{},9,1,"{'name': 'point', 'cx': 3072, 'cy': 2596}",{'Choco_Type': 'Jelly_Black'},3072,2596,2,500,500
-L1000808.JPG,8381440,{},9,2,"{'name': 'point', 'cx': 4223, 'cy': 3392}",{'Choco_Type': 'Jelly_Black'},4223,3392,2,500,500
-L1000808.JPG,8381440,{},9,3,"{'name': 'point', 'cx': 1988, 'cy': 1096}",{'Choco_Type': 'Jelly_Milk'},1988,1096,1,500,500
-L1000808.JPG,8381440,{},9,4,"{'name': 'point', 'cx': 2855, 'cy': 1861}",{'Choco_Type': 'Jelly_Milk'},2855,1861,1,500,500
-L1000808.JPG,8381440,{},9,5,"{'name': 'point', 'cx': 2392, 'cy': 3175}",{'Choco_Type': 'Jelly_Milk'},2392,3175,1,500,500
-L1000808.JPG,8381440,{},9,6,"{'name': 'point', 'cx': 3048, 'cy': 994}",{'Choco_Type': 'Jelly_White'},3048,994,0,500,500
-L1000808.JPG,8381440,{},9,7,"{'name': 'point', 'cx': 3904, 'cy': 867}",{'Choco_Type': 'Jelly_White'},3904,867,0,500,500
-L1000808.JPG,8381440,{},9,8,"{'name': 'point', 'cx': 5265, 'cy': 3114}",{'Choco_Type': 'Jelly_White'},5265,3114,0,500,500
-L1000810.JPG,7253504,{},7,0,"{'name': 'point', 'cx': 3145, 'cy': 2470}",{'Choco_Type': 'Amandina'},3145,2470,3,500,500
-L1000810.JPG,7253504,{},7,1,"{'name': 'point', 'cx': 1855, 'cy': 2373}",{'Choco_Type': 'Arabia'},1855,2373,11,500,500
-L1000810.JPG,7253504,{},7,2,"{'name': 'point', 'cx': 2343, 'cy': 663}",{'Choco_Type': 'Arabia'},2343,663,11,500,500
-L1000810.JPG,7253504,{},7,3,"{'name': 'point', 'cx': 4307, 'cy': 1289}",{'Choco_Type': 'Jelly_Black'},4307,1289,2,500,500
-L1000810.JPG,7253504,{},7,4,"{'name': 'point', 'cx': 4404, 'cy': 2464}",{'Choco_Type': 'Jelly_Black'},4404,2464,2,500,500
-L1000810.JPG,7253504,{},7,5,"{'name': 'point', 'cx': 3283, 'cy': 627}",{'Choco_Type': 'Jelly_White'},3283,627,0,500,500
-L1000810.JPG,7253504,{},7,6,"{'name': 'point', 'cx': 3205, 'cy': 1620}",{'Choco_Type': 'Triangolo'},3205,1620,5,500,500
-L1000812.JPG,7088640,{},7,0,"{'name': 'point', 'cx': 3265, 'cy': 1837}",{'Choco_Type': 'Amandina'},3265,1837,3,500,500
-L1000812.JPG,7088640,{},7,1,"{'name': 'point', 'cx': 2687, 'cy': 1729}",{'Choco_Type': 'Amandina'},2687,1729,3,500,500
-L1000812.JPG,7088640,{},7,2,"{'name': 'point', 'cx': 2488, 'cy': 2741}",{'Choco_Type': 'Comtesse'},2488,2741,7,500,500
-L1000812.JPG,7088640,{},7,3,"{'name': 'point', 'cx': 3108, 'cy': 2843}",{'Choco_Type': 'Comtesse'},3108,2843,7,500,500
-L1000812.JPG,7088640,{},7,4,"{'name': 'point', 'cx': 2741, 'cy': 3175}",{'Choco_Type': 'Comtesse'},2741,3175,7,500,500
-L1000812.JPG,7088640,{},7,5,"{'name': 'point', 'cx': 1819, 'cy': 2355}",{'Choco_Type': 'Tentation_noir'},1819,2355,6,500,500
-L1000812.JPG,7088640,{},7,6,"{'name': 'point', 'cx': 4096, 'cy': 2789}",{'Choco_Type': 'Tentation_noir'},4096,2789,6,500,500
-L1000815.JPG,7308800,{},6,0,"{'name': 'point', 'cx': 2855, 'cy': 2554}",{'Choco_Type': 'Amandina'},2855,2554,3,500,500
-L1000815.JPG,7308800,{},6,1,"{'name': 'point', 'cx': 3078, 'cy': 1512}",{'Choco_Type': 'Jelly_Black'},3078,1512,2,500,500
-L1000815.JPG,7308800,{},6,2,"{'name': 'point', 'cx': 4277, 'cy': 2187}",{'Choco_Type': 'Jelly_White'},4277,2187,0,500,500
-L1000815.JPG,7308800,{},6,3,"{'name': 'point', 'cx': 4801, 'cy': 1337}",{'Choco_Type': 'Noblesse'},4801,1337,8,500,500
-L1000815.JPG,7308800,{},6,4,"{'name': 'point', 'cx': 4253, 'cy': 3084}",{'Choco_Type': 'Noir_authentique'},4253,3084,9,500,500
-L1000815.JPG,7308800,{},6,5,"{'name': 'point', 'cx': 5024, 'cy': 2765}",{'Choco_Type': 'Triangolo'},5024,2765,5,500,500
-L1000817.JPG,8292352,{},5,0,"{'name': 'point', 'cx': 4042, 'cy': 1849}",{'Choco_Type': 'Arabia'},4042,1849,11,500,500
-L1000817.JPG,8292352,{},5,1,"{'name': 'point', 'cx': 4904, 'cy': 2139}",{'Choco_Type': 'Arabia'},4904,2139,11,500,500
-L1000817.JPG,8292352,{},5,2,"{'name': 'point', 'cx': 3693, 'cy': 3476}",{'Choco_Type': 'Comtesse'},3693,3476,7,500,500
-L1000817.JPG,8292352,{},5,3,"{'name': 'point', 'cx': 2922, 'cy': 1608}",{'Choco_Type': 'Creme_brulee'},2922,1608,4,500,500
-L1000817.JPG,8292352,{},5,4,"{'name': 'point', 'cx': 1880, 'cy': 2958}",{'Choco_Type': 'Creme_brulee'},1880,2958,4,500,500
-L1000826.JPG,8158208,{},13,0,"{'name': 'point', 'cx': 4018, 'cy': 2861}",{'Choco_Type': 'Amandina'},4018,2861,3,500,500
-L1000826.JPG,8158208,{},13,1,"{'name': 'point', 'cx': 4470, 'cy': 2596}",{'Choco_Type': 'Arabia'},4470,2596,11,500,500
-L1000826.JPG,8158208,{},13,2,"{'name': 'point', 'cx': 2759, 'cy': 910}",{'Choco_Type': 'Comtesse'},2759,910,7,500,500
-L1000826.JPG,8158208,{},13,3,"{'name': 'point', 'cx': 2217, 'cy': 2012}",{'Choco_Type': 'Creme_brulee'},2217,2012,4,500,500
-L1000826.JPG,8158208,{},13,4,"{'name': 'point', 'cx': 2301, 'cy': 1355}",{'Choco_Type': 'Jelly_Black'},2301,1355,2,500,500
-L1000826.JPG,8158208,{},13,5,"{'name': 'point', 'cx': 2283, 'cy': 2645}",{'Choco_Type': 'Jelly_Milk'},2283,2645,1,500,500
-L1000826.JPG,8158208,{},13,6,"{'name': 'point', 'cx': 4512, 'cy': 2169}",{'Choco_Type': 'Jelly_White'},4512,2169,0,500,500
-L1000826.JPG,8158208,{},13,7,"{'name': 'point', 'cx': 4199, 'cy': 1036}",{'Choco_Type': 'Noblesse'},4199,1036,8,500,500
-L1000826.JPG,8158208,{},13,8,"{'name': 'point', 'cx': 3506, 'cy': 3331}",{'Choco_Type': 'Noir_authentique'},3506,3331,9,500,500
-L1000826.JPG,8158208,{},13,9,"{'name': 'point', 'cx': 3361, 'cy': 2066}",{'Choco_Type': 'Passion_au_lait'},3361,2066,10,500,500
-L1000826.JPG,8158208,{},13,10,"{'name': 'point', 'cx': 3458, 'cy': 651}",{'Choco_Type': 'Stracciatella'},3458,651,12,500,500
-L1000826.JPG,8158208,{},13,11,"{'name': 'point', 'cx': 2699, 'cy': 3054}",{'Choco_Type': 'Tentation_noir'},2699,3054,6,500,500
-L1000826.JPG,8158208,{},13,12,"{'name': 'point', 'cx': 4500, 'cy': 1572}",{'Choco_Type': 'Triangolo'},4500,1572,5,500,500
-L1000827.JPG,7661568,{},8,0,"{'name': 'point', 'cx': 4958, 'cy': 2614}",{'Choco_Type': 'Arabia'},4958,2614,11,500,500
-L1000827.JPG,7661568,{},8,1,"{'name': 'point', 'cx': 1313, 'cy': 2928}",{'Choco_Type': 'Creme_brulee'},1313,2928,4,500,500
-L1000827.JPG,7661568,{},8,2,"{'name': 'point', 'cx': 2295, 'cy': 3512}",{'Choco_Type': 'Creme_brulee'},2295,3512,4,500,500
-L1000827.JPG,7661568,{},8,3,"{'name': 'point', 'cx': 5602, 'cy': 2084}",{'Choco_Type': 'Noblesse'},5602,2084,8,500,500
-L1000827.JPG,7661568,{},8,4,"{'name': 'point', 'cx': 5283, 'cy': 3229}",{'Choco_Type': 'Noblesse'},5283,3229,8,500,500
-L1000827.JPG,7661568,{},8,5,"{'name': 'point', 'cx': 4229, 'cy': 1777}",{'Choco_Type': 'Tentation_noir'},4229,1777,6,500,500
-L1000827.JPG,7661568,{},8,6,"{'name': 'point', 'cx': 3675, 'cy': 2416}",{'Choco_Type': 'Tentation_noir'},3675,2416,6,500,500
-L1000827.JPG,7661568,{},8,7,"{'name': 'point', 'cx': 3572, 'cy': 1349}",{'Choco_Type': 'Tentation_noir'},3572,1349,6,500,500
-L1000828.JPG,8617472,{},7,0,"{'name': 'point', 'cx': 3078, 'cy': 3446}",{'Choco_Type': 'Arabia'},3078,3446,11,500,500
-L1000828.JPG,8617472,{},7,1,"{'name': 'point', 'cx': 2048, 'cy': 554}",{'Choco_Type': 'Comtesse'},2048,554,7,500,500
-L1000828.JPG,8617472,{},7,2,"{'name': 'point', 'cx': 3416, 'cy': 2639}",{'Choco_Type': 'Comtesse'},3416,2639,7,500,500
-L1000828.JPG,8617472,{},7,3,"{'name': 'point', 'cx': 3910, 'cy': 2181}",{'Choco_Type': 'Noir_authentique'},3910,2181,9,500,500
-L1000828.JPG,8617472,{},7,4,"{'name': 'point', 'cx': 1416, 'cy': 1175}",{'Choco_Type': 'Passion_au_lait'},1416,1175,10,500,500
-L1000828.JPG,8617472,{},7,5,"{'name': 'point', 'cx': 3843, 'cy': 518}",{'Choco_Type': 'Stracciatella'},3843,518,12,500,500
-L1000828.JPG,8617472,{},7,6,"{'name': 'point', 'cx': 4910, 'cy': 2018}",{'Choco_Type': 'Stracciatella'},4910,2018,12,500,500
-L1000831.JPG,8157184,{},5,0,"{'name': 'point', 'cx': 3042, 'cy': 1657}",{'Choco_Type': 'Comtesse'},3042,1657,7,500,500
-L1000831.JPG,8157184,{},5,1,"{'name': 'point', 'cx': 4301, 'cy': 2934}",{'Choco_Type': 'Comtesse'},4301,2934,7,500,500
-L1000831.JPG,8157184,{},5,2,"{'name': 'point', 'cx': 2151, 'cy': 2723}",{'Choco_Type': 'Noblesse'},2151,2723,8,500,500
-L1000831.JPG,8157184,{},5,3,"{'name': 'point', 'cx': 4614, 'cy': 2398}",{'Choco_Type': 'Noblesse'},4614,2398,8,500,500
-L1000831.JPG,8157184,{},5,4,"{'name': 'point', 'cx': 5373, 'cy': 2898}",{'Choco_Type': 'Triangolo'},5373,2898,5,500,500
-L1000843.JPG,8336384,{},9,0,"{'name': 'point', 'cx': 1355, 'cy': 867}",{'Choco_Type': 'Arabia'},1355,867,11,500,500
-L1000843.JPG,8336384,{},9,1,"{'name': 'point', 'cx': 3193, 'cy': 1705}",{'Choco_Type': 'Arabia'},3193,1705,11,500,500
-L1000843.JPG,8336384,{},9,2,"{'name': 'point', 'cx': 1735, 'cy': 3235}",{'Choco_Type': 'Arabia'},1735,3235,11,500,500
-L1000843.JPG,8336384,{},9,3,"{'name': 'point', 'cx': 2783, 'cy': 663}",{'Choco_Type': 'Passion_au_lait'},2783,663,10,500,500
-L1000843.JPG,8336384,{},9,4,"{'name': 'point', 'cx': 2922, 'cy': 2807}",{'Choco_Type': 'Passion_au_lait'},2922,2807,10,500,500
-L1000843.JPG,8336384,{},9,5,"{'name': 'point', 'cx': 3843, 'cy': 2849}",{'Choco_Type': 'Passion_au_lait'},3843,2849,10,500,500
-L1000843.JPG,8336384,{},9,6,"{'name': 'point', 'cx': 4319, 'cy': 1530}",{'Choco_Type': 'Stracciatella'},4319,1530,12,500,500
-L1000843.JPG,8336384,{},9,7,"{'name': 'point', 'cx': 5313, 'cy': 2072}",{'Choco_Type': 'Stracciatella'},5313,2072,12,500,500
-L1000843.JPG,8336384,{},9,8,"{'name': 'point', 'cx': 4946, 'cy': 2886}",{'Choco_Type': 'Stracciatella'},4946,2886,12,500,500
-L1000844.JPG,8303104,{},7,0,"{'name': 'point', 'cx': 3199, 'cy': 1536}",{'Choco_Type': 'Tentation_noir'},3199,1536,6,500,500
-L1000844.JPG,8303104,{},7,1,"{'name': 'point', 'cx': 2886, 'cy': 2404}",{'Choco_Type': 'Tentation_noir'},2886,2404,6,500,500
-L1000844.JPG,8303104,{},7,2,"{'name': 'point', 'cx': 2127, 'cy': 3241}",{'Choco_Type': 'Tentation_noir'},2127,3241,6,500,500
-L1000844.JPG,8303104,{},7,3,"{'name': 'point', 'cx': 5355, 'cy': 1259}",{'Choco_Type': 'Tentation_noir'},5355,1259,6,500,500
-L1000844.JPG,8303104,{},7,4,"{'name': 'point', 'cx': 4133, 'cy': 2193}",{'Choco_Type': 'Triangolo'},4133,2193,5,500,500
-L1000844.JPG,8303104,{},7,5,"{'name': 'point', 'cx': 1169, 'cy': 2090}",{'Choco_Type': 'Triangolo'},1169,2090,5,500,500
-L1000844.JPG,8303104,{},7,6,"{'name': 'point', 'cx': 5024, 'cy': 3084}",{'Choco_Type': 'Triangolo'},5024,3084,5,500,500
-L1000850.JPG,8791552,{},6,0,"{'name': 'point', 'cx': 3482, 'cy': 675}",{'Choco_Type': 'Noblesse'},3482,675,8,500,500
-L1000850.JPG,8791552,{},6,1,"{'name': 'point', 'cx': 4325, 'cy': 2964}",{'Choco_Type': 'Noblesse'},4325,2964,8,500,500
-L1000850.JPG,8791552,{},6,2,"{'name': 'point', 'cx': 2205, 'cy': 849}",{'Choco_Type': 'Noir_authentique'},2205,849,9,500,500
-L1000850.JPG,8791552,{},6,3,"{'name': 'point', 'cx': 2988, 'cy': 3476}",{'Choco_Type': 'Noir_authentique'},2988,3476,9,500,500
-L1000850.JPG,8791552,{},6,4,"{'name': 'point', 'cx': 1247, 'cy': 1265}",{'Choco_Type': 'Triangolo'},1247,1265,5,500,500
-L1000850.JPG,8791552,{},6,5,"{'name': 'point', 'cx': 4386, 'cy': 1777}",{'Choco_Type': 'Triangolo'},4386,1777,5,500,500
-L1000851.JPG,7674368,{},4,0,"{'name': 'point', 'cx': 3367, 'cy': 2518}",{'Choco_Type': 'Arabia'},3367,2518,11,500,500
-L1000851.JPG,7674368,{},4,1,"{'name': 'point', 'cx': 2669, 'cy': 2096}",{'Choco_Type': 'Creme_brulee'},2669,2096,4,500,500
-L1000851.JPG,7674368,{},4,2,"{'name': 'point', 'cx': 2729, 'cy': 1271}",{'Choco_Type': 'Noblesse'},2729,1271,8,500,500
-L1000851.JPG,7674368,{},4,3,"{'name': 'point', 'cx': 3554, 'cy': 1705}",{'Choco_Type': 'Noir_authentique'},3554,1705,9,500,500
-L1000854.JPG,8834560,{},8,0,"{'name': 'point', 'cx': 1476, 'cy': 1404}",{'Choco_Type': 'Jelly_Black'},1476,1404,2,500,500
-L1000854.JPG,8834560,{},8,1,"{'name': 'point', 'cx': 3060, 'cy': 2801}",{'Choco_Type': 'Jelly_Black'},3060,2801,2,500,500
-L1000854.JPG,8834560,{},8,2,"{'name': 'point', 'cx': 5199, 'cy': 410}",{'Choco_Type': 'Passion_au_lait'},5199,410,10,500,500
-L1000854.JPG,8834560,{},8,3,"{'name': 'point', 'cx': 1500, 'cy': 2590}",{'Choco_Type': 'Passion_au_lait'},1500,2590,10,500,500
-L1000854.JPG,8834560,{},8,4,"{'name': 'point', 'cx': 4133, 'cy': 934}",{'Choco_Type': 'Stracciatella'},4133,934,12,500,500
-L1000854.JPG,8834560,{},8,5,"{'name': 'point', 'cx': 4241, 'cy': 3090}",{'Choco_Type': 'Stracciatella'},4241,3090,12,500,500
-L1000854.JPG,8834560,{},8,6,"{'name': 'point', 'cx': 3657, 'cy': 373}",{'Choco_Type': 'Tentation_noir'},3657,373,6,500,500
-L1000854.JPG,8834560,{},8,7,"{'name': 'point', 'cx': 5229, 'cy': 2042}",{'Choco_Type': 'Tentation_noir'},5229,2042,6,500,500
-L1000859.JPG,10772480,{},5,0,"{'name': 'point', 'cx': 4060, 'cy': 3169}",{'Choco_Type': 'Amandina'},4060,3169,3,500,500
-L1000859.JPG,10772480,{},5,1,"{'name': 'point', 'cx': 2476, 'cy': 1639}",{'Choco_Type': 'Comtesse'},2476,1639,7,500,500
-L1000859.JPG,10772480,{},5,2,"{'name': 'point', 'cx': 4223, 'cy': 2084}",{'Choco_Type': 'Creme_brulee'},4223,2084,4,500,500
-L1000859.JPG,10772480,{},5,3,"{'name': 'point', 'cx': 2114, 'cy': 3464}",{'Choco_Type': 'Creme_brulee'},2114,3464,4,500,500
-L1000859.JPG,10772480,{},5,4,"{'name': 'point', 'cx': 3783, 'cy': 849}",{'Choco_Type': 'Passion_au_lait'},3783,849,10,500,500
-L1000866.JPG,8481280,{},7,0,"{'name': 'point', 'cx': 3090, 'cy': 2934}",{'Choco_Type': 'Amandina'},3090,2934,3,500,500
-L1000866.JPG,8481280,{},7,1,"{'name': 'point', 'cx': 1741, 'cy': 1783}",{'Choco_Type': 'Amandina'},1741,1783,3,500,500
-L1000866.JPG,8481280,{},7,2,"{'name': 'point', 'cx': 1777, 'cy': 2982}",{'Choco_Type': 'Jelly_Milk'},1777,2982,1,500,500
-L1000866.JPG,8481280,{},7,3,"{'name': 'point', 'cx': 3771, 'cy': 3289}",{'Choco_Type': 'Jelly_Milk'},3771,3289,1,500,500
-L1000866.JPG,8481280,{},7,4,"{'name': 'point', 'cx': 4422, 'cy': 1940}",{'Choco_Type': 'Noblesse'},4422,1940,8,500,500
-L1000866.JPG,8481280,{},7,5,"{'name': 'point', 'cx': 4500, 'cy': 2886}",{'Choco_Type': 'Noir_authentique'},4500,2886,9,500,500
-L1000866.JPG,8481280,{},7,6,"{'name': 'point', 'cx': 765, 'cy': 2982}",{'Choco_Type': 'Passion_au_lait'},765,2982,10,500,500
-L1000870.JPG,9442304,{},5,0,"{'name': 'point', 'cx': 2289, 'cy': 1386}",{'Choco_Type': 'Comtesse'},2289,1386,7,500,500
-L1000870.JPG,9442304,{},5,1,"{'name': 'point', 'cx': 3325, 'cy': 1861}",{'Choco_Type': 'Noir_authentique'},3325,1861,9,500,500
-L1000870.JPG,9442304,{},5,2,"{'name': 'point', 'cx': 898, 'cy': 1753}",{'Choco_Type': 'Noir_authentique'},898,1753,9,500,500
-L1000870.JPG,9442304,{},5,3,"{'name': 'point', 'cx': 886, 'cy': 2940}",{'Choco_Type': 'Tentation_noir'},886,2940,6,500,500
-L1000870.JPG,9442304,{},5,4,"{'name': 'point', 'cx': 1398, 'cy': 1361}",{'Choco_Type': 'Triangolo'},1398,1361,5,500,500
-L1000872.JPG,9036800,{},5,0,"{'name': 'point', 'cx': 2199, 'cy': 1657}",{'Choco_Type': 'Arabia'},2199,1657,11,500,500
-L1000872.JPG,9036800,{},5,1,"{'name': 'point', 'cx': 4157, 'cy': 2476}",{'Choco_Type': 'Arabia'},4157,2476,11,500,500
-L1000872.JPG,9036800,{},5,2,"{'name': 'point', 'cx': 1133, 'cy': 2181}",{'Choco_Type': 'Creme_brulee'},1133,2181,4,500,500
-L1000872.JPG,9036800,{},5,3,"{'name': 'point', 'cx': 3175, 'cy': 1602}",{'Choco_Type': 'Creme_brulee'},3175,1602,4,500,500
-L1000872.JPG,9036800,{},5,4,"{'name': 'point', 'cx': 2687, 'cy': 2464}",{'Choco_Type': 'Passion_au_lait'},2687,2464,10,500,500
-L1000875.JPG,7777280,{},7,0,"{'name': 'point', 'cx': 4548, 'cy': 2970}",{'Choco_Type': 'Amandina'},4548,2970,3,500,500
-L1000875.JPG,7777280,{},7,1,"{'name': 'point', 'cx': 2542, 'cy': 1867}",{'Choco_Type': 'Comtesse'},2542,1867,7,500,500
-L1000875.JPG,7777280,{},7,2,"{'name': 'point', 'cx': 3295, 'cy': 2645}",{'Choco_Type': 'Jelly_Black'},3295,2645,2,500,500
-L1000875.JPG,7777280,{},7,3,"{'name': 'point', 'cx': 3608, 'cy': 3343}",{'Choco_Type': 'Jelly_Milk'},3608,3343,1,500,500
-L1000875.JPG,7777280,{},7,4,"{'name': 'point', 'cx': 2380, 'cy': 2940}",{'Choco_Type': 'Jelly_White'},2380,2940,0,500,500
-L1000875.JPG,7777280,{},7,5,"{'name': 'point', 'cx': 1301, 'cy': 2223}",{'Choco_Type': 'Noblesse'},1301,2223,8,500,500
-L1000875.JPG,7777280,{},7,6,"{'name': 'point', 'cx': 3633, 'cy': 1946}",{'Choco_Type': 'Tentation_noir'},3633,1946,6,500,500
-L1000876.JPG,7729664,{},4,0,"{'name': 'point', 'cx': 2783, 'cy': 1867}",{'Choco_Type': 'Comtesse'},2783,1867,7,500,500
-L1000876.JPG,7729664,{},4,1,"{'name': 'point', 'cx': 2669, 'cy': 2283}",{'Choco_Type': 'Passion_au_lait'},2669,2283,10,500,500
-L1000876.JPG,7729664,{},4,2,"{'name': 'point', 'cx': 3241, 'cy': 1584}",{'Choco_Type': 'Tentation_noir'},3241,1584,6,500,500
-L1000876.JPG,7729664,{},4,3,"{'name': 'point', 'cx': 2512, 'cy': 1373}",{'Choco_Type': 'Tentation_noir'},2512,1373,6,500,500
-L1000880.JPG,12101632,{},5,0,"{'name': 'point', 'cx': 2181, 'cy': 1843}",{'Choco_Type': 'Comtesse'},2181,1843,7,500,500
-L1000880.JPG,12101632,{},5,1,"{'name': 'point', 'cx': 1988, 'cy': 1343}",{'Choco_Type': 'Noblesse'},1988,1343,8,500,500
-L1000880.JPG,12101632,{},5,2,"{'name': 'point', 'cx': 4078, 'cy': 873}",{'Choco_Type': 'Passion_au_lait'},4078,873,10,500,500
-L1000880.JPG,12101632,{},5,3,"{'name': 'point', 'cx': 4181, 'cy': 2066}",{'Choco_Type': 'Passion_au_lait'},4181,2066,10,500,500
-L1000880.JPG,12101632,{},5,4,"{'name': 'point', 'cx': 2861, 'cy': 825}",{'Choco_Type': 'Tentation_noir'},2861,825,6,500,500
-L1000882.JPG,10285056,{},5,0,"{'name': 'point', 'cx': 2289, 'cy': 2735}",{'Choco_Type': 'Amandina'},2289,2735,3,500,500
-L1000882.JPG,10285056,{},5,1,"{'name': 'point', 'cx': 2229, 'cy': 494}",{'Choco_Type': 'Noblesse'},2229,494,8,500,500
-L1000882.JPG,10285056,{},5,2,"{'name': 'point', 'cx': 3711, 'cy': 1416}",{'Choco_Type': 'Noir_authentique'},3711,1416,9,500,500
-L1000882.JPG,10285056,{},5,3,"{'name': 'point', 'cx': 2084, 'cy': 2042}",{'Choco_Type': 'Stracciatella'},2084,2042,12,500,500
-L1000882.JPG,10285056,{},5,4,"{'name': 'point', 'cx': 3187, 'cy': 2157}",{'Choco_Type': 'Triangolo'},3187,2157,5,500,500
-L1000885.JPG,8083456,{},6,0,"{'name': 'point', 'cx': 2633, 'cy': 1765}",{'Choco_Type': 'Arabia'},2633,1765,11,500,500
-L1000885.JPG,8083456,{},6,1,"{'name': 'point', 'cx': 2518, 'cy': 2548}",{'Choco_Type': 'Arabia'},2518,2548,11,500,500
-L1000885.JPG,8083456,{},6,2,"{'name': 'point', 'cx': 4590, 'cy': 1681}",{'Choco_Type': 'Noblesse'},4590,1681,8,500,500
-L1000885.JPG,8083456,{},6,3,"{'name': 'point', 'cx': 4687, 'cy': 2801}",{'Choco_Type': 'Noblesse'},4687,2801,8,500,500
-L1000885.JPG,8083456,{},6,4,"{'name': 'point', 'cx': 3849, 'cy': 1669}",{'Choco_Type': 'Stracciatella'},3849,1669,12,500,500
-L1000885.JPG,8083456,{},6,5,"{'name': 'point', 'cx': 3319, 'cy': 2596}",{'Choco_Type': 'Stracciatella'},3319,2596,12,500,500
-L1000888.JPG,8126976,{},5,0,"{'name': 'point', 'cx': 3452, 'cy': 2633}",{'Choco_Type': 'Amandina'},3452,2633,3,500,500
-L1000888.JPG,8126976,{},5,1,"{'name': 'point', 'cx': 4145, 'cy': 2434}",{'Choco_Type': 'Amandina'},4145,2434,3,500,500
-L1000888.JPG,8126976,{},5,2,"{'name': 'point', 'cx': 2608, 'cy': 1723}",{'Choco_Type': 'Creme_brulee'},2608,1723,4,500,500
-L1000888.JPG,8126976,{},5,3,"{'name': 'point', 'cx': 3181, 'cy': 1741}",{'Choco_Type': 'Creme_brulee'},3181,1741,4,500,500
-L1000888.JPG,8126976,{},5,4,"{'name': 'point', 'cx': 4078, 'cy': 1771}",{'Choco_Type': 'Triangolo'},4078,1771,5,500,500
-L1000890.JPG,9505280,{},6,0,"{'name': 'point', 'cx': 1145, 'cy': 2084}",{'Choco_Type': 'Jelly_Black'},1145,2084,2,500,500
-L1000890.JPG,9505280,{},6,1,"{'name': 'point', 'cx': 2934, 'cy': 2512}",{'Choco_Type': 'Jelly_Black'},2934,2512,2,500,500
-L1000890.JPG,9505280,{},6,2,"{'name': 'point', 'cx': 3524, 'cy': 3157}",{'Choco_Type': 'Jelly_Milk'},3524,3157,1,500,500
-L1000890.JPG,9505280,{},6,3,"{'name': 'point', 'cx': 1982, 'cy': 3410}",{'Choco_Type': 'Jelly_Milk'},1982,3410,1,500,500
-L1000890.JPG,9505280,{},6,4,"{'name': 'point', 'cx': 3867, 'cy': 1910}",{'Choco_Type': 'Jelly_White'},3867,1910,0,500,500
-L1000890.JPG,9505280,{},6,5,"{'name': 'point', 'cx': 2169, 'cy': 1777}",{'Choco_Type': 'Jelly_White'},2169,1777,0,500,500
-L1000894.JPG,9492992,{},5,0,"{'name': 'point', 'cx': 3614, 'cy': 2343}",{'Choco_Type': 'Comtesse'},3614,2343,7,500,500
-L1000894.JPG,9492992,{},5,1,"{'name': 'point', 'cx': 1530, 'cy': 849}",{'Choco_Type': 'Passion_au_lait'},1530,849,10,500,500
-L1000894.JPG,9492992,{},5,2,"{'name': 'point', 'cx': 1602, 'cy': 2741}",{'Choco_Type': 'Passion_au_lait'},1602,2741,10,500,500
-L1000894.JPG,9492992,{},5,3,"{'name': 'point', 'cx': 2687, 'cy': 1982}",{'Choco_Type': 'Stracciatella'},2687,1982,12,500,500
-L1000894.JPG,9492992,{},5,4,"{'name': 'point', 'cx': 2181, 'cy': 3416}",{'Choco_Type': 'Stracciatella'},2181,3416,12,500,500
-L1000896.JPG,8170496,{},6,0,"{'name': 'point', 'cx': 4560, 'cy': 2355}",{'Choco_Type': 'Comtesse'},4560,2355,7,500,500
-L1000896.JPG,8170496,{},6,1,"{'name': 'point', 'cx': 3711, 'cy': 3572}",{'Choco_Type': 'Comtesse'},3711,3572,7,500,500
-L1000896.JPG,8170496,{},6,2,"{'name': 'point', 'cx': 2982, 'cy': 2500}",{'Choco_Type': 'Jelly_White'},2982,2500,0,500,500
-L1000896.JPG,8170496,{},6,3,"{'name': 'point', 'cx': 1976, 'cy': 3241}",{'Choco_Type': 'Jelly_White'},1976,3241,0,500,500
-L1000896.JPG,8170496,{},6,4,"{'name': 'point', 'cx': 2910, 'cy': 1102}",{'Choco_Type': 'Passion_au_lait'},2910,1102,10,500,500
-L1000896.JPG,8170496,{},6,5,"{'name': 'point', 'cx': 880, 'cy': 2940}",{'Choco_Type': 'Passion_au_lait'},880,2940,10,500,500
-L1000899.JPG,7984640,{},5,0,"{'name': 'point', 'cx': 4048, 'cy': 1133}",{'Choco_Type': 'Comtesse'},4048,1133,7,500,500
-L1000899.JPG,7984640,{},5,1,"{'name': 'point', 'cx': 1090, 'cy': 2898}",{'Choco_Type': 'Jelly_Black'},1090,2898,2,500,500
-L1000899.JPG,7984640,{},5,2,"{'name': 'point', 'cx': 3723, 'cy': 2663}",{'Choco_Type': 'Jelly_Milk'},3723,2663,1,500,500
-L1000899.JPG,7984640,{},5,3,"{'name': 'point', 'cx': 2337, 'cy': 1837}",{'Choco_Type': 'Jelly_White'},2337,1837,0,500,500
-L1000899.JPG,7984640,{},5,4,"{'name': 'point', 'cx': 2639, 'cy': 3000}",{'Choco_Type': 'Noir_authentique'},2639,3000,9,500,500
-L1000900.JPG,8820736,{},5,0,"{'name': 'point', 'cx': 3898, 'cy': 1470}",{'Choco_Type': 'Arabia'},3898,1470,11,500,500
-L1000900.JPG,8820736,{},5,1,"{'name': 'point', 'cx': 2880, 'cy': 741}",{'Choco_Type': 'Noblesse'},2880,741,8,500,500
-L1000900.JPG,8820736,{},5,2,"{'name': 'point', 'cx': 1488, 'cy': 1301}",{'Choco_Type': 'Noir_authentique'},1488,1301,9,500,500
-L1000900.JPG,8820736,{},5,3,"{'name': 'point', 'cx': 2952, 'cy': 2452}",{'Choco_Type': 'Passion_au_lait'},2952,2452,10,500,500
-L1000900.JPG,8820736,{},5,4,"{'name': 'point', 'cx': 1578, 'cy': 2458}",{'Choco_Type': 'Stracciatella'},1578,2458,12,500,500
-L1000903.JPG,9487360,{},4,0,"{'name': 'point', 'cx': 3193, 'cy': 1639}",{'Choco_Type': 'Creme_brulee'},3193,1639,4,500,500
-L1000903.JPG,9487360,{},4,1,"{'name': 'point', 'cx': 3548, 'cy': 2139}",{'Choco_Type': 'Creme_brulee'},3548,2139,4,500,500
-L1000903.JPG,9487360,{},4,2,"{'name': 'point', 'cx': 1916, 'cy': 1873}",{'Choco_Type': 'Jelly_White'},1916,1873,0,500,500
-L1000903.JPG,9487360,{},4,3,"{'name': 'point', 'cx': 2560, 'cy': 2018}",{'Choco_Type': 'Jelly_White'},2560,2018,0,500,500
-L1000909.JPG,8291840,{},6,0,"{'name': 'point', 'cx': 2964, 'cy': 1187}",{'Choco_Type': 'Amandina'},2964,1187,3,500,500
-L1000909.JPG,8291840,{},6,1,"{'name': 'point', 'cx': 4422, 'cy': 1187}",{'Choco_Type': 'Comtesse'},4422,1187,7,500,500
-L1000909.JPG,8291840,{},6,2,"{'name': 'point', 'cx': 1723, 'cy': 2837}",{'Choco_Type': 'Comtesse'},1723,2837,7,500,500
-L1000909.JPG,8291840,{},6,3,"{'name': 'point', 'cx': 2470, 'cy': 3675}",{'Choco_Type': 'Comtesse'},2470,3675,7,500,500
-L1000909.JPG,8291840,{},6,4,"{'name': 'point', 'cx': 4247, 'cy': 2187}",{'Choco_Type': 'Tentation_noir'},4247,2187,6,500,500
-L1000909.JPG,8291840,{},6,5,"{'name': 'point', 'cx': 3735, 'cy': 2265}",{'Choco_Type': 'Triangolo'},3735,2265,5,500,500
-L1000910.JPG,11748864,{},7,0,"{'name': 'point', 'cx': 2711, 'cy': 2452}",{'Choco_Type': 'Jelly_Black'},2711,2452,2,500,500
-L1000910.JPG,11748864,{},7,1,"{'name': 'point', 'cx': 2476, 'cy': 3163}",{'Choco_Type': 'Jelly_Black'},2476,3163,2,500,500
-L1000910.JPG,11748864,{},7,2,"{'name': 'point', 'cx': 3386, 'cy': 1301}",{'Choco_Type': 'Jelly_Milk'},3386,1301,1,500,500
-L1000910.JPG,11748864,{},7,3,"{'name': 'point', 'cx': 1428, 'cy': 3518}",{'Choco_Type': 'Jelly_Milk'},1428,3518,1,500,500
-L1000910.JPG,11748864,{},7,4,"{'name': 'point', 'cx': 994, 'cy': 1434}",{'Choco_Type': 'Noir_authentique'},994,1434,9,500,500
-L1000910.JPG,11748864,{},7,5,"{'name': 'point', 'cx': 2235, 'cy': 2380}",{'Choco_Type': 'Noir_authentique'},2235,2380,9,500,500
-L1000910.JPG,11748864,{},7,6,"{'name': 'point', 'cx': 3193, 'cy': 3373}",{'Choco_Type': 'Noir_authentique'},3193,3373,9,500,500
-L1000914.JPG,11473920,{},6,0,"{'name': 'point', 'cx': 2729, 'cy': 910}",{'Choco_Type': 'Passion_au_lait'},2729,910,10,500,500
-L1000914.JPG,11473920,{},6,1,"{'name': 'point', 'cx': 3096, 'cy': 1910}",{'Choco_Type': 'Passion_au_lait'},3096,1910,10,500,500
-L1000914.JPG,11473920,{},6,2,"{'name': 'point', 'cx': 2006, 'cy': 355}",{'Choco_Type': 'Stracciatella'},2006,355,12,500,500
-L1000914.JPG,11473920,{},6,3,"{'name': 'point', 'cx': 1699, 'cy': 1488}",{'Choco_Type': 'Stracciatella'},1699,1488,12,500,500
-L1000914.JPG,11473920,{},6,4,"{'name': 'point', 'cx': 1801, 'cy': 2500}",{'Choco_Type': 'Tentation_noir'},1801,2500,6,500,500
-L1000914.JPG,11473920,{},6,5,"{'name': 'point', 'cx': 970, 'cy': 1807}",{'Choco_Type': 'Tentation_noir'},970,1807,6,500,500
-L1000916.JPG,7473152,{},4,0,"{'name': 'point', 'cx': 3187, 'cy': 880}",{'Choco_Type': 'Comtesse'},3187,880,7,500,500
-L1000916.JPG,7473152,{},4,1,"{'name': 'point', 'cx': 3295, 'cy': 1355}",{'Choco_Type': 'Comtesse'},3295,1355,7,500,500
-L1000916.JPG,7473152,{},4,2,"{'name': 'point', 'cx': 2735, 'cy': 2367}",{'Choco_Type': 'Creme_brulee'},2735,2367,4,500,500
-L1000916.JPG,7473152,{},4,3,"{'name': 'point', 'cx': 3440, 'cy': 2855}",{'Choco_Type': 'Triangolo'},3440,2855,5,500,500
-L1000923.JPG,9731072,{},13,0,"{'name': 'point', 'cx': 3114, 'cy': 3108}",{'Choco_Type': 'Amandina'},3114,3108,3,500,500
-L1000923.JPG,9731072,{},13,1,"{'name': 'point', 'cx': 2048, 'cy': 1440}",{'Choco_Type': 'Arabia'},2048,1440,11,500,500
-L1000923.JPG,9731072,{},13,2,"{'name': 'point', 'cx': 3440, 'cy': 2422}",{'Choco_Type': 'Comtesse'},3440,2422,7,500,500
-L1000923.JPG,9731072,{},13,3,"{'name': 'point', 'cx': 2735, 'cy': 2361}",{'Choco_Type': 'Creme_brulee'},2735,2361,4,500,500
-L1000923.JPG,9731072,{},13,4,"{'name': 'point', 'cx': 1651, 'cy': 2373}",{'Choco_Type': 'Jelly_Black'},1651,2373,2,500,500
-L1000923.JPG,9731072,{},13,5,"{'name': 'point', 'cx': 4470, 'cy': 2976}",{'Choco_Type': 'Jelly_Milk'},4470,2976,1,500,500
-L1000923.JPG,9731072,{},13,6,"{'name': 'point', 'cx': 4084, 'cy': 3102}",{'Choco_Type': 'Jelly_White'},4084,3102,0,500,500
-L1000923.JPG,9731072,{},13,7,"{'name': 'point', 'cx': 4355, 'cy': 1657}",{'Choco_Type': 'Noblesse'},4355,1657,8,500,500
-L1000923.JPG,9731072,{},13,8,"{'name': 'point', 'cx': 1096, 'cy': 1795}",{'Choco_Type': 'Noir_authentique'},1096,1795,9,500,500
-L1000923.JPG,9731072,{},13,9,"{'name': 'point', 'cx': 1964, 'cy': 3024}",{'Choco_Type': 'Passion_au_lait'},1964,3024,10,500,500
-L1000923.JPG,9731072,{},13,10,"{'name': 'point', 'cx': 3096, 'cy': 1669}",{'Choco_Type': 'Stracciatella'},3096,1669,12,500,500
-L1000923.JPG,9731072,{},13,11,"{'name': 'point', 'cx': 3602, 'cy': 1253}",{'Choco_Type': 'Tentation_noir'},3602,1253,6,500,500
-L1000923.JPG,9731072,{},13,12,"{'name': 'point', 'cx': 1072, 'cy': 3078}",{'Choco_Type': 'Triangolo'},1072,3078,5,500,500
-L1000926.JPG,10252800,{},8,0,"{'name': 'point', 'cx': 1970, 'cy': 958}",{'Choco_Type': 'Comtesse'},1970,958,7,500,500
-L1000926.JPG,10252800,{},8,1,"{'name': 'point', 'cx': 3675, 'cy': 1530}",{'Choco_Type': 'Comtesse'},3675,1530,7,500,500
-L1000926.JPG,10252800,{},8,2,"{'name': 'point', 'cx': 4524, 'cy': 1994}",{'Choco_Type': 'Comtesse'},4524,1994,7,500,500
-L1000926.JPG,10252800,{},8,3,"{'name': 'point', 'cx': 3404, 'cy': 2813}",{'Choco_Type': 'Comtesse'},3404,2813,7,500,500
-L1000926.JPG,10252800,{},8,4,"{'name': 'point', 'cx': 1940, 'cy': 2886}",{'Choco_Type': 'Comtesse'},1940,2886,7,500,500
-L1000926.JPG,10252800,{},8,5,"{'name': 'point', 'cx': 1590, 'cy': 1759}",{'Choco_Type': 'Jelly_White'},1590,1759,0,500,500
-L1000926.JPG,10252800,{},8,6,"{'name': 'point', 'cx': 2590, 'cy': 1518}",{'Choco_Type': 'Jelly_White'},2590,1518,0,500,500
-L1000926.JPG,10252800,{},8,7,"{'name': 'point', 'cx': 2663, 'cy': 2337}",{'Choco_Type': 'Jelly_White'},2663,2337,0,500,500
-L1000928.JPG,8652288,{},6,0,"{'name': 'point', 'cx': 3928, 'cy': 837}",{'Choco_Type': 'Arabia'},3928,837,11,500,500
-L1000928.JPG,8652288,{},6,1,"{'name': 'point', 'cx': 1566, 'cy': 1229}",{'Choco_Type': 'Arabia'},1566,1229,11,500,500
-L1000928.JPG,8652288,{},6,2,"{'name': 'point', 'cx': 3482, 'cy': 1235}",{'Choco_Type': 'Noir_authentique'},3482,1235,9,500,500
-L1000928.JPG,8652288,{},6,3,"{'name': 'point', 'cx': 4006, 'cy': 1584}",{'Choco_Type': 'Noir_authentique'},4006,1584,9,500,500
-L1000928.JPG,8652288,{},6,4,"{'name': 'point', 'cx': 1277, 'cy': 795}",{'Choco_Type': 'Stracciatella'},1277,795,12,500,500
-L1000928.JPG,8652288,{},6,5,"{'name': 'point', 'cx': 1054, 'cy': 2964}",{'Choco_Type': 'Stracciatella'},1054,2964,12,500,500
-L1000930.JPG,8049664,{},10,0,"{'name': 'point', 'cx': 2548, 'cy': 325}",{'Choco_Type': 'Creme_brulee'},2548,325,4,500,500
-L1000930.JPG,8049664,{},10,1,"{'name': 'point', 'cx': 2319, 'cy': 1590}",{'Choco_Type': 'Creme_brulee'},2319,1590,4,500,500
-L1000930.JPG,8049664,{},10,2,"{'name': 'point', 'cx': 2133, 'cy': 2217}",{'Choco_Type': 'Creme_brulee'},2133,2217,4,500,500
-L1000930.JPG,8049664,{},10,3,"{'name': 'point', 'cx': 4108, 'cy': 3398}",{'Choco_Type': 'Creme_brulee'},4108,3398,4,500,500
-L1000930.JPG,8049664,{},10,4,"{'name': 'point', 'cx': 3133, 'cy': 1307}",{'Choco_Type': 'Jelly_Black'},3133,1307,2,500,500
-L1000930.JPG,8049664,{},10,5,"{'name': 'point', 'cx': 3458, 'cy': 2060}",{'Choco_Type': 'Jelly_Black'},3458,2060,2,500,500
-L1000930.JPG,8049664,{},10,6,"{'name': 'point', 'cx': 4036, 'cy': 1958}",{'Choco_Type': 'Jelly_Black'},4036,1958,2,500,500
-L1000930.JPG,8049664,{},10,7,"{'name': 'point', 'cx': 3590, 'cy': 795}",{'Choco_Type': 'Jelly_Milk'},3590,795,1,500,500
-L1000930.JPG,8049664,{},10,8,"{'name': 'point', 'cx': 3819, 'cy': 1193}",{'Choco_Type': 'Jelly_Milk'},3819,1193,1,500,500
-L1000930.JPG,8049664,{},10,9,"{'name': 'point', 'cx': 2054, 'cy': 3639}",{'Choco_Type': 'Jelly_Milk'},2054,3639,1,500,500
-L1000932.JPG,8856064,{},5,0,"{'name': 'point', 'cx': 2542, 'cy': 3018}",{'Choco_Type': 'Amandina'},2542,3018,3,500,500
-L1000932.JPG,8856064,{},5,1,"{'name': 'point', 'cx': 1398, 'cy': 2476}",{'Choco_Type': 'Arabia'},1398,2476,11,500,500
-L1000932.JPG,8856064,{},5,2,"{'name': 'point', 'cx': 4452, 'cy': 1096}",{'Choco_Type': 'Jelly_White'},4452,1096,0,500,500
-L1000932.JPG,8856064,{},5,3,"{'name': 'point', 'cx': 4277, 'cy': 1470}",{'Choco_Type': 'Jelly_White'},4277,1470,0,500,500
-L1000932.JPG,8856064,{},5,4,"{'name': 'point', 'cx': 1554, 'cy': 1946}",{'Choco_Type': 'Stracciatella'},1554,1946,12,500,500
-L1000939.JPG,8123392,{},8,0,"{'name': 'point', 'cx': 2253, 'cy': 2446}",{'Choco_Type': 'Jelly_Black'},2253,2446,2,500,500
-L1000939.JPG,8123392,{},8,1,"{'name': 'point', 'cx': 2982, 'cy': 2030}",{'Choco_Type': 'Jelly_Black'},2982,2030,2,500,500
-L1000939.JPG,8123392,{},8,2,"{'name': 'point', 'cx': 2982, 'cy': 1572}",{'Choco_Type': 'Jelly_Milk'},2982,1572,1,500,500
-L1000939.JPG,8123392,{},8,3,"{'name': 'point', 'cx': 2488, 'cy': 1807}",{'Choco_Type': 'Jelly_Milk'},2488,1807,1,500,500
-L1000939.JPG,8123392,{},8,4,"{'name': 'point', 'cx': 2024, 'cy': 1253}",{'Choco_Type': 'Tentation_noir'},2024,1253,6,500,500
-L1000939.JPG,8123392,{},8,5,"{'name': 'point', 'cx': 2952, 'cy': 3006}",{'Choco_Type': 'Tentation_noir'},2952,3006,6,500,500
-L1000939.JPG,8123392,{},8,6,"{'name': 'point', 'cx': 1500, 'cy': 1657}",{'Choco_Type': 'Triangolo'},1500,1657,5,500,500
-L1000939.JPG,8123392,{},8,7,"{'name': 'point', 'cx': 4036, 'cy': 2163}",{'Choco_Type': 'Triangolo'},4036,2163,5,500,500
-L1000941.JPG,7117824,{},5,0,"{'name': 'point', 'cx': 3169, 'cy': 2283}",{'Choco_Type': 'Arabia'},3169,2283,11,500,500
-L1000941.JPG,7117824,{},5,1,"{'name': 'point', 'cx': 3259, 'cy': 1319}",{'Choco_Type': 'Comtesse'},3259,1319,7,500,500
-L1000941.JPG,7117824,{},5,2,"{'name': 'point', 'cx': 2831, 'cy': 1120}",{'Choco_Type': 'Jelly_White'},2831,1120,0,500,500
-L1000941.JPG,7117824,{},5,3,"{'name': 'point', 'cx': 2036, 'cy': 2572}",{'Choco_Type': 'Passion_au_lait'},2036,2572,10,500,500
-L1000941.JPG,7117824,{},5,4,"{'name': 'point', 'cx': 1970, 'cy': 1355}",{'Choco_Type': 'Stracciatella'},1970,1355,12,500,500
-L1000946.JPG,11611136,{},5,0,"{'name': 'point', 'cx': 3524, 'cy': 2289}",{'Choco_Type': 'Creme_brulee'},3524,2289,4,500,500
-L1000946.JPG,11611136,{},5,1,"{'name': 'point', 'cx': 3651, 'cy': 1608}",{'Choco_Type': 'Jelly_White'},3651,1608,0,500,500
-L1000946.JPG,11611136,{},5,2,"{'name': 'point', 'cx': 1892, 'cy': 2301}",{'Choco_Type': 'Jelly_White'},1892,2301,0,500,500
-L1000946.JPG,11611136,{},5,3,"{'name': 'point', 'cx': 2518, 'cy': 1072}",{'Choco_Type': 'Tentation_noir'},2518,1072,6,500,500
-L1000946.JPG,11611136,{},5,4,"{'name': 'point', 'cx': 2813, 'cy': 3512}",{'Choco_Type': 'Tentation_noir'},2813,3512,6,500,500
-L1000951.JPG,7613440,{},8,0,"{'name': 'point', 'cx': 2729, 'cy': 1446}",{'Choco_Type': 'Jelly_Black'},2729,1446,2,500,500
-L1000951.JPG,7613440,{},8,1,"{'name': 'point', 'cx': 2639, 'cy': 1024}",{'Choco_Type': 'Jelly_Milk'},2639,1024,1,500,500
-L1000951.JPG,7613440,{},8,2,"{'name': 'point', 'cx': 2904, 'cy': 2343}",{'Choco_Type': 'Noblesse'},2904,2343,8,500,500
-L1000951.JPG,7613440,{},8,3,"{'name': 'point', 'cx': 2717, 'cy': 3277}",{'Choco_Type': 'Noblesse'},2717,3277,8,500,500
-L1000951.JPG,7613440,{},8,4,"{'name': 'point', 'cx': 3211, 'cy': 1717}",{'Choco_Type': 'Noir_authentique'},3211,1717,9,500,500
-L1000951.JPG,7613440,{},8,5,"{'name': 'point', 'cx': 1771, 'cy': 789}",{'Choco_Type': 'Noir_authentique'},1771,789,9,500,500
-L1000951.JPG,7613440,{},8,6,"{'name': 'point', 'cx': 2084, 'cy': 2163}",{'Choco_Type': 'Passion_au_lait'},2084,2163,10,500,500
-L1000951.JPG,7613440,{},8,7,"{'name': 'point', 'cx': 3464, 'cy': 3042}",{'Choco_Type': 'Passion_au_lait'},3464,3042,10,500,500
-L1000952.JPG,7659008,{},6,0,"{'name': 'point', 'cx': 1651, 'cy': 741}",{'Choco_Type': 'Amandina'},1651,741,3,500,500
-L1000952.JPG,7659008,{},6,1,"{'name': 'point', 'cx': 1578, 'cy': 2084}",{'Choco_Type': 'Arabia'},1578,2084,11,500,500
-L1000952.JPG,7659008,{},6,2,"{'name': 'point', 'cx': 2295, 'cy': 831}",{'Choco_Type': 'Arabia'},2295,831,11,500,500
-L1000952.JPG,7659008,{},6,3,"{'name': 'point', 'cx': 1530, 'cy': 1488}",{'Choco_Type': 'Creme_brulee'},1530,1488,4,500,500
-L1000952.JPG,7659008,{},6,4,"{'name': 'point', 'cx': 2283, 'cy': 1572}",{'Choco_Type': 'Tentation_noir'},2283,1572,6,500,500
-L1000952.JPG,7659008,{},6,5,"{'name': 'point', 'cx': 1873, 'cy': 2753}",{'Choco_Type': 'Triangolo'},1873,2753,5,500,500
-L1000957.JPG,9320448,{},7,0,"{'name': 'point', 'cx': 1837, 'cy': 2187}",{'Choco_Type': 'Comtesse'},1837,2187,7,500,500
-L1000957.JPG,9320448,{},7,1,"{'name': 'point', 'cx': 3265, 'cy': 3578}",{'Choco_Type': 'Noblesse'},3265,3578,8,500,500
-L1000957.JPG,9320448,{},7,2,"{'name': 'point', 'cx': 2084, 'cy': 1705}",{'Choco_Type': 'Noir_authentique'},2084,1705,9,500,500
-L1000957.JPG,9320448,{},7,3,"{'name': 'point', 'cx': 3843, 'cy': 2367}",{'Choco_Type': 'Noir_authentique'},3843,2367,9,500,500
-L1000957.JPG,9320448,{},7,4,"{'name': 'point', 'cx': 3145, 'cy': 1343}",{'Choco_Type': 'Passion_au_lait'},3145,1343,10,500,500
-L1000957.JPG,9320448,{},7,5,"{'name': 'point', 'cx': 2777, 'cy': 3295}",{'Choco_Type': 'Passion_au_lait'},2777,3295,10,500,500
-L1000957.JPG,9320448,{},7,6,"{'name': 'point', 'cx': 4205, 'cy': 3380}",{'Choco_Type': 'Tentation_noir'},4205,3380,6,500,500
-L1000963.JPG,8179712,{},4,0,"{'name': 'point', 'cx': 2873, 'cy': 855}",{'Choco_Type': 'Creme_brulee'},2873,855,4,500,500
-L1000963.JPG,8179712,{},4,1,"{'name': 'point', 'cx': 2645, 'cy': 2114}",{'Choco_Type': 'Tentation_noir'},2645,2114,6,500,500
-L1000963.JPG,8179712,{},4,2,"{'name': 'point', 'cx': 3608, 'cy': 1566}",{'Choco_Type': 'Triangolo'},3608,1566,5,500,500
-L1000963.JPG,8179712,{},4,3,"{'name': 'point', 'cx': 3578, 'cy': 2614}",{'Choco_Type': 'Triangolo'},3578,2614,5,500,500
-L1000964.JPG,8811520,{},5,0,"{'name': 'point', 'cx': 3681, 'cy': 970}",{'Choco_Type': 'Arabia'},3681,970,11,500,500
-L1000964.JPG,8811520,{},5,1,"{'name': 'point', 'cx': 2614, 'cy': 3295}",{'Choco_Type': 'Jelly_Black'},2614,3295,2,500,500
-L1000964.JPG,8811520,{},5,2,"{'name': 'point', 'cx': 1398, 'cy': 3783}",{'Choco_Type': 'Jelly_Milk'},1398,3783,1,500,500
-L1000964.JPG,8811520,{},5,3,"{'name': 'point', 'cx': 2452, 'cy': 361}",{'Choco_Type': 'Noblesse'},2452,361,8,500,500
-L1000964.JPG,8811520,{},5,4,"{'name': 'point', 'cx': 4422, 'cy': 2217}",{'Choco_Type': 'Noblesse'},4422,2217,8,500,500
-L1000965.JPG,9058816,{},8,0,"{'name': 'point', 'cx': 4114, 'cy': 2018}",{'Choco_Type': 'Arabia'},4114,2018,11,500,500
-L1000965.JPG,9058816,{},8,1,"{'name': 'point', 'cx': 2355, 'cy': 922}",{'Choco_Type': 'Arabia'},2355,922,11,500,500
-L1000965.JPG,9058816,{},8,2,"{'name': 'point', 'cx': 3247, 'cy': 1283}",{'Choco_Type': 'Passion_au_lait'},3247,1283,10,500,500
-L1000965.JPG,9058816,{},8,3,"{'name': 'point', 'cx': 2205, 'cy': 1681}",{'Choco_Type': 'Passion_au_lait'},2205,1681,10,500,500
-L1000965.JPG,9058816,{},8,4,"{'name': 'point', 'cx': 2807, 'cy': 2669}",{'Choco_Type': 'Passion_au_lait'},2807,2669,10,500,500
-L1000965.JPG,9058816,{},8,5,"{'name': 'point', 'cx': 4066, 'cy': 2596}",{'Choco_Type': 'Stracciatella'},4066,2596,12,500,500
-L1000965.JPG,9058816,{},8,6,"{'name': 'point', 'cx': 3500, 'cy': 2970}",{'Choco_Type': 'Stracciatella'},3500,2970,12,500,500
-L1000965.JPG,9058816,{},8,7,"{'name': 'point', 'cx': 2783, 'cy': 1952}",{'Choco_Type': 'Stracciatella'},2783,1952,12,500,500
-L1000971.JPG,8409088,{},6,0,"{'name': 'point', 'cx': 3313, 'cy': 2813}",{'Choco_Type': 'Amandina'},3313,2813,3,500,500
-L1000971.JPG,8409088,{},6,1,"{'name': 'point', 'cx': 2157, 'cy': 765}",{'Choco_Type': 'Amandina'},2157,765,3,500,500
-L1000971.JPG,8409088,{},6,2,"{'name': 'point', 'cx': 3795, 'cy': 1566}",{'Choco_Type': 'Creme_brulee'},3795,1566,4,500,500
-L1000971.JPG,8409088,{},6,3,"{'name': 'point', 'cx': 2181, 'cy': 2867}",{'Choco_Type': 'Creme_brulee'},2181,2867,4,500,500
-L1000971.JPG,8409088,{},6,4,"{'name': 'point', 'cx': 3199, 'cy': 608}",{'Choco_Type': 'Triangolo'},3199,608,5,500,500
-L1000971.JPG,8409088,{},6,5,"{'name': 'point', 'cx': 1578, 'cy': 1681}",{'Choco_Type': 'Triangolo'},1578,1681,5,500,500
-L1000972.JPG,7781376,{},6,0,"{'name': 'point', 'cx': 3458, 'cy': 1837}",{'Choco_Type': 'Comtesse'},3458,1837,7,500,500
-L1000972.JPG,7781376,{},6,1,"{'name': 'point', 'cx': 3066, 'cy': 2861}",{'Choco_Type': 'Comtesse'},3066,2861,7,500,500
-L1000972.JPG,7781376,{},6,2,"{'name': 'point', 'cx': 2783, 'cy': 3687}",{'Choco_Type': 'Noblesse'},2783,3687,8,500,500
-L1000972.JPG,7781376,{},6,3,"{'name': 'point', 'cx': 3584, 'cy': 1012}",{'Choco_Type': 'Noir_authentique'},3584,1012,9,500,500
-L1000972.JPG,7781376,{},6,4,"{'name': 'point', 'cx': 2614, 'cy': 1151}",{'Choco_Type': 'Tentation_noir'},2614,1151,6,500,500
-L1000972.JPG,7781376,{},6,5,"{'name': 'point', 'cx': 2307, 'cy': 645}",{'Choco_Type': 'Tentation_noir'},2307,645,6,500,500
-L1000974.JPG,8484352,{},8,0,"{'name': 'point', 'cx': 3506, 'cy': 2873}",{'Choco_Type': 'Amandina'},3506,2873,3,500,500
-L1000974.JPG,8484352,{},8,1,"{'name': 'point', 'cx': 2380, 'cy': 669}",{'Choco_Type': 'Amandina'},2380,669,3,500,500
-L1000974.JPG,8484352,{},8,2,"{'name': 'point', 'cx': 3289, 'cy': 1639}",{'Choco_Type': 'Jelly_Black'},3289,1639,2,500,500
-L1000974.JPG,8484352,{},8,3,"{'name': 'point', 'cx': 2723, 'cy': 2982}",{'Choco_Type': 'Jelly_Black'},2723,2982,2,500,500
-L1000974.JPG,8484352,{},8,4,"{'name': 'point', 'cx': 2193, 'cy': 1717}",{'Choco_Type': 'Jelly_Milk'},2193,1717,1,500,500
-L1000974.JPG,8484352,{},8,5,"{'name': 'point', 'cx': 3669, 'cy': 2307}",{'Choco_Type': 'Jelly_Milk'},3669,2307,1,500,500
-L1000974.JPG,8484352,{},8,6,"{'name': 'point', 'cx': 2910, 'cy': 2530}",{'Choco_Type': 'Jelly_White'},2910,2530,0,500,500
-L1000974.JPG,8484352,{},8,7,"{'name': 'point', 'cx': 3199, 'cy': 1030}",{'Choco_Type': 'Jelly_White'},3199,1030,0,500,500
-L1000977.JPG,12086272,{},9,0,"{'name': 'point', 'cx': 2639, 'cy': 2054}",{'Choco_Type': 'Comtesse'},2639,2054,7,500,500
-L1000977.JPG,12086272,{},9,1,"{'name': 'point', 'cx': 1940, 'cy': 2247}",{'Choco_Type': 'Comtesse'},1940,2247,7,500,500
-L1000977.JPG,12086272,{},9,2,"{'name': 'point', 'cx': 2602, 'cy': 3108}",{'Choco_Type': 'Comtesse'},2602,3108,7,500,500
-L1000977.JPG,12086272,{},9,3,"{'name': 'point', 'cx': 1663, 'cy': 1747}",{'Choco_Type': 'Noblesse'},1663,1747,8,500,500
-L1000977.JPG,12086272,{},9,4,"{'name': 'point', 'cx': 2012, 'cy': 3078}",{'Choco_Type': 'Noblesse'},2012,3078,8,500,500
-L1000977.JPG,12086272,{},9,5,"{'name': 'point', 'cx': 3349, 'cy': 2596}",{'Choco_Type': 'Noblesse'},3349,2596,8,500,500
-L1000977.JPG,12086272,{},9,6,"{'name': 'point', 'cx': 1813, 'cy': 1139}",{'Choco_Type': 'Noir_authentique'},1813,1139,9,500,500
-L1000977.JPG,12086272,{},9,7,"{'name': 'point', 'cx': 1313, 'cy': 2114}",{'Choco_Type': 'Noir_authentique'},1313,2114,9,500,500
-L1000977.JPG,12086272,{},9,8,"{'name': 'point', 'cx': 3349, 'cy': 1994}",{'Choco_Type': 'Noir_authentique'},3349,1994,9,500,500
-L1000979.JPG,11988992,{},9,0,"{'name': 'point', 'cx': 3199, 'cy': 2518}",{'Choco_Type': 'Amandina'},3199,2518,3,500,500
-L1000979.JPG,11988992,{},9,1,"{'name': 'point', 'cx': 2229, 'cy': 717}",{'Choco_Type': 'Amandina'},2229,717,3,500,500
-L1000979.JPG,11988992,{},9,2,"{'name': 'point', 'cx': 2825, 'cy': 1488}",{'Choco_Type': 'Creme_brulee'},2825,1488,4,500,500
-L1000979.JPG,11988992,{},9,3,"{'name': 'point', 'cx': 3054, 'cy': 3398}",{'Choco_Type': 'Creme_brulee'},3054,3398,4,500,500
-L1000979.JPG,11988992,{},9,4,"{'name': 'point', 'cx': 3380, 'cy': 1753}",{'Choco_Type': 'Jelly_White'},3380,1753,0,500,500
-L1000979.JPG,11988992,{},9,5,"{'name': 'point', 'cx': 1916, 'cy': 2500}",{'Choco_Type': 'Jelly_White'},1916,2500,0,500,500
-L1000979.JPG,11988992,{},9,6,"{'name': 'point', 'cx': 1578, 'cy': 1211}",{'Choco_Type': 'Jelly_White'},1578,1211,0,500,500
-L1000979.JPG,11988992,{},9,7,"{'name': 'point', 'cx': 753, 'cy': 2042}",{'Choco_Type': 'Triangolo'},753,2042,5,500,500
-L1000979.JPG,11988992,{},9,8,"{'name': 'point', 'cx': 2133, 'cy': 3120}",{'Choco_Type': 'Triangolo'},2133,3120,5,500,500
-L1000981.JPG,7939584,{},5,0,"{'name': 'point', 'cx': 1205, 'cy': 1976}",{'Choco_Type': 'Comtesse'},1205,1976,7,500,500
-L1000981.JPG,7939584,{},5,1,"{'name': 'point', 'cx': 1211, 'cy': 1211}",{'Choco_Type': 'Jelly_Milk'},1211,1211,1,500,500
-L1000981.JPG,7939584,{},5,2,"{'name': 'point', 'cx': 2042, 'cy': 1807}",{'Choco_Type': 'Noblesse'},2042,1807,8,500,500
-L1000981.JPG,7939584,{},5,3,"{'name': 'point', 'cx': 3090, 'cy': 1795}",{'Choco_Type': 'Noir_authentique'},3090,1795,9,500,500
-L1000981.JPG,7939584,{},5,4,"{'name': 'point', 'cx': 807, 'cy': 1458}",{'Choco_Type': 'Triangolo'},807,1458,5,500,500
-L1000987.JPG,9590784,{},6,0,"{'name': 'point', 'cx': 2000, 'cy': 1518}",{'Choco_Type': 'Creme_brulee'},2000,1518,4,500,500
-L1000987.JPG,9590784,{},6,1,"{'name': 'point', 'cx': 3380, 'cy': 2940}",{'Choco_Type': 'Creme_brulee'},3380,2940,4,500,500
-L1000987.JPG,9590784,{},6,2,"{'name': 'point', 'cx': 1133, 'cy': 1813}",{'Choco_Type': 'Noblesse'},1133,1813,8,500,500
-L1000987.JPG,9590784,{},6,3,"{'name': 'point', 'cx': 3825, 'cy': 2331}",{'Choco_Type': 'Noblesse'},3825,2331,8,500,500
-L1000987.JPG,9590784,{},6,4,"{'name': 'point', 'cx': 2645, 'cy': 2620}",{'Choco_Type': 'Tentation_noir'},2645,2620,6,500,500
-L1000987.JPG,9590784,{},6,5,"{'name': 'point', 'cx': 3096, 'cy': 1247}",{'Choco_Type': 'Tentation_noir'},3096,1247,6,500,500
-L1000989.JPG,9752576,{},6,0,"{'name': 'point', 'cx': 928, 'cy': 1247}",{'Choco_Type': 'Passion_au_lait'},928,1247,10,500,500
-L1000989.JPG,9752576,{},6,1,"{'name': 'point', 'cx': 687, 'cy': 2392}",{'Choco_Type': 'Passion_au_lait'},687,2392,10,500,500
-L1000989.JPG,9752576,{},6,2,"{'name': 'point', 'cx': 1940, 'cy': 2620}",{'Choco_Type': 'Passion_au_lait'},1940,2620,10,500,500
-L1000989.JPG,9752576,{},6,3,"{'name': 'point', 'cx': 2753, 'cy': 880}",{'Choco_Type': 'Stracciatella'},2753,880,12,500,500
-L1000989.JPG,9752576,{},6,4,"{'name': 'point', 'cx': 1717, 'cy': 1199}",{'Choco_Type': 'Stracciatella'},1717,1199,12,500,500
-L1000989.JPG,9752576,{},6,5,"{'name': 'point', 'cx': 2795, 'cy': 3078}",{'Choco_Type': 'Stracciatella'},2795,3078,12,500,500
-L1000992.JPG,8007680,{},3,0,"{'name': 'point', 'cx': 2181, 'cy': 1072}",{'Choco_Type': 'Arabia'},2181,1072,11,500,500
-L1000992.JPG,8007680,{},3,1,"{'name': 'point', 'cx': 3699, 'cy': 1922}",{'Choco_Type': 'Arabia'},3699,1922,11,500,500
-L1000992.JPG,8007680,{},3,2,"{'name': 'point', 'cx': 2602, 'cy': 3054}",{'Choco_Type': 'Arabia'},2602,3054,11,500,500
-L1000993.JPG,8193024,{},5,0,"{'name': 'point', 'cx': 3554, 'cy': 3048}",{'Choco_Type': 'Noir_authentique'},3554,3048,9,500,500
-L1000993.JPG,8193024,{},5,1,"{'name': 'point', 'cx': 3651, 'cy': 3657}",{'Choco_Type': 'Noir_authentique'},3651,3657,9,500,500
-L1000993.JPG,8193024,{},5,2,"{'name': 'point', 'cx': 3867, 'cy': 1030}",{'Choco_Type': 'Passion_au_lait'},3867,1030,10,500,500
-L1000993.JPG,8193024,{},5,3,"{'name': 'point', 'cx': 4271, 'cy': 2554}",{'Choco_Type': 'Tentation_noir'},4271,2554,6,500,500
-L1000993.JPG,8193024,{},5,4,"{'name': 'point', 'cx': 5175, 'cy': 2789}",{'Choco_Type': 'Tentation_noir'},5175,2789,6,500,500
-L1001000.JPG,9889792,{},6,0,"{'name': 'point', 'cx': 3717, 'cy': 2657}",{'Choco_Type': 'Amandina'},3717,2657,3,500,500
-L1001000.JPG,9889792,{},6,1,"{'name': 'point', 'cx': 3819, 'cy': 1151}",{'Choco_Type': 'Amandina'},3819,1151,3,500,500
-L1001000.JPG,9889792,{},6,2,"{'name': 'point', 'cx': 1476, 'cy': 741}",{'Choco_Type': 'Comtesse'},1476,741,7,500,500
-L1001000.JPG,9889792,{},6,3,"{'name': 'point', 'cx': 1458, 'cy': 3108}",{'Choco_Type': 'Comtesse'},1458,3108,7,500,500
-L1001000.JPG,9889792,{},6,4,"{'name': 'point', 'cx': 1289, 'cy': 1404}",{'Choco_Type': 'Jelly_White'},1289,1404,0,500,500
-L1001000.JPG,9889792,{},6,5,"{'name': 'point', 'cx': 1145, 'cy': 2265}",{'Choco_Type': 'Jelly_White'},1145,2265,0,500,500
-L1010004.JPG,7646720,{},8,0,"{'name': 'point', 'cx': 1319, 'cy': 1705}",{'Choco_Type': 'Amandina'},1319,1705,3,500,500
-L1010004.JPG,7646720,{},8,1,"{'name': 'point', 'cx': 1108, 'cy': 711}",{'Choco_Type': 'Comtesse'},1108,711,7,500,500
-L1010004.JPG,7646720,{},8,2,"{'name': 'point', 'cx': 4187, 'cy': 759}",{'Choco_Type': 'Creme_brulee'},4187,759,4,500,500
-L1010004.JPG,7646720,{},8,3,"{'name': 'point', 'cx': 3988, 'cy': 1783}",{'Choco_Type': 'Jelly_Black'},3988,1783,2,500,500
-L1010004.JPG,7646720,{},8,4,"{'name': 'point', 'cx': 3265, 'cy': 855}",{'Choco_Type': 'Jelly_Milk'},3265,855,1,500,500
-L1010004.JPG,7646720,{},8,5,"{'name': 'point', 'cx': 3482, 'cy': 1729}",{'Choco_Type': 'Jelly_White'},3482,1729,0,500,500
-L1010004.JPG,7646720,{},8,6,"{'name': 'point', 'cx': 2645, 'cy': 807}",{'Choco_Type': 'Tentation_noir'},2645,807,6,500,500
-L1010004.JPG,7646720,{},8,7,"{'name': 'point', 'cx': 2331, 'cy': 2205}",{'Choco_Type': 'Triangolo'},2331,2205,5,500,500
-L1010008.JPG,10625536,{},6,0,"{'name': 'point', 'cx': 2627, 'cy': 1295}",{'Choco_Type': 'Amandina'},2627,1295,3,500,500
-L1010008.JPG,10625536,{},6,1,"{'name': 'point', 'cx': 4120, 'cy': 2627}",{'Choco_Type': 'Amandina'},4120,2627,3,500,500
-L1010008.JPG,10625536,{},6,2,"{'name': 'point', 'cx': 2277, 'cy': 2235}",{'Choco_Type': 'Comtesse'},2277,2235,7,500,500
-L1010008.JPG,10625536,{},6,3,"{'name': 'point', 'cx': 2675, 'cy': 2699}",{'Choco_Type': 'Comtesse'},2675,2699,7,500,500
-L1010008.JPG,10625536,{},6,4,"{'name': 'point', 'cx': 2211, 'cy': 2843}",{'Choco_Type': 'Creme_brulee'},2211,2843,4,500,500
-L1010008.JPG,10625536,{},6,5,"{'name': 'point', 'cx': 3361, 'cy': 578}",{'Choco_Type': 'Creme_brulee'},3361,578,4,500,500
-L1010009.JPG,11859456,{},6,0,"{'name': 'point', 'cx': 2946, 'cy': 1090}",{'Choco_Type': 'Arabia'},2946,1090,11,500,500
-L1010009.JPG,11859456,{},6,1,"{'name': 'point', 'cx': 3747, 'cy': 2663}",{'Choco_Type': 'Arabia'},3747,2663,11,500,500
-L1010009.JPG,11859456,{},6,2,"{'name': 'point', 'cx': 1578, 'cy': 2175}",{'Choco_Type': 'Comtesse'},1578,2175,7,500,500
-L1010009.JPG,11859456,{},6,3,"{'name': 'point', 'cx': 2036, 'cy': 2657}",{'Choco_Type': 'Comtesse'},2036,2657,7,500,500
-L1010009.JPG,11859456,{},6,4,"{'name': 'point', 'cx': 2542, 'cy': 1560}",{'Choco_Type': 'Passion_au_lait'},2542,1560,10,500,500
-L1010009.JPG,11859456,{},6,5,"{'name': 'point', 'cx': 3205, 'cy': 2090}",{'Choco_Type': 'Passion_au_lait'},3205,2090,10,500,500
-L1010012.JPG,7745024,{},10,0,"{'name': 'point', 'cx': 2355, 'cy': 1494}",{'Choco_Type': 'Arabia'},2355,1494,11,500,500
-L1010012.JPG,7745024,{},10,1,"{'name': 'point', 'cx': 3072, 'cy': 2452}",{'Choco_Type': 'Arabia'},3072,2452,11,500,500
-L1010012.JPG,7745024,{},10,2,"{'name': 'point', 'cx': 2036, 'cy': 717}",{'Choco_Type': 'Noblesse'},2036,717,8,500,500
-L1010012.JPG,7745024,{},10,3,"{'name': 'point', 'cx': 1771, 'cy': 1223}",{'Choco_Type': 'Noblesse'},1771,1223,8,500,500
-L1010012.JPG,7745024,{},10,4,"{'name': 'point', 'cx': 2193, 'cy': 2018}",{'Choco_Type': 'Noir_authentique'},2193,2018,9,500,500
-L1010012.JPG,7745024,{},10,5,"{'name': 'point', 'cx': 3663, 'cy': 2404}",{'Choco_Type': 'Noir_authentique'},3663,2404,9,500,500
-L1010012.JPG,7745024,{},10,6,"{'name': 'point', 'cx': 3289, 'cy': 1940}",{'Choco_Type': 'Passion_au_lait'},3289,1940,10,500,500
-L1010012.JPG,7745024,{},10,7,"{'name': 'point', 'cx': 2446, 'cy': 2602}",{'Choco_Type': 'Passion_au_lait'},2446,2602,10,500,500
-L1010012.JPG,7745024,{},10,8,"{'name': 'point', 'cx': 2801, 'cy': 1217}",{'Choco_Type': 'Stracciatella'},2801,1217,12,500,500
-L1010012.JPG,7745024,{},10,9,"{'name': 'point', 'cx': 3410, 'cy': 3102}",{'Choco_Type': 'Stracciatella'},3410,3102,12,500,500
-L1010014.JPG,7673344,{},6,0,"{'name': 'point', 'cx': 2699, 'cy': 2187}",{'Choco_Type': 'Comtesse'},2699,2187,7,500,500
-L1010014.JPG,7673344,{},6,1,"{'name': 'point', 'cx': 3157, 'cy': 2331}",{'Choco_Type': 'Comtesse'},3157,2331,7,500,500
-L1010014.JPG,7673344,{},6,2,"{'name': 'point', 'cx': 4024, 'cy': 3036}",{'Choco_Type': 'Jelly_Black'},4024,3036,2,500,500
-L1010014.JPG,7673344,{},6,3,"{'name': 'point', 'cx': 4205, 'cy': 2404}",{'Choco_Type': 'Jelly_Milk'},4205,2404,1,500,500
-L1010014.JPG,7673344,{},6,4,"{'name': 'point', 'cx': 1530, 'cy': 1873}",{'Choco_Type': 'Jelly_White'},1530,1873,0,500,500
-L1010014.JPG,7673344,{},6,5,"{'name': 'point', 'cx': 1042, 'cy': 1711}",{'Choco_Type': 'Triangolo'},1042,1711,5,500,500
-L1010015.JPG,8013824,{},4,0,"{'name': 'point', 'cx': 3584, 'cy': 3018}",{'Choco_Type': 'Comtesse'},3584,3018,7,500,500
-L1010015.JPG,8013824,{},4,1,"{'name': 'point', 'cx': 2217, 'cy': 1723}",{'Choco_Type': 'Jelly_Black'},2217,1723,2,500,500
-L1010015.JPG,8013824,{},4,2,"{'name': 'point', 'cx': 1265, 'cy': 1813}",{'Choco_Type': 'Jelly_Black'},1265,1813,2,500,500
-L1010015.JPG,8013824,{},4,3,"{'name': 'point', 'cx': 1289, 'cy': 1476}",{'Choco_Type': 'Jelly_Milk'},1289,1476,1,500,500
-L1010019.JPG,9074688,{},8,0,"{'name': 'point', 'cx': 1169, 'cy': 2392}",{'Choco_Type': 'Arabia'},1169,2392,11,500,500
-L1010019.JPG,9074688,{},8,1,"{'name': 'point', 'cx': 2807, 'cy': 3301}",{'Choco_Type': 'Arabia'},2807,3301,11,500,500
-L1010019.JPG,9074688,{},8,2,"{'name': 'point', 'cx': 1434, 'cy': 1620}",{'Choco_Type': 'Noir_authentique'},1434,1620,9,500,500
-L1010019.JPG,9074688,{},8,3,"{'name': 'point', 'cx': 3175, 'cy': 2566}",{'Choco_Type': 'Noir_authentique'},3175,2566,9,500,500
-L1010019.JPG,9074688,{},8,4,"{'name': 'point', 'cx': 3139, 'cy': 1669}",{'Choco_Type': 'Passion_au_lait'},3139,1669,10,500,500
-L1010019.JPG,9074688,{},8,5,"{'name': 'point', 'cx': 1205, 'cy': 3181}",{'Choco_Type': 'Passion_au_lait'},1205,3181,10,500,500
-L1010019.JPG,9074688,{},8,6,"{'name': 'point', 'cx': 2151, 'cy': 1500}",{'Choco_Type': 'Stracciatella'},2151,1500,12,500,500
-L1010019.JPG,9074688,{},8,7,"{'name': 'point', 'cx': 1988, 'cy': 3247}",{'Choco_Type': 'Stracciatella'},1988,3247,12,500,500
-L1010022.JPG,9308672,{},6,0,"{'name': 'point', 'cx': 2036, 'cy': 1663}",{'Choco_Type': 'Arabia'},2036,1663,11,500,500
-L1010022.JPG,9308672,{},6,1,"{'name': 'point', 'cx': 3151, 'cy': 2096}",{'Choco_Type': 'Arabia'},3151,2096,11,500,500
-L1010022.JPG,9308672,{},6,2,"{'name': 'point', 'cx': 512, 'cy': 2934}",{'Choco_Type': 'Passion_au_lait'},512,2934,10,500,500
-L1010022.JPG,9308672,{},6,3,"{'name': 'point', 'cx': 3530, 'cy': 2886}",{'Choco_Type': 'Passion_au_lait'},3530,2886,10,500,500
-L1010022.JPG,9308672,{},6,4,"{'name': 'point', 'cx': 807, 'cy': 1578}",{'Choco_Type': 'Stracciatella'},807,1578,12,500,500
-L1010022.JPG,9308672,{},6,5,"{'name': 'point', 'cx': 1795, 'cy': 2964}",{'Choco_Type': 'Stracciatella'},1795,2964,12,500,500
-L1010026.JPG,8581632,{},12,0,"{'name': 'point', 'cx': 3651, 'cy': 1289}",{'Choco_Type': 'Arabia'},3651,1289,11,500,500
-L1010026.JPG,8581632,{},12,1,"{'name': 'point', 'cx': 3711, 'cy': 1970}",{'Choco_Type': 'Arabia'},3711,1970,11,500,500
-L1010026.JPG,8581632,{},12,2,"{'name': 'point', 'cx': 2060, 'cy': 1193}",{'Choco_Type': 'Passion_au_lait'},2060,1193,10,500,500
-L1010026.JPG,8581632,{},12,3,"{'name': 'point', 'cx': 2880, 'cy': 2663}",{'Choco_Type': 'Passion_au_lait'},2880,2663,10,500,500
-L1010026.JPG,8581632,{},12,4,"{'name': 'point', 'cx': 3729, 'cy': 2711}",{'Choco_Type': 'Stracciatella'},3729,2711,12,500,500
-L1010026.JPG,8581632,{},12,5,"{'name': 'point', 'cx': 1386, 'cy': 2645}",{'Choco_Type': 'Stracciatella'},1386,2645,12,500,500
-L1010026.JPG,8581632,{},12,6,"{'name': 'point', 'cx': 2133, 'cy': 1904}",{'Choco_Type': 'Tentation_noir'},2133,1904,6,500,500
-L1010026.JPG,8581632,{},12,7,"{'name': 'point', 'cx': 1386, 'cy': 1904}",{'Choco_Type': 'Tentation_noir'},1386,1904,6,500,500
-L1010026.JPG,8581632,{},12,8,"{'name': 'point', 'cx': 1398, 'cy': 1223}",{'Choco_Type': 'Tentation_noir'},1398,1223,6,500,500
-L1010026.JPG,8581632,{},12,9,"{'name': 'point', 'cx': 2898, 'cy': 1295}",{'Choco_Type': 'Triangolo'},2898,1295,5,500,500
-L1010026.JPG,8581632,{},12,10,"{'name': 'point', 'cx': 2880, 'cy': 2012}",{'Choco_Type': 'Triangolo'},2880,2012,5,500,500
-L1010026.JPG,8581632,{},12,11,"{'name': 'point', 'cx': 2120, 'cy': 2687}",{'Choco_Type': 'Triangolo'},2120,2687,5,500,500
-L1010029.JPG,8006144,{},6,0,"{'name': 'point', 'cx': 2120, 'cy': 2241}",{'Choco_Type': 'Comtesse'},2120,2241,7,500,500
-L1010029.JPG,8006144,{},6,1,"{'name': 'point', 'cx': 3602, 'cy': 2386}",{'Choco_Type': 'Comtesse'},3602,2386,7,500,500
-L1010029.JPG,8006144,{},6,2,"{'name': 'point', 'cx': 1602, 'cy': 2367}",{'Choco_Type': 'Creme_brulee'},1602,2367,4,500,500
-L1010029.JPG,8006144,{},6,3,"{'name': 'point', 'cx': 3602, 'cy': 1271}",{'Choco_Type': 'Creme_brulee'},3602,1271,4,500,500
-L1010029.JPG,8006144,{},6,4,"{'name': 'point', 'cx': 3024, 'cy': 1127}",{'Choco_Type': 'Noir_authentique'},3024,1127,9,500,500
-L1010029.JPG,8006144,{},6,5,"{'name': 'point', 'cx': 1500, 'cy': 2964}",{'Choco_Type': 'Noir_authentique'},1500,2964,9,500,500
-L1010031.JPG,8820224,{},8,0,"{'name': 'point', 'cx': 2482, 'cy': 1434}",{'Choco_Type': 'Arabia'},2482,1434,11,500,500
-L1010031.JPG,8820224,{},8,1,"{'name': 'point', 'cx': 3060, 'cy': 1572}",{'Choco_Type': 'Arabia'},3060,1572,11,500,500
-L1010031.JPG,8820224,{},8,2,"{'name': 'point', 'cx': 1337, 'cy': 2795}",{'Choco_Type': 'Noblesse'},1337,2795,8,500,500
-L1010031.JPG,8820224,{},8,3,"{'name': 'point', 'cx': 3825, 'cy': 2259}",{'Choco_Type': 'Noblesse'},3825,2259,8,500,500
-L1010031.JPG,8820224,{},8,4,"{'name': 'point', 'cx': 1482, 'cy': 1789}",{'Choco_Type': 'Passion_au_lait'},1482,1789,10,500,500
-L1010031.JPG,8820224,{},8,5,"{'name': 'point', 'cx': 3669, 'cy': 3127}",{'Choco_Type': 'Passion_au_lait'},3669,3127,10,500,500
-L1010031.JPG,8820224,{},8,6,"{'name': 'point', 'cx': 2301, 'cy': 3602}",{'Choco_Type': 'Tentation_noir'},2301,3602,6,500,500
-L1010031.JPG,8820224,{},8,7,"{'name': 'point', 'cx': 2861, 'cy': 3584}",{'Choco_Type': 'Tentation_noir'},2861,3584,6,500,500
-L1010032.JPG,9029120,{},6,0,"{'name': 'point', 'cx': 1337, 'cy': 1440}",{'Choco_Type': 'Comtesse'},1337,1440,7,500,500
-L1010032.JPG,9029120,{},6,1,"{'name': 'point', 'cx': 1506, 'cy': 2518}",{'Choco_Type': 'Comtesse'},1506,2518,7,500,500
-L1010032.JPG,9029120,{},6,2,"{'name': 'point', 'cx': 2060, 'cy': 1325}",{'Choco_Type': 'Tentation_noir'},2060,1325,6,500,500
-L1010032.JPG,9029120,{},6,3,"{'name': 'point', 'cx': 2886, 'cy': 940}",{'Choco_Type': 'Tentation_noir'},2886,940,6,500,500
-L1010032.JPG,9029120,{},6,4,"{'name': 'point', 'cx': 3994, 'cy': 813}",{'Choco_Type': 'Triangolo'},3994,813,5,500,500
-L1010032.JPG,9029120,{},6,5,"{'name': 'point', 'cx': 3988, 'cy': 2042}",{'Choco_Type': 'Triangolo'},3988,2042,5,500,500
-L1010035.JPG,8234496,{},8,0,"{'name': 'point', 'cx': 3325, 'cy': 386}",{'Choco_Type': 'Noblesse'},3325,386,8,500,500
-L1010035.JPG,8234496,{},8,1,"{'name': 'point', 'cx': 2024, 'cy': 2331}",{'Choco_Type': 'Noblesse'},2024,2331,8,500,500
-L1010035.JPG,8234496,{},8,2,"{'name': 'point', 'cx': 2789, 'cy': 2801}",{'Choco_Type': 'Noblesse'},2789,2801,8,500,500
-L1010035.JPG,8234496,{},8,3,"{'name': 'point', 'cx': 3114, 'cy': 1416}",{'Choco_Type': 'Noir_authentique'},3114,1416,9,500,500
-L1010035.JPG,8234496,{},8,4,"{'name': 'point', 'cx': 3916, 'cy': 1855}",{'Choco_Type': 'Noir_authentique'},3916,1855,9,500,500
-L1010035.JPG,8234496,{},8,5,"{'name': 'point', 'cx': 3982, 'cy': 867}",{'Choco_Type': 'Triangolo'},3982,867,5,500,500
-L1010035.JPG,8234496,{},8,6,"{'name': 'point', 'cx': 1235, 'cy': 2169}",{'Choco_Type': 'Triangolo'},1235,2169,5,500,500
-L1010035.JPG,8234496,{},8,7,"{'name': 'point', 'cx': 1711, 'cy': 3060}",{'Choco_Type': 'Triangolo'},1711,3060,5,500,500
-L1010041.JPG,9519104,{},7,0,"{'name': 'point', 'cx': 1536, 'cy': 1392}",{'Choco_Type': 'Amandina'},1536,1392,3,500,500
-L1010041.JPG,9519104,{},7,1,"{'name': 'point', 'cx': 3084, 'cy': 741}",{'Choco_Type': 'Amandina'},3084,741,3,500,500
-L1010041.JPG,9519104,{},7,2,"{'name': 'point', 'cx': 3343, 'cy': 1807}",{'Choco_Type': 'Stracciatella'},3343,1807,12,500,500
-L1010041.JPG,9519104,{},7,3,"{'name': 'point', 'cx': 1530, 'cy': 1849}",{'Choco_Type': 'Stracciatella'},1530,1849,12,500,500
-L1010041.JPG,9519104,{},7,4,"{'name': 'point', 'cx': 2452, 'cy': 1892}",{'Choco_Type': 'Stracciatella'},2452,1892,12,500,500
-L1010041.JPG,9519104,{},7,5,"{'name': 'point', 'cx': 2349, 'cy': 886}",{'Choco_Type': 'Tentation_noir'},2349,886,6,500,500
-L1010041.JPG,9519104,{},7,6,"{'name': 'point', 'cx': 1464, 'cy': 795}",{'Choco_Type': 'Tentation_noir'},1464,795,6,500,500
-L1010045.JPG,7890432,{},8,0,"{'name': 'point', 'cx': 2976, 'cy': 1976}",{'Choco_Type': 'Amandina'},2976,1976,3,500,500
-L1010045.JPG,7890432,{},8,1,"{'name': 'point', 'cx': 2012, 'cy': 1030}",{'Choco_Type': 'Comtesse'},2012,1030,7,500,500
-L1010045.JPG,7890432,{},8,2,"{'name': 'point', 'cx': 3343, 'cy': 1271}",{'Choco_Type': 'Creme_brulee'},3343,1271,4,500,500
-L1010045.JPG,7890432,{},8,3,"{'name': 'point', 'cx': 620, 'cy': 1199}",{'Choco_Type': 'Jelly_Black'},620,1199,2,500,500
-L1010045.JPG,7890432,{},8,4,"{'name': 'point', 'cx': 3729, 'cy': 1440}",{'Choco_Type': 'Jelly_Milk'},3729,1440,1,500,500
-L1010045.JPG,7890432,{},8,5,"{'name': 'point', 'cx': 1596, 'cy': 1090}",{'Choco_Type': 'Jelly_White'},1596,1090,0,500,500
-L1010045.JPG,7890432,{},8,6,"{'name': 'point', 'cx': 3506, 'cy': 1873}",{'Choco_Type': 'Tentation_noir'},3506,1873,6,500,500
-L1010045.JPG,7890432,{},8,7,"{'name': 'point', 'cx': 3783, 'cy': 741}",{'Choco_Type': 'Triangolo'},3783,741,5,500,500
+filename,cx,cy,width,height,class
+L1000756.JPG,2239,1579,354,450,0
+L1000756.JPG,3715,2637,372,468,0
+L1000756.JPG,2873,2164,540,540,8
+L1000756.JPG,2018,2948,477,500,12
+L1000756.JPG,4088,1414,518,495,12
+L1000756.JPG,3124,818,581,627,5
+L1000763.JPG,734,1992,368,459,2
+L1000763.JPG,2810,2103,359,472,2
+L1000763.JPG,4826,2269,359,450,2
+L1000763.JPG,2439,686,354,454,1
+L1000763.JPG,5307,825,350,450,1
+L1000763.JPG,5226,3493,377,454,1
+L1000763.JPG,3756,1144,481,363,0
+L1000763.JPG,1932,3334,477,345,0
+L1000765.JPG,3870,1462,590,609,10
+L1000765.JPG,4568,2530,577,654,10
+L1000765.JPG,2775,1610,590,631,5
+L1000765.JPG,2064,2453,622,554,5
+L1000765.JPG,3372,2450,595,595,5
+L1000768.JPG,3963,2174,468,477,7
+L1000768.JPG,5276,3168,531,531,8
+L1000768.JPG,5212,1197,540,550,12
+L1000768.JPG,2210,2662,568,554,12
+L1000772.JPG,3380,2087,445,386,2
+L1000772.JPG,1808,2750,391,441,1
+L1000772.JPG,4120,3206,382,463,1
+L1000772.JPG,1706,1378,459,395,0
+L1000772.JPG,4136,518,341,472,0
+L1000772.JPG,4818,1724,463,377,0
+L1000779.JPG,2354,1563,431,818,3
+L1000779.JPG,4412,2856,513,481,11
+L1000779.JPG,4892,2998,509,481,11
+L1000779.JPG,3256,3328,463,359,2
+L1000779.JPG,1928,2623,559,568,4
+L1000779.JPG,4558,1269,531,522,12
+L1000780.JPG,3552,3298,372,854,3
+L1000780.JPG,4810,2642,509,495,11
+L1000780.JPG,5121,1662,486,491,7
+L1000780.JPG,2523,720,550,577,4
+L1000780.JPG,2189,3474,454,363,1
+L1000780.JPG,2912,1464,463,395,1
+L1000780.JPG,3770,2226,391,436,0
+L1000780.JPG,693,940,550,536,8
+L1000780.JPG,1236,3032,581,586,9
+L1000780.JPG,2332,1916,613,609,10
+L1000780.JPG,5010,890,563,545,12
+L1000780.JPG,3781,1074,586,559,6
+L1000780.JPG,4830,3609,586,586,5
+L1000785.JPG,2641,1772,804,463,3
+L1000785.JPG,5448,3209,468,368,0
+L1000785.JPG,3511,1948,554,554,9
+L1000785.JPG,1458,1302,527,513,12
+L1000785.JPG,1549,1758,518,518,12
+L1000788.JPG,4568,2402,359,481,2
+L1000788.JPG,3346,3356,341,463,2
+L1000788.JPG,1824,2973,468,322,2
+L1000788.JPG,4949,1524,450,368,1
+L1000788.JPG,1920,1655,441,404,1
+L1000788.JPG,3574,1020,463,368,0
+L1000788.JPG,3414,2117,441,400,0
+L1000791.JPG,4572,2406,513,477,11
+L1000791.JPG,4206,1204,518,527,8
+L1000791.JPG,1728,1547,559,550,12
+L1000791.JPG,2748,2700,609,595,5
+L1000791.JPG,3082,2462,613,609,5
+L1000792.JPG,2757,1750,536,531,8
+L1000792.JPG,3284,1812,527,527,8
+L1000792.JPG,2973,556,568,577,9
+L1000792.JPG,1517,2824,572,581,9
+L1000792.JPG,4740,2870,568,563,9
+L1000793.JPG,4056,1956,727,577,3
+L1000793.JPG,2140,2569,481,486,11
+L1000793.JPG,4558,1047,550,540,4
+L1000793.JPG,4572,2258,595,627,10
+L1000793.JPG,3893,3406,518,527,12
+L1000793.JPG,2366,1274,545,540,6
+L1000797.JPG,2730,926,554,563,4
+L1000797.JPG,5442,2123,545,540,4
+L1000797.JPG,1862,2119,545,550,8
+L1000797.JPG,3036,2866,540,545,8
+L1000797.JPG,3645,1594,550,545,9
+L1000797.JPG,4445,2423,550,540,9
+L1000799.JPG,2487,2738,486,481,11
+L1000799.JPG,4960,2686,509,495,11
+L1000799.JPG,4799,3082,468,368,2
+L1000799.JPG,2734,3066,454,391,2
+L1000799.JPG,4646,1848,436,363,1
+L1000799.JPG,2557,1320,454,377,1
+L1000799.JPG,2230,895,536,536,8
+L1000799.JPG,4842,1386,527,527,8
+L1000802.JPG,4158,2026,477,481,7
+L1000802.JPG,1608,2436,500,495,7
+L1000802.JPG,3004,1066,622,613,10
+L1000802.JPG,3238,3136,627,622,10
+L1000804.JPG,5521,1136,540,545,4
+L1000804.JPG,2503,2003,572,554,9
+L1000804.JPG,2650,2564,568,559,9
+L1000804.JPG,1177,1032,618,609,5
+L1000804.JPG,3979,3531,590,640,5
+L1000808.JPG,4264,1270,463,350,2
+L1000808.JPG,3086,2591,441,350,2
+L1000808.JPG,4220,3379,363,472,2
+L1000808.JPG,1980,1100,400,427,1
+L1000808.JPG,2850,1862,404,427,1
+L1000808.JPG,2394,3166,354,481,1
+L1000808.JPG,3050,998,350,477,0
+L1000808.JPG,3902,872,409,445,0
+L1000808.JPG,5244,3107,468,354,0
+L1000810.JPG,3140,2473,731,604,3
+L1000810.JPG,1860,2374,486,477,11
+L1000810.JPG,2346,688,486,504,11
+L1000810.JPG,4302,1294,363,463,2
+L1000810.JPG,4410,2450,354,459,2
+L1000810.JPG,3266,622,409,436,0
+L1000810.JPG,3184,1582,627,595,5
+L1000812.JPG,2686,1724,477,795,3
+L1000812.JPG,3259,1851,650,668,3
+L1000812.JPG,2480,2724,491,481,7
+L1000812.JPG,3100,2836,468,477,7
+L1000812.JPG,2742,3170,495,472,7
+L1000812.JPG,1788,2362,531,491,6
+L1000812.JPG,4092,2782,527,522,6
+L1000815.JPG,2854,2539,377,854,3
+L1000815.JPG,3068,1512,359,427,2
+L1000815.JPG,4269,2185,354,472,0
+L1000815.JPG,4794,1333,522,522,8
+L1000815.JPG,4226,3068,568,568,9
+L1000815.JPG,4976,2782,577,577,5
+L1000817.JPG,4028,1858,509,491,11
+L1000817.JPG,4874,2154,518,491,11
+L1000817.JPG,3688,3466,491,491,7
+L1000817.JPG,2909,1610,550,559,4
+L1000817.JPG,1874,2956,568,563,4
+L1000826.JPG,4006,2855,382,840,3
+L1000826.JPG,4442,2596,500,477,11
+L1000826.JPG,2754,914,495,491,7
+L1000826.JPG,2214,2012,559,554,4
+L1000826.JPG,2303,1364,436,413,2
+L1000826.JPG,2291,2637,368,468,1
+L1000826.JPG,4502,2164,391,431,0
+L1000826.JPG,4192,1036,527,527,8
+L1000826.JPG,3495,3308,568,577,9
+L1000826.JPG,3372,2076,640,618,10
+L1000826.JPG,3448,663,545,536,12
+L1000826.JPG,2694,3062,509,545,6
+L1000826.JPG,4460,1597,590,568,5
+L1000827.JPG,4933,2616,518,491,11
+L1000827.JPG,1308,2932,572,577,4
+L1000827.JPG,2292,3493,559,572,4
+L1000827.JPG,5580,2076,531,527,8
+L1000827.JPG,5276,3226,531,531,8
+L1000827.JPG,3586,1378,513,531,6
+L1000827.JPG,4217,1783,504,550,6
+L1000827.JPG,3676,2428,459,513,6
+L1000828.JPG,3066,3422,491,504,11
+L1000828.JPG,2051,554,486,491,7
+L1000828.JPG,3408,2630,477,481,7
+L1000828.JPG,3895,2174,568,559,9
+L1000828.JPG,1440,1220,618,613,10
+L1000828.JPG,3834,534,481,477,12
+L1000828.JPG,4900,2026,527,509,12
+L1000831.JPG,3032,1633,495,486,7
+L1000831.JPG,4304,2934,486,481,7
+L1000831.JPG,4604,2389,531,536,8
+L1000831.JPG,2166,2727,545,540,8
+L1000831.JPG,5376,2855,577,586,5
+L1000843.JPG,3182,1726,486,481,11
+L1000843.JPG,1748,3238,509,491,11
+L1000843.JPG,1376,900,500,500,11
+L1000843.JPG,2816,706,590,595,10
+L1000843.JPG,3806,2807,609,618,10
+L1000843.JPG,2903,2793,600,654,10
+L1000843.JPG,5310,2084,545,545,12
+L1000843.JPG,4926,2889,550,554,12
+L1000843.JPG,4306,1551,545,540,12
+L1000844.JPG,3179,1528,554,586,6
+L1000844.JPG,2884,2421,527,554,6
+L1000844.JPG,5338,1261,531,550,6
+L1000844.JPG,2110,3238,522,463,6
+L1000844.JPG,1198,2094,581,627,5
+L1000844.JPG,4110,2162,627,590,5
+L1000844.JPG,4954,3078,577,577,5
+L1000850.JPG,3484,681,527,536,8
+L1000850.JPG,4312,2984,531,536,8
+L1000850.JPG,2194,856,572,577,9
+L1000850.JPG,2966,3484,554,563,9
+L1000850.JPG,1202,1290,613,590,5
+L1000850.JPG,4388,1740,600,618,5
+L1000851.JPG,3356,2509,491,486,11
+L1000851.JPG,2673,2096,550,550,4
+L1000851.JPG,2727,1278,540,522,8
+L1000851.JPG,3545,1704,550,563,9
+L1000854.JPG,3043,2805,418,404,2
+L1000854.JPG,1462,1408,481,400,2
+L1000854.JPG,1494,2562,681,600,10
+L1000854.JPG,5160,411,572,622,10
+L1000854.JPG,4108,945,504,500,12
+L1000854.JPG,4222,3078,486,513,12
+L1000854.JPG,5210,2057,527,554,6
+L1000854.JPG,3631,392,504,513,6
+L1000859.JPG,4050,3157,595,772,3
+L1000859.JPG,2482,1624,504,495,7
+L1000859.JPG,4210,2076,563,572,4
+L1000859.JPG,2121,3456,572,572,4
+L1000859.JPG,3788,867,654,590,10
+L1000866.JPG,1758,1774,709,777,3
+L1000866.JPG,3094,2893,409,936,3
+L1000866.JPG,1780,2978,409,513,1
+L1000866.JPG,3781,3279,404,518,1
+L1000866.JPG,4402,1935,581,590,8
+L1000866.JPG,4485,2864,604,622,9
+L1000866.JPG,756,2975,668,736,10
+L1000870.JPG,2296,1376,513,536,7
+L1000870.JPG,896,1768,613,609,9
+L1000870.JPG,3322,1878,604,595,9
+L1000870.JPG,867,2945,554,604,6
+L1000870.JPG,1408,1374,627,650,5
+L1000872.JPG,2212,1682,509,513,11
+L1000872.JPG,4138,2478,527,513,11
+L1000872.JPG,3190,1602,595,595,4
+L1000872.JPG,1151,2178,604,595,4
+L1000872.JPG,2660,2480,713,645,10
+L1000875.JPG,4536,2960,395,913,3
+L1000875.JPG,2548,1853,509,518,7
+L1000875.JPG,3306,2642,491,377,2
+L1000875.JPG,3593,3338,500,372,1
+L1000875.JPG,2357,2930,500,409,0
+L1000875.JPG,1292,2212,595,590,8
+L1000875.JPG,3618,1942,586,577,6
+L1000876.JPG,2784,1844,527,527,7
+L1000876.JPG,2687,2305,704,650,10
+L1000876.JPG,3224,1581,563,536,6
+L1000876.JPG,2510,1390,550,563,6
+L1000880.JPG,2174,1826,495,491,7
+L1000880.JPG,1985,1358,536,545,8
+L1000880.JPG,4031,830,650,581,10
+L1000880.JPG,4162,2092,659,577,10
+L1000880.JPG,2862,854,481,500,6
+L1000882.JPG,2316,2711,463,790,3
+L1000882.JPG,2246,506,531,531,8
+L1000882.JPG,3709,1413,550,554,9
+L1000882.JPG,2078,2040,513,509,12
+L1000882.JPG,3134,2168,600,595,5
+L1000885.JPG,2622,1726,513,518,11
+L1000885.JPG,2500,2594,504,527,11
+L1000885.JPG,4589,1664,540,540,8
+L1000885.JPG,4674,2788,536,545,8
+L1000885.JPG,3838,1665,491,486,12
+L1000885.JPG,3311,2628,454,513,12
+L1000888.JPG,3452,2639,736,600,3
+L1000888.JPG,4134,2439,799,472,3
+L1000888.JPG,2614,1705,550,540,4
+L1000888.JPG,3186,1733,559,550,4
+L1000888.JPG,4050,1798,595,581,5
+L1000890.JPG,1128,2071,422,454,2
+L1000890.JPG,2925,2516,354,472,2
+L1000890.JPG,3526,3143,377,472,1
+L1000890.JPG,1980,3416,409,481,1
+L1000890.JPG,2178,1746,377,495,0
+L1000890.JPG,3854,1904,404,445,0
+L1000894.JPG,3614,2330,495,500,7
+L1000894.JPG,1483,888,622,686,10
+L1000894.JPG,1572,2725,600,690,10
+L1000894.JPG,2682,1992,495,504,12
+L1000894.JPG,2178,3416,495,500,12
+L1000896.JPG,4553,2332,540,540,7
+L1000896.JPG,3708,3563,540,550,7
+L1000896.JPG,1990,3246,518,395,0
+L1000896.JPG,2975,2476,354,518,0
+L1000896.JPG,2946,1092,677,704,10
+L1000896.JPG,883,2938,704,690,10
+L1000899.JPG,4042,1122,518,536,7
+L1000899.JPG,1115,2898,522,382,2
+L1000899.JPG,3730,2650,509,395,1
+L1000899.JPG,2332,1826,395,509,0
+L1000899.JPG,2646,2975,613,618,9
+L1000900.JPG,3878,1492,527,522,11
+L1000900.JPG,2893,736,572,572,8
+L1000900.JPG,1494,1303,609,590,9
+L1000900.JPG,2982,2453,640,654,10
+L1000900.JPG,1574,2444,540,536,12
+L1000903.JPG,3195,1637,586,604,4
+L1000903.JPG,3533,2121,590,590,4
+L1000903.JPG,1915,1872,468,445,0
+L1000903.JPG,2573,2010,404,477,0
+L1000909.JPG,2944,1178,681,749,3
+L1000909.JPG,4420,1172,509,527,7
+L1000909.JPG,1730,2814,527,540,7
+L1000909.JPG,2470,3668,527,522,7
+L1000909.JPG,4224,2196,518,559,6
+L1000909.JPG,3649,2270,622,663,5
+L1000910.JPG,2705,2442,350,459,2
+L1000910.JPG,2494,3178,445,341,2
+L1000910.JPG,3384,1306,327,459,1
+L1000910.JPG,1412,3514,372,459,1
+L1000910.JPG,1002,1435,595,590,9
+L1000910.JPG,2233,2391,568,568,9
+L1000910.JPG,3198,3361,563,572,9
+L1000914.JPG,2728,994,668,590,10
+L1000914.JPG,3096,1951,668,604,10
+L1000914.JPG,1996,341,568,554,12
+L1000914.JPG,1708,1497,563,550,12
+L1000914.JPG,986,1802,609,581,6
+L1000914.JPG,1804,2514,509,486,6
+L1000916.JPG,3186,874,495,486,7
+L1000916.JPG,3291,1344,504,491,7
+L1000916.JPG,2707,2353,536,554,4
+L1000916.JPG,3464,2836,577,631,5
+L1000923.JPG,3123,3104,868,386,3
+L1000923.JPG,2044,1458,509,500,11
+L1000923.JPG,3436,2412,495,509,7
+L1000923.JPG,2741,2362,568,563,4
+L1000923.JPG,1662,2370,391,445,2
+L1000923.JPG,4464,2970,363,491,1
+L1000923.JPG,4076,3086,377,495,0
+L1000923.JPG,4349,1665,550,550,8
+L1000923.JPG,1095,1785,600,590,9
+L1000923.JPG,1924,3025,631,690,10
+L1000923.JPG,3088,1683,572,568,12
+L1000923.JPG,3613,1260,550,531,6
+L1000923.JPG,1077,3056,636,627,5
+L1000926.JPG,1976,950,500,509,7
+L1000926.JPG,3670,1519,491,504,7
+L1000926.JPG,4526,1986,513,509,7
+L1000926.JPG,3394,2798,509,509,7
+L1000926.JPG,1930,2866,518,518,7
+L1000926.JPG,1582,1730,377,491,0
+L1000926.JPG,2600,1526,368,491,0
+L1000926.JPG,2646,2318,450,431,0
+L1000928.JPG,1585,1254,554,554,11
+L1000928.JPG,3906,858,554,536,11
+L1000928.JPG,3477,1240,622,609,9
+L1000928.JPG,3981,1592,604,604,9
+L1000928.JPG,1272,810,609,577,12
+L1000928.JPG,1036,2982,581,568,12
+L1000930.JPG,2544,330,618,613,4
+L1000930.JPG,2318,1592,613,613,4
+L1000930.JPG,2130,2201,609,604,4
+L1000930.JPG,4099,3368,604,613,4
+L1000930.JPG,4047,1964,500,368,2
+L1000930.JPG,3473,2072,450,491,2
+L1000930.JPG,3142,1316,463,441,2
+L1000930.JPG,2038,3656,495,472,1
+L1000930.JPG,3572,781,513,400,1
+L1000930.JPG,3796,1194,481,427,1
+L1000932.JPG,2537,3008,904,391,3
+L1000932.JPG,1410,2500,540,504,11
+L1000932.JPG,4458,1080,377,481,0
+L1000932.JPG,4269,1450,454,431,0
+L1000932.JPG,1556,1962,613,581,12
+L1000939.JPG,2966,2035,509,382,2
+L1000939.JPG,2234,2455,509,350,2
+L1000939.JPG,2496,1798,431,463,1
+L1000939.JPG,2991,1572,486,391,1
+L1000939.JPG,1992,1258,631,609,6
+L1000939.JPG,4024,2124,672,631,5
+L1000939.JPG,1501,1703,668,636,5
+L1000939.JPG,2972,3004,540,559,6
+L1000941.JPG,3164,2287,531,522,11
+L1000941.JPG,3262,1290,527,536,7
+L1000941.JPG,2825,1086,372,491,0
+L1000941.JPG,2037,2632,704,659,10
+L1000941.JPG,1964,1367,559,518,12
+L1000946.JPG,3532,2294,568,554,4
+L1000946.JPG,3632,1608,441,409,0
+L1000946.JPG,1870,2278,459,386,0
+L1000946.JPG,2505,1086,604,563,6
+L1000946.JPG,2803,3500,500,504,6
+L1000951.JPG,2741,1436,450,363,2
+L1000951.JPG,2639,1029,418,422,1
+L1000951.JPG,2890,2344,531,536,8
+L1000951.JPG,2721,3295,536,550,8
+L1000951.JPG,1766,800,581,563,9
+L1000951.JPG,3214,1714,568,559,9
+L1000951.JPG,2032,2164,595,595,10
+L1000951.JPG,3486,3032,631,604,10
+L1000952.JPG,1664,750,377,845,3
+L1000952.JPG,2308,840,491,500,11
+L1000952.JPG,1587,2092,486,486,11
+L1000952.JPG,1524,1496,568,559,4
+L1000952.JPG,2278,1576,559,518,6
+L1000952.JPG,1924,2758,577,609,5
+L1000957.JPG,1831,2169,500,504,7
+L1000957.JPG,3257,3577,536,550,8
+L1000957.JPG,3824,2344,572,581,9
+L1000957.JPG,2094,1692,572,568,9
+L1000957.JPG,3156,1386,645,609,10
+L1000957.JPG,2786,3282,640,613,10
+L1000957.JPG,4208,3382,568,531,6
+L1000963.JPG,2866,868,600,600,4
+L1000963.JPG,2668,2135,640,654,6
+L1000963.JPG,3566,1586,645,627,5
+L1000963.JPG,3579,2576,672,627,5
+L1000964.JPG,3676,995,531,536,11
+L1000964.JPG,2627,3291,504,404,2
+L1000964.JPG,1392,3790,513,386,1
+L1000964.JPG,2464,370,595,586,8
+L1000964.JPG,4413,2190,568,563,8
+L1000965.JPG,2359,938,522,522,11
+L1000965.JPG,4116,2034,509,509,11
+L1000965.JPG,3284,1274,627,695,10
+L1000965.JPG,2812,2714,681,604,10
+L1000965.JPG,2212,1708,654,636,10
+L1000965.JPG,4054,2598,604,600,12
+L1000965.JPG,3498,2948,581,590,12
+L1000965.JPG,2764,1957,559,572,12
+L1000971.JPG,3318,2796,868,486,3
+L1000971.JPG,2162,788,799,622,3
+L1000971.JPG,3784,1562,581,590,4
+L1000971.JPG,2184,2864,590,595,4
+L1000971.JPG,3170,574,663,622,5
+L1000971.JPG,1531,1669,636,650,5
+L1000972.JPG,3474,1842,527,522,7
+L1000972.JPG,3066,2836,518,513,7
+L1000972.JPG,2773,3676,568,577,8
+L1000972.JPG,3565,1004,590,572,9
+L1000972.JPG,2316,642,536,540,6
+L1000972.JPG,2608,1151,627,604,6
+L1000974.JPG,2402,674,663,759,3
+L1000974.JPG,3508,2853,713,718,3
+L1000974.JPG,3286,1649,404,500,2
+L1000974.JPG,2714,2979,395,472,2
+L1000974.JPG,3638,2298,509,382,1
+L1000974.JPG,2180,1719,481,386,1
+L1000974.JPG,3197,1015,472,404,0
+L1000974.JPG,2904,2512,431,454,0
+L1000977.JPG,1937,2246,486,477,7
+L1000977.JPG,2636,2046,477,477,7
+L1000977.JPG,2594,3095,481,486,7
+L1000977.JPG,1658,1730,518,527,8
+L1000977.JPG,3356,2594,527,527,8
+L1000977.JPG,2012,3093,536,536,8
+L1000977.JPG,1808,1144,554,563,9
+L1000977.JPG,3329,1992,554,568,9
+L1000977.JPG,1322,2128,572,559,9
+L1000979.JPG,3252,2548,836,418,3
+L1000979.JPG,2257,694,372,863,3
+L1000979.JPG,2810,1481,531,554,4
+L1000979.JPG,3034,3441,563,550,4
+L1000979.JPG,1572,1228,445,377,0
+L1000979.JPG,1917,2494,418,427,0
+L1000979.JPG,3377,1748,386,445,0
+L1000979.JPG,732,2076,627,600,5
+L1000979.JPG,2090,3072,581,595,5
+L1000981.JPG,1200,1969,491,486,7
+L1000981.JPG,1220,1216,359,459,1
+L1000981.JPG,2039,1808,536,545,8
+L1000981.JPG,3100,1794,540,545,9
+L1000981.JPG,793,1488,604,586,5
+L1000987.JPG,2003,1522,572,563,4
+L1000987.JPG,3363,2932,568,577,4
+L1000987.JPG,1130,1815,563,550,8
+L1000987.JPG,3813,2332,540,540,8
+L1000987.JPG,3104,1240,540,536,6
+L1000987.JPG,2644,2623,518,568,6
+L1000989.JPG,906,1256,631,659,10
+L1000989.JPG,734,2416,677,627,10
+L1000989.JPG,1990,2626,609,663,10
+L1000989.JPG,2780,3073,572,586,12
+L1000989.JPG,2760,882,559,563,12
+L1000989.JPG,1732,1217,531,536,12
+L1000992.JPG,2185,1086,536,536,11
+L1000992.JPG,3684,1932,536,522,11
+L1000992.JPG,2594,3036,527,522,11
+L1000993.JPG,3538,3028,618,613,9
+L1000993.JPG,3640,3642,595,609,9
+L1000993.JPG,3877,1068,686,645,10
+L1000993.JPG,4267,2562,568,536,6
+L1000993.JPG,5148,2771,586,554,6
+L1001000.JPG,3813,1166,404,895,3
+L1001000.JPG,3720,2634,400,881,3
+L1001000.JPG,1468,736,527,536,7
+L1001000.JPG,1468,3102,527,518,7
+L1001000.JPG,1279,1383,386,486,0
+L1001000.JPG,1142,2241,404,486,0
+L1010004.JPG,1310,1686,713,745,3
+L1010004.JPG,1113,718,536,527,7
+L1010004.JPG,4182,758,577,581,4
+L1010004.JPG,3992,1771,463,436,2
+L1010004.JPG,3270,858,463,409,1
+L1010004.JPG,3488,1714,500,377,0
+L1010004.JPG,2655,820,586,613,6
+L1010004.JPG,2321,2230,636,645,5
+L1010008.JPG,4100,2636,513,759,3
+L1010008.JPG,2596,1294,731,563,3
+L1010008.JPG,2276,2228,500,486,7
+L1010008.JPG,2676,2700,481,495,7
+L1010008.JPG,3354,558,550,563,4
+L1010008.JPG,2212,2838,545,545,4
+L1010009.JPG,2946,1098,477,481,11
+L1010009.JPG,3740,2680,486,491,11
+L1010009.JPG,1581,2166,500,491,7
+L1010009.JPG,2046,2644,486,481,7
+L1010009.JPG,2553,1532,654,595,10
+L1010009.JPG,3243,2087,590,650,10
+L1010012.JPG,2357,1502,472,477,11
+L1010012.JPG,3073,2448,486,491,11
+L1010012.JPG,2028,716,513,531,8
+L1010012.JPG,1771,1231,536,518,8
+L1010012.JPG,2185,2017,572,554,9
+L1010012.JPG,3664,2401,559,550,9
+L1010012.JPG,3288,1950,636,595,10
+L1010012.JPG,2442,2635,595,600,10
+L1010012.JPG,2802,1222,554,554,12
+L1010012.JPG,3418,3120,486,491,12
+L1010014.JPG,2705,2185,486,472,7
+L1010014.JPG,3178,2324,477,477,7
+L1010014.JPG,4016,3016,445,418,2
+L1010014.JPG,4186,2398,441,327,1
+L1010014.JPG,1521,1858,372,463,0
+L1010014.JPG,982,1724,609,604,5
+L1010015.JPG,3584,3006,500,481,7
+L1010015.JPG,2212,1722,372,445,2
+L1010015.JPG,1256,1806,468,341,2
+L1010015.JPG,1297,1476,468,318,1
+L1010019.JPG,1174,2389,513,500,11
+L1010019.JPG,2796,3275,504,500,11
+L1010019.JPG,1446,1620,577,577,9
+L1010019.JPG,3168,2557,577,572,9
+L1010019.JPG,3089,1681,618,636,10
+L1010019.JPG,1231,3179,636,636,10
+L1010019.JPG,2164,1513,504,518,12
+L1010019.JPG,1992,3250,495,468,12
+L1010022.JPG,2035,1662,500,509,11
+L1010022.JPG,3144,2108,491,500,11
+L1010022.JPG,532,2923,627,640,10
+L1010022.JPG,3536,2864,622,631,10
+L1010022.JPG,812,1581,563,554,12
+L1010022.JPG,1782,2962,513,500,12
+L1010026.JPG,3636,1310,540,522,11
+L1010026.JPG,3688,1982,536,531,11
+L1010026.JPG,2141,1197,640,704,10
+L1010026.JPG,2884,2740,718,631,10
+L1010026.JPG,1385,2636,536,522,12
+L1010026.JPG,3740,2704,504,531,12
+L1010026.JPG,1392,1214,586,595,6
+L1010026.JPG,1397,1890,550,563,6
+L1010026.JPG,2122,1905,509,568,6
+L1010026.JPG,2907,1340,654,654,5
+L1010026.JPG,2882,2044,659,627,5
+L1010026.JPG,2072,2655,645,668,5
+L1010029.JPG,2121,2232,518,513,7
+L1010029.JPG,3597,2380,518,518,7
+L1010029.JPG,3582,1272,595,581,4
+L1010029.JPG,1588,2360,568,568,4
+L1010029.JPG,3016,1135,590,590,9
+L1010029.JPG,1515,2952,604,581,9
+L1010031.JPG,2478,1438,513,513,11
+L1010031.JPG,3052,1574,509,513,11
+L1010031.JPG,3804,2258,550,563,8
+L1010031.JPG,1335,2800,572,559,8
+L1010031.JPG,1494,1828,663,640,10
+L1010031.JPG,3627,3130,622,636,10
+L1010031.JPG,2298,3602,581,581,6
+L1010031.JPG,2862,3578,527,559,6
+L1010032.JPG,1337,1431,522,518,7
+L1010032.JPG,1494,2507,527,518,7
+L1010032.JPG,2023,1340,622,581,6
+L1010032.JPG,2884,949,527,554,6
+L1010032.JPG,4031,816,622,650,5
+L1010032.JPG,3967,2003,622,600,5
+L1010035.JPG,2028,2312,559,563,8
+L1010035.JPG,2782,2778,577,577,8
+L1010035.JPG,3336,393,559,568,8
+L1010035.JPG,3128,1404,595,600,9
+L1010035.JPG,3920,1858,609,609,9
+L1010035.JPG,4024,868,600,618,5
+L1010035.JPG,1230,2214,645,631,5
+L1010035.JPG,1710,3018,650,613,5
+L1010041.JPG,3066,733,454,822,3
+L1010041.JPG,1554,1406,845,359,3
+L1010041.JPG,3352,1822,509,509,12
+L1010041.JPG,2462,1876,454,481,12
+L1010041.JPG,1544,1867,554,518,12
+L1010041.JPG,1468,811,527,522,6
+L1010041.JPG,2341,910,540,513,6
+L1010045.JPG,2974,1942,445,813,3
+L1010045.JPG,2008,1038,491,486,7
+L1010045.JPG,3336,1260,531,540,4
+L1010045.JPG,629,1192,404,441,2
+L1010045.JPG,3729,1440,354,427,1
+L1010045.JPG,1578,1076,368,445,0
+L1010045.JPG,3496,1892,495,477,6
+L1010045.JPG,3772,761,595,568,5
