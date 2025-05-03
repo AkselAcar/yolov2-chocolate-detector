@@ -106,11 +106,29 @@ class YOLOv4Small(nn.Module):
             nn.Conv2d(512, (B * 5 + C), 1)
         )
 
+        self._initialize_weights() # initialisation des poids
+
     def forward(self, x):
         x = self.backbone(x) # (B, 256, H/32, W/32)
         x = self.head(x) # (B, 23, S_H, S_W)
         x = x.permute(0, 2, 3, 1) # (B, S_H, S_W, 23) pour correspondre au target
+        # appliquer sigmoid sur x, y, et conf
+        for b in range(B):
+            x[..., b * 5 + 0] = torch.sigmoid(x[..., b * 5 + 0])  # x
+            x[..., b * 5 + 1] = torch.sigmoid(x[..., b * 5 + 1])  # y
+            x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf
+
         return x
+    
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, a=0.1)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
 
 
 # === Fonction IOU === convertit (x, y, w, h) en coins (x1, y1, x2, y2) et calcule le rapport intersection over union de target et prediction
@@ -184,48 +202,97 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5): # pred et target 
 
 
 # === Affichage et sauvegarde des prédictions === affiche les boites prédites avec un score de confiance supérieur à un seuil
-def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3):
+def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
     for i in range(len(dataset)):
         img_tensor, target, fname = dataset[i]
-        img_tensor = img_tensor.unsqueeze(0).to(device)
+        img_tensor = img_tensor.unsqueeze(0).to(next(model.parameters()).device)
         with torch.no_grad():
-            pred = model(img_tensor).squeeze(0).cpu().numpy()  # (S, S, 23)
+            pred = model(img_tensor).squeeze(0).cpu().numpy()
 
         img_np = np.transpose(img_tensor.squeeze(0).cpu().numpy(), (1, 2, 0))
         plt.figure(figsize=(6, 4))
-        plt.imshow(img_np) # "dessine" l'image en mémoire, ne la dessine pas vraiment comme plt.show()
+        plt.imshow(img_np)
         ax = plt.gca()
+
+        boxes = []
+        scores = []
+        classes = []
+        trues = []
+
+        for row in range(S_H):
+            for col in range(S_W):
+                for b in range(B):
+                    offset = b * 5
+                    cell = pred[row, col]
+                    conf = cell[offset + 4]
+                    class_scores = cell[B * 5:]
+                    score = conf * np.max(class_scores)
+                    if score > score_thresh:
+                        x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
+                        class_id = np.argmax(cell[B * 5:])
+                        cx = (col + x) / S_W
+                        cy = (row + y) / S_H
+                        bw = w
+                        bh = h
+                        x1 = (cx - bw / 2) * IMG_RESIZED_W
+                        y1 = (cy - bh / 2) * IMG_RESIZED_H
+                        x2 = (cx + bw / 2) * IMG_RESIZED_W
+                        y2 = (cy + bh / 2) * IMG_RESIZED_H
+                        boxes.append([x1, y1, x2, y2])
+                        scores.append(score)
+                        classes.append(class_id)
+                        trues.append(torch.argmax(target[row, col, B * 5:]).item())
+
+        keep = non_max_suppression(boxes, scores, iou_threshold=iou_thresh)
+        for i in keep:
+            x1, y1, x2, y2 = boxes[i]
+            color = 'black' if classes[i] == trues[i] else 'red'
+            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=2)
+            ax.add_patch(rect)
 
         for x in range(1, S_W):
             plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.5)
         for y in range(1, S_H):
             plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.5)
 
-        for row in range(S_H):
-            for col in range(S_W):
-                cell = pred[row, col]
-                conf = cell[4]
-                if conf > score_thresh:
-                    x, y, w, h = cell[0], cell[1], cell[2], cell[3]
-                    class_id = np.argmax(cell[5:])
-                    cx = (col + x) / S_W
-                    cy = (row + y) / S_H
-                    bw = w
-                    bh = h
-                    x1 = (cx - bw / 2) * IMG_RESIZED_W
-                    y1 = (cy - bh / 2) * IMG_RESIZED_H
-                    x2 = (cx + bw / 2) * IMG_RESIZED_W
-                    y2 = (cy + bh / 2) * IMG_RESIZED_H
-
-                    true_class = torch.argmax(target[row, col, 5:]).item()
-                    color = 'black' if true_class == class_id else 'red'
-                    rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=2)
-                    ax.add_patch(rect)
         plt.axis('off')
         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
         plt.close()
+
+def non_max_suppression(boxes, scores, iou_threshold=0.5):
+    if len(boxes) == 0:
+        return []
+    boxes = torch.tensor(boxes)
+    scores = torch.tensor(scores)
+    x1 = boxes[:, 0]
+    y1 = boxes[:, 1]
+    x2 = boxes[:, 2]
+    y2 = boxes[:, 3]
+
+    areas = (x2 - x1) * (y2 - y1)
+    _, order = scores.sort(descending=True)
+    keep = []
+
+    while order.numel() > 0:
+        i = order[0].item()
+        keep.append(i)
+
+        if order.numel() == 1:
+            break
+
+        xx1 = x1[order[1:]].clamp(min=x1[i])
+        yy1 = y1[order[1:]].clamp(min=y1[i])
+        xx2 = x2[order[1:]].clamp(max=x2[i])
+        yy2 = y2[order[1:]].clamp(max=y2[i])
+
+        inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
+        iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-6)
+
+        order = order[1:][iou <= iou_threshold]
+
+    return keep
 
 
 # === Boucle d'entraînement ===
@@ -236,8 +303,7 @@ train_files, valid_files = train_test_split(all_files, test_size=0.2, random_sta
 
 train_transform = T.Compose([
     T.Resize((IMG_RESIZED_H, IMG_RESIZED_W)),
-    T.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
-    T.RandomHorizontalFlip(p=0.5),
+    T.RandomAffine(degrees=180, translate=(0.1, 0.1)),  # rotation jusqu'à +/-180°, translation jusqu'à ±10% sur x et y
     T.ToTensor()
 ])
 
@@ -289,5 +355,5 @@ for epoch in range(epochs):
     print(f"Valid Loss: {val_loss / len(valid_loader):.4f}")
 
     # Sauvegarde des prédictions visuelles
-    save_validation_predictions(model, valid_dataset, "images_validation_YOLO", score_thresh=0.3)
+    save_validation_predictions(model, valid_dataset, "images_validation_YOLO")
 
