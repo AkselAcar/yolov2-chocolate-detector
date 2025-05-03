@@ -402,8 +402,9 @@ print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}"
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-epochs = 30
+epochs = 700
 
+best_val_loss = float('inf')
 for epoch in range(epochs):
     model.train()
     running_loss = 0.0
@@ -415,7 +416,8 @@ for epoch in range(epochs):
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-    print(f"Train Loss: {running_loss / len(train_loader):.4f}")
+    avg_train_loss = running_loss / len(train_loader)
+    print(f"Train Loss: {avg_train_loss:.4f}")
 
     model.eval()
     val_loss = 0.0
@@ -425,8 +427,20 @@ for epoch in range(epochs):
             outputs = model(images)
             loss = yolo_loss(outputs, targets)
             val_loss += loss.item()
-    print(f"Valid Loss: {val_loss / len(valid_loader):.4f}")
+    avg_val_loss = val_loss / len(valid_loader)
+    print(f"Valid Loss: {avg_val_loss:.4f}")
 
     # Sauvegarde des prédictions visuelles
     save_validation_predictions(model, valid_dataset, "images_validation_YOLO")
 
+    # Sauvegarde du meilleur modèle complet (weights + optimizer + epoch)
+    if avg_val_loss < best_val_loss:
+        best_val_loss = avg_val_loss
+        checkpoint = {
+            'epoch': epoch + 1,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'val_loss': best_val_loss
+        }
+        torch.save(checkpoint, "checkpoint_yolov1.pth")
+        print(f"✔ Best model saved at epoch {epoch+1} with val_loss = {avg_val_loss:.4f}")
