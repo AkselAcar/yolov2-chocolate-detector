@@ -11,6 +11,7 @@ import tqdm
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
+from torchvision.transforms import functional as TF
 
 # Paramètres globaux
 IMG_W, IMG_H = 6000, 4000  # dimensions originales des images
@@ -20,6 +21,16 @@ S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
 B = 2   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+w_min_orig_size = 200 #pixels sur 6000
+w_max_orig_size = 1000 #pixels sur 6000
+h_min_orig_size = 200 #pixels sur 4000
+h_max_orig_size = 1000 #pixels sur 4000
+
+w_min = w_min_orig_size / IMG_W # largeur minimale normalisée
+w_max = w_max_orig_size / IMG_W # largeur maximale normalisée
+h_min = h_min_orig_size / IMG_H # hauteur minimale normalisée
+h_max = h_max_orig_size / IMG_H # hauteur maximale normalisée
 
 
 # === Dataset YOLO ===
@@ -33,53 +44,55 @@ class YOLODataset(Dataset):
 
     def __len__(self):
         return len(self.filenames)  # nombre d'images
-
+    
     def __getitem__(self, idx):
-        fname = self.filenames[idx]  # nom de l'image
-        img_path = os.path.join(self.img_dir, fname)  # chemin complet
-        image = Image.open(img_path).convert("RGB")  # ouverture et conversion RGB
-        image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))  # redimensionnement
-        
-        boxes = torch.zeros((S_H, S_W, B * 5 + C))  # TARGET = GROUND TRUTH (vide pour l'instant, construite plus tard) de forme (S_H, S_W, 23). Le NN voudra trouver ces boxes
-                            #(13,  20, (x1, y1, w1, h1, conf1, x2, y2, w2, h2, conf2, class1, class2, ..., class13))
-        annots = self.annotations[self.annotations['filename'] == fname]  # lignes de cette image
+        fname = self.filenames[idx] # nom de l'image
+        img_path = os.path.join(self.img_dir, fname) # chemin complet
+        image = Image.open(img_path).convert("RGB") # ouverture et conversion RGB
+
+        # Collecte les annotations de cette image
+        annots = self.annotations[self.annotations['filename'] == fname] # lignes de cette image
+        boxes_raw = []
+        class_ids = []
+
         for _, row in annots.iterrows():
             cx = row['cx'] / IMG_W # position x normalisée (0-1) sur l'image entière
             cy = row['cy'] / IMG_H # position y normalisée
-            class_id = int(row['class']) # id de classe entre 0 et C-1 (=12 ici)
+            w = row['width'] / IMG_W  # largeur relative de la box par rapport à l'image entière
+            h = row['height'] / IMG_H # hauteur relative de la box
+            boxes_raw.append([cx, cy, w, h]) # box entièrement normalisée
+            class_ids.append(int(row['class'])) # id de classe entre 0 et C-1 (=12 ici)
 
+        image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))
+        # Applique la transformation affine sur l'image ET les boîtes
+        if self.transform:
+            image, boxes_raw = self.transform(image, boxes_raw)
+
+        # Initialisation de la grille YOLO
+        boxes = torch.zeros((S_H, S_W, B * 5 + C)) # TARGET = GROUND TRUTH (vide pour l'instant, construite plus tard) de forme (S_H, S_W, 23). Le NN voudra trouver ces boxes
+                           #(13,  20, (x1, y1, w1, h1, conf1, x2, y2, w2, h2, conf2, class1, class2, ..., class13))
+        # Remplit la grille avec les boxes transformées
+        for box, class_id in zip(boxes_raw, class_ids):
+            cx, cy, w, h = box
             grid_x = int(cx * S_W) # index colonne de la cellule qui contient le centre de la box
             grid_y = int(cy * S_H) # index ligne de la cellule qui contient le centre de la box
             if grid_x >= S_W or grid_y >= S_H:
                 continue # hors grille, on saute (safety)
 
             x_cell = cx * S_W - grid_x # position relative dans la cellule (0-1)
-            y_cell = cy * S_H - grid_y
-            w = row['width'] / IMG_W # largeur relative des boîtes par rapport à l'image entière
-            h = row['height'] / IMG_H # hauteur relative des boîtes
+            y_cell = cy * S_H - grid_y 
 
-            # Génère la target
-            gt_box = torch.tensor([x_cell, y_cell, w, h])
-
-            # Calcule l'IoU avec les B boites possibles
-            ious = []
+            # Sélection de la meilleure boîte (ou la première libre ici)
+            best_b = 0
             for b in range(B):
-                pred_box = boxes[grid_y, grid_x, b * 5 : b * 5 + 4]
-                if boxes[grid_y, grid_x, b * 5 + 4] == 1:
-                    ious.append(bbox_iou(pred_box.unsqueeze(0), gt_box.unsqueeze(0)))
-                else:
-                    ious.append(torch.tensor(0.0))
-
-            best_b = torch.tensor(ious).argmax().item()
+                if boxes[grid_y, grid_x, b * 5 + 4] == 0:
+                    best_b = b
+                    break
 
             boxes[grid_y, grid_x, best_b * 5 : best_b * 5 + 5] = torch.tensor([x_cell, y_cell, w, h, 1])
             boxes[grid_y, grid_x, B * 5 + class_id] = 1
 
-
-        if self.transform:
-            image = self.transform(image)  # transformation image (ToTensor)
-
-        return image, boxes, fname  # image: (3,H,W), target: (S,S,23)
+        return image, boxes, fname # image: (3,H,W), target: (S,S,23)
 
     
 class YOLOv4Small(nn.Module):
@@ -250,8 +263,13 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         keep = non_max_suppression(boxes, scores, iou_threshold=iou_thresh)
         for i in keep:
             x1, y1, x2, y2 = boxes[i]
-            color = 'black' if classes[i] == trues[i] else 'red'
-            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=2)
+            target_vector = target[row, col, B * 5:]
+        if target_vector.sum() > 0:
+            true_class = torch.argmax(target_vector).item()
+            color = 'black' if class_id == true_class else 'red'
+        else:
+            color = 'red'
+            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=1)
             ax.add_patch(rect)
 
         for x in range(1, S_W):
@@ -304,16 +322,68 @@ all_data = pd.read_csv("../labels_YOLO.csv")
 all_files = all_data['filename'].unique()
 train_files, valid_files = train_test_split(all_files, test_size=0.2, random_state=42)
 
-train_transform = T.Compose([
-    T.Resize((IMG_RESIZED_H, IMG_RESIZED_W)),
-    T.RandomAffine(degrees=180, translate=(0.1, 0.1)),  # rotation jusqu'à +/-180°, translation jusqu'à ±10% sur x et y
-    T.ToTensor()
-])
 
-valid_transform = T.Compose([
-    T.Resize((IMG_RESIZED_H, IMG_RESIZED_W)),
-    T.ToTensor()
-])
+class RandomAffineWithBoxes:
+    def __init__(self, degrees=0, translate=(0.0, 0.0)):
+        self.degrees = degrees
+        self.translate = translate
+
+    def __call__(self, image, boxes):
+        original_image = image.copy()
+        original_boxes = boxes.copy()
+
+        angle = np.random.uniform(-self.degrees, self.degrees)
+        translate_x = int(self.translate[0] * image.size[0])
+        translate_y = int(self.translate[1] * image.size[1])
+        translate = (np.random.randint(-translate_x, translate_x+1), np.random.randint(-translate_y, translate_y+1)) # np.random.randint(a, b) est inclusif pour a et exclusif pour b d'où les +1
+
+        image = TF.affine(image, angle=angle, translate=translate, scale=1.0, shear=0)
+
+        new_boxes = []
+        for box in boxes:
+            cx, cy, w, h = box
+            cx_pix = cx * IMG_RESIZED_W
+            cy_pix = cy * IMG_RESIZED_H
+
+            corners = torch.tensor([
+                [cx_pix - w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
+                [cx_pix + w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
+                [cx_pix + w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2],
+                [cx_pix - w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2]
+            ], dtype=torch.float)
+
+            angle_rad = -angle * np.pi / 180.0 # signe inversé car axe y vers le bas
+            rot_matrix = torch.tensor([
+                [np.cos(angle_rad), -np.sin(angle_rad)],
+                [np.sin(angle_rad),  np.cos(angle_rad)]
+            ], dtype=torch.float)
+
+            center = torch.tensor([IMG_RESIZED_W / 2, IMG_RESIZED_H / 2], dtype=torch.float)
+            rotated = (corners - center) @ rot_matrix.T + center
+            rotated += torch.tensor(translate, dtype=torch.float)
+
+            x_coords = rotated[:, 0].clamp(0, IMG_RESIZED_W)
+            y_coords = rotated[:, 1].clamp(0, IMG_RESIZED_H)
+            new_cx = (x_coords.min() + x_coords.max()) / 2 / IMG_RESIZED_W
+            new_cy = (y_coords.min() + y_coords.max()) / 2 / IMG_RESIZED_H
+            new_w = (x_coords.max() - x_coords.min()) / IMG_RESIZED_W
+            new_h = (y_coords.max() - y_coords.min()) / IMG_RESIZED_H
+
+            if (
+                0 <= new_cx <= 1 and 0 <= new_cy <= 1 and
+                0 < new_w <= 1 and 0 < new_h <= 1
+            ): # on vérifie que la boîte est toujours dans l'image
+                new_boxes.append([new_cx, new_cy, new_w, new_h])
+
+        # Si toutes les boîtes sont invalides, on annule la transformation
+        if len(new_boxes) == 0:
+            return TF.to_tensor(original_image), original_boxes
+        
+        return TF.to_tensor(image), new_boxes
+
+# Remplace la transformation simple par la version custom
+train_transform = RandomAffineWithBoxes(degrees=180, translate=(0.1, 0.1))
+valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
 train_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", train_files, train_transform)
 valid_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", valid_files, valid_transform)
