@@ -64,7 +64,7 @@ class YOLODataset(Dataset):
             class_ids.append(int(row['class'])) # id de classe entre 0 et C-1 (=12 ici)
 
         image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))
-        # Applique la transformation affine sur l'image ET les boîtes
+        # Applique la transformation affine sur l'image ET les boîtes, transform a été créée de manière à prendre l'image redimensionnée
         if self.transform:
             image, boxes_raw = self.transform(image, boxes_raw)
 
