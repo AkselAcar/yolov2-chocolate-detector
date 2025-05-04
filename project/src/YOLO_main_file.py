@@ -294,7 +294,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
 """
 
 
-def yolo_loss(pred, target, lambda_coord=10, lambda_noobj=5, lambda_count=1.0):
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=1, lambda_count=1.0):
     total_loss = 0.0
 
     for b in range(B):
@@ -331,7 +331,7 @@ def yolo_loss(pred, target, lambda_coord=10, lambda_noobj=5, lambda_count=1.0):
     if class_mask.sum() > 0:
         class_loss = F.cross_entropy(
             pred[class_mask][..., B*5 : B*5+C],
-            torch.argmax(target[class_mask][..., B*5 : B*5+C], dim=-1)
+            torch.argmax(target[class_mask][..., B*5 : B*5+C], dim=-1),
         )
     else:
         class_loss = torch.tensor(0.0, device=pred.device)
@@ -353,10 +353,161 @@ def yolo_loss(pred, target, lambda_coord=10, lambda_noobj=5, lambda_count=1.0):
     return total_loss
 
 import shutil
-def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
-    #if os.path.exists(output_dir):
-    #    shutil.rmtree(output_dir)
+# def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
+#     #if os.path.exists(output_dir):
+#     #    shutil.rmtree(output_dir)
 
+#     if os.path.exists(output_dir):
+#         for f in os.listdir(output_dir):
+#             if f.endswith(".png"):
+#                 os.remove(os.path.join(output_dir, f))
+
+#     os.makedirs(output_dir, exist_ok=True)
+#     model.eval()
+#     for i in range(len(dataset)):
+#         img_tensor, target, fname = dataset[i]
+#         img_tensor = img_tensor.unsqueeze(0).to(next(model.parameters()).device)
+#         with torch.no_grad():
+#             pred = model(img_tensor).squeeze(0).cpu().numpy()
+
+#         img_np = np.transpose(img_tensor.squeeze(0).cpu().numpy(), (1, 2, 0))
+#         plt.figure(figsize=(6, 4))
+#         plt.imshow(img_np)
+#         ax = plt.gca()
+
+#         boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
+
+#         for row in range(S_H):
+#             for col in range(S_W):
+#                 for b in range(B):
+#                     offset = b * 5
+#                     cell = pred[row, col]
+                    
+#                     # Apply sigmoid to confidence
+#                     conf = 1 / (1 + np.exp(-cell[offset + 4]))
+                    
+#                     # Apply softmax to class scores
+#                     class_scores = cell[B*5:]
+#                     class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
+#                     score = conf * np.max(class_probs)
+#                     class_id = np.argmax(class_probs)
+
+#                     if score > score_thresh:
+#                         x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
+#                         #class_id = np.argmax(class_scores)
+#                         cx = (col + x) / S_W
+#                         cy = (row + y) / S_H
+#                         x1 = max(0, (cx - w / 2) * IMG_RESIZED_W)
+#                         y1 = max(0, (cy - h / 2) * IMG_RESIZED_H)
+#                         x2 = min(IMG_RESIZED_W, (cx + w / 2) * IMG_RESIZED_W)
+#                         y2 = min(IMG_RESIZED_H, (cy + h / 2) * IMG_RESIZED_H)
+
+#                         if target[row, col, B * 5:].sum() > 0:
+#                             true_class = torch.argmax(target[row, col, B * 5:]).item()
+#                         else:
+#                             true_class = -1  # signifie qu'aucun objet n'est présent
+#                         boxes_info.append({
+#                             'box': [x1, y1, x2, y2],
+#                             'score': score,
+#                             'class_id': class_id,
+#                             'true_class': true_class,
+#                             'row': row,
+#                             'col': col
+#                         })
+
+#         # NMS et affichage final
+#        # keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
+
+#         keep = []
+#         class_to_boxes = {}  # {class_id: [box_indices]}
+
+#         # Group boxes by class
+#         for idx, info in enumerate(boxes_info):
+#             cls = info['class_id']
+#             if cls not in class_to_boxes:
+#                 class_to_boxes[cls] = []
+#             class_to_boxes[cls].append(idx)
+
+#         # Apply NMS per class
+#         for cls, indices in class_to_boxes.items():
+#             cls_boxes = [boxes_info[i]['box'] for i in indices]
+#             cls_scores = [boxes_info[i]['score'] for i in indices]
+#             cls_keep = non_max_suppression(cls_boxes, cls_scores, iou_thresh)
+#             keep.extend([indices[i] for i in cls_keep])
+
+#         for i in keep:
+#             info = boxes_info[i]
+#             x1, y1, x2, y2 = info['box']
+#             class_id = info['class_id']
+#             true_class = info['true_class']
+#             color = 'black' if class_id == true_class and true_class != -1 else 'red'
+#             rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=1)
+#             ax.add_patch(rect)
+
+#         for x in range(1, S_W):
+#             plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.5)
+#         for y in range(1, S_H):
+#             plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.5)
+
+#         plt.axis('off')
+#         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
+#         plt.close()
+
+# def non_max_suppression(boxes, scores, iou_threshold=0.5, img_width=IMG_RESIZED_W, img_height=IMG_RESIZED_H):
+#     """
+#     Args:
+#         boxes: List of [x1, y1, x2, y2] in pixel coordinates
+#         scores: List of confidence scores
+#         iou_threshold: Threshold for IoU to consider overlap
+#         img_width: Width of the resized image
+#         img_height: Height of the resized image
+#     """
+#     if len(boxes) == 0:
+#         return []
+    
+#     # Convert to tensors and clamp coordinates to image boundaries
+#     boxes = torch.tensor(boxes)
+#     boxes[:, 0] = torch.clamp(boxes[:, 0], min=0, max=img_width)   # x1
+#     boxes[:, 1] = torch.clamp(boxes[:, 1], min=0, max=img_height)  # y1
+#     boxes[:, 2] = torch.clamp(boxes[:, 2], min=0, max=img_width)   # x2
+#     boxes[:, 3] = torch.clamp(boxes[:, 3], min=0, max=img_height)  # y2
+    
+#     scores = torch.tensor(scores)
+    
+#     # Calculate areas of all boxes
+#     areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    
+#     # Sort indices by descending scores
+#     _, order = scores.sort(descending=True)
+#     keep = []
+    
+#     while order.numel() > 0:
+#         # Pick the highest-scoring box
+#         i = order[0].item()
+#         keep.append(i)
+        
+#         if order.numel() == 1:
+#             break
+        
+#         # Compute IoU between the picked box and the rest
+#         xx1 = torch.max(boxes[i, 0], boxes[order[1:], 0])
+#         yy1 = torch.max(boxes[i, 1], boxes[order[1:], 1])
+#         xx2 = torch.min(boxes[i, 2], boxes[order[1:], 2])
+#         yy2 = torch.min(boxes[i, 3], boxes[order[1:], 3])
+        
+#         inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
+#         iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-6)
+        
+#         # Keep boxes with IoU <= threshold
+#         mask = iou <= iou_threshold
+#         order = order[1:][mask]
+    
+#     return keep
+
+
+def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
+    from collections import defaultdict
+    
     if os.path.exists(output_dir):
         for f in os.listdir(output_dir):
             if f.endswith(".png"):
@@ -364,9 +515,11 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
 
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
+    
     for i in range(len(dataset)):
         img_tensor, target, fname = dataset[i]
         img_tensor = img_tensor.unsqueeze(0).to(next(model.parameters()).device)
+        
         with torch.no_grad():
             pred = model(img_tensor).squeeze(0).cpu().numpy()
 
@@ -375,121 +528,109 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         plt.imshow(img_np)
         ax = plt.gca()
 
-        boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
+        boxes_info = []
 
-    for row in range(S_H):
-        for col in range(S_W):
-            for b in range(B):
-                offset = b * 5
-                cell = pred[row, col]
-                
-                # Apply sigmoid to confidence
-                conf = 1 / (1 + np.exp(-cell[offset + 4]))
-                
-                # Apply softmax to class scores
-                class_scores = cell[B*5:]
-                class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
-                score = conf * np.max(class_probs)
-                class_id = np.argmax(class_probs)
+        # ========== CRITICAL FIX: PROPER INDENTATION ==========
+        for row in range(S_H):
+            for col in range(S_W):
+                for b in range(B):
+                    offset = b * 5
+                    cell = pred[row, col]
+                    
+                    # Process confidence and class scores
+                    conf = 1 / (1 + np.exp(-cell[offset + 4]))  # Sigmoid
+                    class_scores = cell[B*5:]
+                    class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
+                    score = conf * np.max(class_probs)
+                    class_id = np.argmax(class_probs)
 
-                if score > score_thresh:
+                    if score > score_thresh:
                         x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
-                        #class_id = np.argmax(class_scores)
+                        
+                        # Calculate box coordinates with clamping
                         cx = (col + x) / S_W
                         cy = (row + y) / S_H
-                        x1 = max(0, (cx - w / 2) * IMG_RESIZED_W)
-                        y1 = max(0, (cy - h / 2) * IMG_RESIZED_H)
-                        x2 = min(IMG_RESIZED_W, (cx + w / 2) * IMG_RESIZED_W)
-                        y2 = min(IMG_RESIZED_H, (cy + h / 2) * IMG_RESIZED_H)
+                        x1 = max(0, (cx - w/2) * IMG_RESIZED_W)
+                        y1 = max(0, (cy - h/2) * IMG_RESIZED_H)
+                        x2 = min(IMG_RESIZED_W, (cx + w/2) * IMG_RESIZED_W)
+                        y2 = min(IMG_RESIZED_H, (cy + h/2) * IMG_RESIZED_H)
 
-                        if target[row, col, B * 5:].sum() > 0:
-                            true_class = torch.argmax(target[row, col, B * 5:]).item()
-                        else:
-                            true_class = -1  # signifie qu'aucun objet n'est présent
+                        # Get true class if present
+                        true_class = -1
+                        if target[row, col, B*5:].sum() > 0:
+                            true_class = torch.argmax(target[row, col, B*5:]).item()
+
                         boxes_info.append({
                             'box': [x1, y1, x2, y2],
                             'score': score,
                             'class_id': class_id,
-                            'true_class': true_class,
-                            'row': row,
-                            'col': col
+                            'true_class': true_class
                         })
 
-        # NMS et affichage final
-       # keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
-
+        # ========== CLASS-AWARE NMS ==========
         keep = []
-        class_to_boxes = {}  # {class_id: [box_indices]}
-
+        class_groups = defaultdict(list)
+        
         # Group boxes by class
         for idx, info in enumerate(boxes_info):
-            cls = info['class_id']
-            if cls not in class_to_boxes:
-                class_to_boxes[cls] = []
-            class_to_boxes[cls].append(idx)
+            class_groups[info['class_id']].append(idx)
 
-        # Apply NMS per class
-        for cls, indices in class_to_boxes.items():
+        # Process each class separately
+        for cls, indices in class_groups.items():
             cls_boxes = [boxes_info[i]['box'] for i in indices]
             cls_scores = [boxes_info[i]['score'] for i in indices]
             cls_keep = non_max_suppression(cls_boxes, cls_scores, iou_thresh)
             keep.extend([indices[i] for i in cls_keep])
 
+        # Remove duplicate indices
+        keep = list(set(keep))
+
+        # Draw final boxes
         for i in keep:
             info = boxes_info[i]
             x1, y1, x2, y2 = info['box']
-            class_id = info['class_id']
-            true_class = info['true_class']
-            color = 'black' if class_id == true_class and true_class != -1 else 'red'
-            rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=1)
+            color = 'green' if info['class_id'] == info['true_class'] else 'red'
+            rect = plt.Rectangle((x1, y1), x2-x1, y2-y1, 
+                               edgecolor=color, facecolor='none', lw=1)
             ax.add_patch(rect)
 
+        # Draw grid lines
         for x in range(1, S_W):
-            plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.5)
+            plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.3)
         for y in range(1, S_H):
-            plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.5)
+            plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.3)
 
         plt.axis('off')
-        plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
+        plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")), 
+                    bbox_inches='tight', pad_inches=0)
         plt.close()
 
-def non_max_suppression(boxes, scores, iou_threshold=0.5, img_width=IMG_RESIZED_W, img_height=IMG_RESIZED_H):
-    """
-    Args:
-        boxes: List of [x1, y1, x2, y2] in pixel coordinates
-        scores: List of confidence scores
-        iou_threshold: Threshold for IoU to consider overlap
-        img_width: Width of the resized image
-        img_height: Height of the resized image
-    """
+def non_max_suppression(boxes, scores, iou_threshold=0.5):
+    """Class-agnostic NMS for boxes of the same class"""
     if len(boxes) == 0:
         return []
     
-    # Convert to tensors and clamp coordinates to image boundaries
     boxes = torch.tensor(boxes)
-    boxes[:, 0] = torch.clamp(boxes[:, 0], min=0, max=img_width)   # x1
-    boxes[:, 1] = torch.clamp(boxes[:, 1], min=0, max=img_height)  # y1
-    boxes[:, 2] = torch.clamp(boxes[:, 2], min=0, max=img_width)   # x2
-    boxes[:, 3] = torch.clamp(boxes[:, 3], min=0, max=img_height)  # y2
-    
     scores = torch.tensor(scores)
     
-    # Calculate areas of all boxes
+    # Clamp coordinates to image boundaries
+    boxes[:, 0] = boxes[:, 0].clamp(0, IMG_RESIZED_W)
+    boxes[:, 1] = boxes[:, 1].clamp(0, IMG_RESIZED_H)
+    boxes[:, 2] = boxes[:, 2].clamp(0, IMG_RESIZED_W)
+    boxes[:, 3] = boxes[:, 3].clamp(0, IMG_RESIZED_H)
+    
     areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    order = scores.argsort(descending=True)
     
-    # Sort indices by descending scores
-    _, order = scores.sort(descending=True)
     keep = []
-    
     while order.numel() > 0:
-        # Pick the highest-scoring box
-        i = order[0].item()
-        keep.append(i)
+        i = order[0]
+        keep.append(i.item())
         
         if order.numel() == 1:
             break
         
-        # Compute IoU between the picked box and the rest
+        # Calculate IoU with remaining boxes
         xx1 = torch.max(boxes[i, 0], boxes[order[1:], 0])
         yy1 = torch.max(boxes[i, 1], boxes[order[1:], 1])
         xx2 = torch.min(boxes[i, 2], boxes[order[1:], 2])
@@ -498,12 +639,9 @@ def non_max_suppression(boxes, scores, iou_threshold=0.5, img_width=IMG_RESIZED_
         inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
         iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-6)
         
-        # Keep boxes with IoU <= threshold
-        mask = iou <= iou_threshold
-        order = order[1:][mask]
+        order = order[1:][iou <= iou_threshold]
     
     return keep
-
 
 all_data = pd.read_csv("../labels_YOLO.csv")
 all_files = all_data['filename'].unique()
@@ -589,7 +727,8 @@ print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}"
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-epochs = 30
+
+epochs = 60
 
 best_val_loss = float('inf')
 for epoch in range(epochs):
