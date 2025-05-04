@@ -74,6 +74,10 @@ class YOLODataset(Dataset):
         # Remplit la grille avec les boxes transformées
         for box, class_id in zip(boxes_raw, class_ids):
             cx, cy, w, h = box
+            # Clip w et h aux bornes définies (utile si rotation ou bruit)
+            w = min(max(w, w_min), w_max)
+            h = min(max(h, h_min), h_max)
+
             grid_x = int(cx * S_W) # index colonne de la cellule qui contient le centre de la box
             grid_y = int(cy * S_H) # index ligne de la cellule qui contient le centre de la box
             if grid_x >= S_W or grid_y >= S_H:
@@ -129,7 +133,7 @@ class YOLOv4Small(nn.Module):
         for b in range(B):
             x[..., b * 5 + 0] = torch.sigmoid(x[..., b * 5 + 0])  # x
             x[..., b * 5 + 1] = torch.sigmoid(x[..., b * 5 + 1])  # y
-            x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf
+            #x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf (commenté car new loss with BCE)
             
             x[..., b * 5 + 2] = w_min + (w_max - w_min) * torch.sigmoid(x[..., b * 5 + 2])  # w
             x[..., b * 5 + 3] = h_min + (h_max - h_min) * torch.sigmoid(x[..., b * 5 + 3])  # h
@@ -176,9 +180,9 @@ def bbox_iou(box1, box2):
     union_area = area1 + area2 - inter_area
 
     return inter_area / (union_area + 1e-6)  # pour éviter division par 0
-
+"""
 # === Nouvelle fonction de perte YOLO avec B boîtes ===
-def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5): # pred et target sont de forme (B, S_H, S_W, 23) = sortie du réseau
+def yolo_loss(pred, target, lambda_coord=5.0, lambda_noobj=0.5, lambda_count=1.0): # pred et target sont de forme (B, S_H, S_W, 23) = sortie du réseau
     total_loss = 0.0
 
     for b in range(B): # => b = 0 ou 1 si B=2
@@ -198,7 +202,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5): # pred et target 
                          )
             # Confiance : on veut que la boite responsable prévoie une confiance proche de 1 et les autres boites proches de 0
             conf_loss_obj = F.mse_loss(box_pred[obj_mask][..., 4], box_target[obj_mask][..., 4])
-        else: # Si pas d'objet dans la cellule, on ne calcule pas la perte (pour éviter loss nan)
+        else: # Si pas d'objet dans la cellule, on ne calcule pas la perte (pour éviter loss nan) PEUT ETRE BOFFFFF
             coord_loss = torch.tensor(0.0, device=pred.device)
             conf_loss_obj = torch.tensor(0.0, device=pred.device)
 
@@ -213,11 +217,153 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5): # pred et target 
     ) if class_mask.sum() > 0 else torch.tensor(0.0, device=pred.device)
 
     total_loss += class_loss
+
+    # === 🔢 Ajout : count_loss ===
+    true_counts = target[..., B * 5 : B * 5 + C].sum(dim=(0, 1))  # (C,)
+    pred_class_probs = pred[..., B * 5 : B * 5 + C]  # (S_H, S_W, C)
+    pred_conf = pred[..., [b * 5 + 4 for b in range(B)]].max(dim=-1).values.unsqueeze(-1)  # (S_H, S_W, 1)
+    pred_counts = (pred_class_probs * pred_conf).sum(dim=(0, 1))  # (C,)
+
+    count_loss = F.mse_loss(pred_counts, true_counts)
+    total_loss += lambda_count * count_loss
+
     return total_loss
 
+"""
+"""
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0): # pred et target sont de forme (B, S_H, S_W, 23) = sortie du réseau
+    total_loss = 0.0
 
-# === Affichage et sauvegarde des prédictions === affiche les boites prédites avec un score de confiance supérieur à un seuil
+    for b in range(B): # => b = 0 ou 1 si B=2
+        # Indices pour la boîte b
+        box_pred = pred[..., b * 5 : b * 5 + 5]
+        box_target = target[..., b * 5 : b * 5 + 5]
+
+        obj_mask = box_target[..., 4] == 1  # boîte b est responsable
+        cell_has_any_object = target[..., 4::5].any(dim=-1)  # (S_H, S_W)
+        noobj_mask = ~cell_has_any_object  # cellule totalement vide
+
+        # --- Coordinate + Confidence (obj) ---
+        if obj_mask.sum() > 0:
+            coord_loss = lambda_coord * (
+                F.mse_loss(box_pred[obj_mask][..., 0:2], box_target[obj_mask][..., 0:2]) +
+                F.mse_loss(
+                    torch.sqrt(torch.clamp(box_pred[obj_mask][..., 2:4], min=1e-6)),
+                    torch.sqrt(box_target[obj_mask][..., 2:4])
+                )
+            )
+            conf_loss_obj = F.binary_cross_entropy_with_logits(
+                box_pred[obj_mask][..., 4],
+                box_target[obj_mask][..., 4]
+            )
+        else:
+            coord_loss = torch.tensor(0.0, device=pred.device)
+            conf_loss_obj = torch.tensor(0.0, device=pred.device)
+
+        # --- Confidence (noobj) ---
+        conf_loss_noobj = F.binary_cross_entropy_with_logits(
+            box_pred[noobj_mask][..., 4],
+            box_target[noobj_mask][..., 4]
+        )
+
+        total_loss += coord_loss + conf_loss_obj + lambda_noobj * conf_loss_noobj
+
+    # --- Classification ---
+    class_mask = target[..., B * 5 : B * 5 + C].sum(dim=-1) > 0
+    if class_mask.sum() > 0:
+        class_loss = F.cross_entropy(
+            pred[class_mask][..., B * 5 : B * 5 + C],
+            torch.argmax(target[class_mask][..., B * 5 : B * 5 + C], dim=-1)
+        )
+    else:
+        class_loss = torch.tensor(0.0, device=pred.device)
+
+    total_loss += class_loss
+
+    # --- Counting loss ---
+    true_counts = target[..., B * 5 : B * 5 + C].sum(dim=(0, 1))  # (C,)
+    pred_class_probs = torch.sigmoid(pred[..., B * 5 : B * 5 + C])  # (S_H, S_W, C)
+    pred_conf_logits = pred[..., [b * 5 + 4 for b in range(B)]]  # (S_H, S_W, B)
+    pred_conf = torch.sigmoid(pred_conf_logits).max(dim=-1).values.unsqueeze(-1)  # (S_H, S_W, 1)
+    pred_counts = (pred_class_probs * pred_conf).sum(dim=(0, 1))  # (C,)
+    count_loss = F.mse_loss(pred_counts, true_counts)
+
+    total_loss += lambda_count * count_loss
+
+    return total_loss
+"""
+
+
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
+    total_loss = 0.0
+
+    # --- Coordinate/Confidence Loss ---
+    for b in range(B):
+        box_pred = pred[..., b*5 : b*5+5]
+        box_target = target[..., b*5 : b*5+5]
+
+        obj_mask = box_target[..., 4] == 1
+        cell_has_any_object = target[..., 4::5].any(dim=-1)
+        noobj_mask = ~cell_has_any_object
+
+        # Coordinate loss
+        if obj_mask.sum() > 0:
+            coord_loss = lambda_coord * (
+                F.mse_loss(box_pred[obj_mask][..., :2], box_target[obj_mask][..., :2]) +
+                F.mse_loss(
+                    torch.sqrt(box_pred[obj_mask][..., 2:4].clamp(min=1e-6)),
+                    torch.sqrt(box_target[obj_mask][..., 2:4])
+                )
+            )
+            conf_loss_obj = F.binary_cross_entropy_with_logits(
+                box_pred[obj_mask][..., 4], box_target[obj_mask][..., 4]
+            )
+        else:
+            coord_loss = torch.tensor(0.0, device=pred.device)
+            conf_loss_obj = torch.tensor(0.0, device=pred.device)
+
+        # No-object confidence loss
+        conf_loss_noobj = F.binary_cross_entropy_with_logits(
+            box_pred[noobj_mask][..., 4], box_target[noobj_mask][..., 4]
+        )
+        total_loss += coord_loss + conf_loss_obj + lambda_noobj * conf_loss_noobj
+
+    # --- Classification Loss ---
+    class_mask = target[..., B*5 : B*5+C].sum(dim=-1) > 0
+    if class_mask.sum() > 0:
+        class_loss = F.cross_entropy(
+            pred[class_mask][..., B*5 : B*5+C],
+            torch.argmax(target[class_mask][..., B*5 : B*5+C], dim=-1)
+        )
+    else:
+        class_loss = torch.tensor(0.0, device=pred.device)
+    total_loss += class_loss
+
+    # --- Counting Loss (Fixed) ---
+    true_counts = target[..., B*5 : B*5+C].sum(dim=(0, 1))  # (C,)
+    
+    # Get class probabilities (softmax for mutually exclusive classes)
+    pred_class_probs = F.softmax(pred[..., B*5 : B*5+C], dim=-1)  # (S_H, S_W, C)
+    # Get max confidence per cell across all boxes
+    pred_conf = torch.sigmoid(pred[..., 4::5]).max(dim=-1).values  # (S_H, S_W)
+    # Aggregate predicted counts
+    pred_counts = (pred_class_probs * pred_conf.unsqueeze(-1)).sum(dim=(0, 1))  # (C,)
+    # Use Poisson loss for counting
+    count_loss = F.poisson_nll_loss(pred_counts, true_counts, log_input=False)
+    total_loss += lambda_count * count_loss
+
+    return total_loss
+
+import shutil
 def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
+    #if os.path.exists(output_dir):
+    #    shutil.rmtree(output_dir)
+
+    if os.path.exists(output_dir):
+        for f in os.listdir(output_dir):
+            if f.endswith(".png"):
+                os.remove(os.path.join(output_dir, f))
+
     os.makedirs(output_dir, exist_ok=True)
     model.eval()
     for i in range(len(dataset)):
@@ -231,10 +377,7 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         plt.imshow(img_np)
         ax = plt.gca()
 
-        boxes = []
-        scores = []
-        classes = []
-        trues = []
+        boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
 
         for row in range(S_H):
             for col in range(S_W):
@@ -244,31 +387,39 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                     conf = cell[offset + 4]
                     class_scores = cell[B * 5:]
                     score = conf * np.max(class_scores)
+
                     if score > score_thresh:
                         x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
-                        class_id = np.argmax(cell[B * 5:])
+                        class_id = np.argmax(class_scores)
                         cx = (col + x) / S_W
                         cy = (row + y) / S_H
-                        bw = w
-                        bh = h
-                        x1 = (cx - bw / 2) * IMG_RESIZED_W
-                        y1 = (cy - bh / 2) * IMG_RESIZED_H
-                        x2 = (cx + bw / 2) * IMG_RESIZED_W
-                        y2 = (cy + bh / 2) * IMG_RESIZED_H
-                        boxes.append([x1, y1, x2, y2])
-                        scores.append(score)
-                        classes.append(class_id)
-                        trues.append(torch.argmax(target[row, col, B * 5:]).item())
+                        x1 = (cx - w / 2) * IMG_RESIZED_W
+                        y1 = (cy - h / 2) * IMG_RESIZED_H
+                        x2 = (cx + w / 2) * IMG_RESIZED_W
+                        y2 = (cy + h / 2) * IMG_RESIZED_H
 
-        keep = non_max_suppression(boxes, scores, iou_threshold=iou_thresh)
+                        if target[row, col, B * 5:].sum() > 0:
+                            true_class = torch.argmax(target[row, col, B * 5:]).item()
+                        else:
+                            true_class = -1  # signifie qu'aucun objet n'est présent
+                        boxes_info.append({
+                            'box': [x1, y1, x2, y2],
+                            'score': score,
+                            'class_id': class_id,
+                            'true_class': true_class,
+                            'row': row,
+                            'col': col
+                        })
+
+        # NMS et affichage final
+        keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
+
         for i in keep:
-            x1, y1, x2, y2 = boxes[i]
-            target_vector = target[row, col, B * 5:]
-        if target_vector.sum() > 0:
-            true_class = torch.argmax(target_vector).item()
-            color = 'black' if class_id == true_class else 'red'
-        else:
-            color = 'red'
+            info = boxes_info[i]
+            x1, y1, x2, y2 = info['box']
+            class_id = info['class_id']
+            true_class = info['true_class']
+            color = 'black' if class_id == true_class and true_class != -1 else 'red'
             rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=1)
             ax.add_patch(rect)
 
@@ -280,7 +431,6 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         plt.axis('off')
         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
         plt.close()
-        
 
 def non_max_suppression(boxes, scores, iou_threshold=0.5):
     if len(boxes) == 0:
@@ -316,11 +466,10 @@ def non_max_suppression(boxes, scores, iou_threshold=0.5):
     return keep
 
 
-# === Boucle d'entraînement ===
 
 all_data = pd.read_csv("../labels_YOLO.csv")
 all_files = all_data['filename'].unique()
-train_files, valid_files = train_test_split(all_files, test_size=0.2, random_state=42)
+train_files, valid_files = train_test_split(all_files, test_size=0.2) # , random_state=42 si on veut la même répartition à chaque fois
 
 
 class RandomAffineWithBoxes:
@@ -382,7 +531,7 @@ class RandomAffineWithBoxes:
         return TF.to_tensor(image), new_boxes
 
 # Remplace la transformation simple par la version custom
-train_transform = RandomAffineWithBoxes(degrees=180, translate=(0.1, 0.1))
+train_transform = RandomAffineWithBoxes(degrees=20, translate=(0.1, 0.1))
 valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
 train_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", train_files, train_transform)
@@ -402,7 +551,7 @@ print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}"
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-epochs = 700
+epochs = 30
 
 best_val_loss = float('inf')
 for epoch in range(epochs):
@@ -425,13 +574,13 @@ for epoch in range(epochs):
         images, targets = images.to(device), targets.to(device)
         with torch.no_grad():
             outputs = model(images)
-            loss = yolo_loss(outputs, targets)
+            loss = yolo_loss(outputs, targets, lambda_coord=5.0, lambda_noobj=5.0, lambda_count=1.0)
             val_loss += loss.item()
     avg_val_loss = val_loss / len(valid_loader)
     print(f"Valid Loss: {avg_val_loss:.4f}")
 
     # Sauvegarde des prédictions visuelles
-    save_validation_predictions(model, valid_dataset, "images_validation_YOLO")
+    save_validation_predictions(model, valid_dataset, "images_validation_YOLO", score_thresh=0.6, iou_thresh=0.6)
 
     # Sauvegarde du meilleur modèle complet (weights + optimizer + epoch)
     if avg_val_loss < best_val_loss:
