@@ -294,19 +294,17 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
 """
 
 
-def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
+def yolo_loss(pred, target, lambda_coord=10, lambda_noobj=5, lambda_count=1.0):
     total_loss = 0.0
 
-    # --- Coordinate/Confidence Loss ---
     for b in range(B):
         box_pred = pred[..., b*5 : b*5+5]
         box_target = target[..., b*5 : b*5+5]
 
         obj_mask = box_target[..., 4] == 1
-        cell_has_any_object = target[..., 4::5].any(dim=-1)
-        noobj_mask = ~cell_has_any_object
+        noobj_mask = box_target[..., 4] == 0  # Corrected: per anchor
 
-        # Coordinate loss
+        # Coordinate loss (unchanged)
         if obj_mask.sum() > 0:
             coord_loss = lambda_coord * (
                 F.mse_loss(box_pred[obj_mask][..., :2], box_target[obj_mask][..., :2]) +
@@ -322,7 +320,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
             coord_loss = torch.tensor(0.0, device=pred.device)
             conf_loss_obj = torch.tensor(0.0, device=pred.device)
 
-        # No-object confidence loss
+        # No-object confidence loss (corrected mask)
         conf_loss_noobj = F.binary_cross_entropy_with_logits(
             box_pred[noobj_mask][..., 4], box_target[noobj_mask][..., 4]
         )
@@ -379,18 +377,24 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
 
         boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
 
-        for row in range(S_H):
-            for col in range(S_W):
-                for b in range(B):
-                    offset = b * 5
-                    cell = pred[row, col]
-                    conf = cell[offset + 4]
-                    class_scores = cell[B * 5:]
-                    score = conf * np.max(class_scores)
+    for row in range(S_H):
+        for col in range(S_W):
+            for b in range(B):
+                offset = b * 5
+                cell = pred[row, col]
+                
+                # Apply sigmoid to confidence
+                conf = 1 / (1 + np.exp(-cell[offset + 4]))
+                
+                # Apply softmax to class scores
+                class_scores = cell[B*5:]
+                class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
+                score = conf * np.max(class_probs)
+                class_id = np.argmax(class_probs)
 
-                    if score > score_thresh:
+                if score > score_thresh:
                         x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
-                        class_id = np.argmax(class_scores)
+                        #class_id = np.argmax(class_scores)
                         cx = (col + x) / S_W
                         cy = (row + y) / S_H
                         x1 = (cx - w / 2) * IMG_RESIZED_W
@@ -432,39 +436,56 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
         plt.close()
 
-def non_max_suppression(boxes, scores, iou_threshold=0.5):
+def non_max_suppression(boxes, scores, iou_threshold=0.5, img_width=IMG_RESIZED_W, img_height=IMG_RESIZED_H):
+    """
+    Args:
+        boxes: List of [x1, y1, x2, y2] in pixel coordinates
+        scores: List of confidence scores
+        iou_threshold: Threshold for IoU to consider overlap
+        img_width: Width of the resized image
+        img_height: Height of the resized image
+    """
     if len(boxes) == 0:
         return []
+    
+    # Convert to tensors and clamp coordinates to image boundaries
     boxes = torch.tensor(boxes)
+    boxes[:, 0] = torch.clamp(boxes[:, 0], min=0, max=img_width)   # x1
+    boxes[:, 1] = torch.clamp(boxes[:, 1], min=0, max=img_height)  # y1
+    boxes[:, 2] = torch.clamp(boxes[:, 2], min=0, max=img_width)   # x2
+    boxes[:, 3] = torch.clamp(boxes[:, 3], min=0, max=img_height)  # y2
+    
     scores = torch.tensor(scores)
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
-    x2 = boxes[:, 2]
-    y2 = boxes[:, 3]
-
-    areas = (x2 - x1) * (y2 - y1)
+    
+    # Calculate areas of all boxes
+    areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
+    
+    # Sort indices by descending scores
     _, order = scores.sort(descending=True)
     keep = []
-
+    
     while order.numel() > 0:
+        # Pick the highest-scoring box
         i = order[0].item()
         keep.append(i)
-
+        
         if order.numel() == 1:
             break
-
-        xx1 = x1[order[1:]].clamp(min=x1[i])
-        yy1 = y1[order[1:]].clamp(min=y1[i])
-        xx2 = x2[order[1:]].clamp(max=x2[i])
-        yy2 = y2[order[1:]].clamp(max=y2[i])
-
+        
+        # Compute IoU between the picked box and the rest
+        xx1 = torch.max(boxes[i, 0], boxes[order[1:], 0])
+        yy1 = torch.max(boxes[i, 1], boxes[order[1:], 1])
+        xx2 = torch.min(boxes[i, 2], boxes[order[1:], 2])
+        yy2 = torch.min(boxes[i, 3], boxes[order[1:], 3])
+        
         inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
         iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-6)
-
-        order = order[1:][iou <= iou_threshold]
-
+        
+        # Keep boxes with IoU <= threshold
+        mask = iou <= iou_threshold
+        order = order[1:][mask]
+    
     return keep
-
 
 
 all_data = pd.read_csv("../labels_YOLO.csv")
