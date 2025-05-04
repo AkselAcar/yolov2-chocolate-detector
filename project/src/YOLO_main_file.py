@@ -19,7 +19,7 @@ IMG_RESIZED_W, IMG_RESIZED_H = 640, 416  # divisible par 32
 S_W = IMG_RESIZED_W // 32  # 640 / 32 = 20, 32 psk on fait 5 maxpool dans le CNN qui nous sort une image de 20x13
 S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
-B = 2   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
+B = 1   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 w_min_orig_size = 200 #pixels sur 6000
@@ -133,7 +133,7 @@ class YOLOv4Small(nn.Module):
         for b in range(B):
             x[..., b * 5 + 0] = torch.sigmoid(x[..., b * 5 + 0])  # x
             x[..., b * 5 + 1] = torch.sigmoid(x[..., b * 5 + 1])  # y
-            #x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf (commenté car new loss with BCE)
+            x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf (commenté car new loss with BCE)
             
             x[..., b * 5 + 2] = w_min + (w_max - w_min) * torch.sigmoid(x[..., b * 5 + 2])  # w
             x[..., b * 5 + 3] = h_min + (h_max - h_min) * torch.sigmoid(x[..., b * 5 + 3])  # h
@@ -293,8 +293,9 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
     return total_loss
 """
 
-
-def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
+lambda_noobj_arg = 0.5
+print(f"lambda_noobj_arg = {lambda_noobj_arg}")
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=lambda_noobj_arg, lambda_count=0.0):
     total_loss = 0.0
 
     # --- Coordinate/Confidence Loss ---
@@ -574,7 +575,7 @@ for epoch in range(epochs):
         images, targets = images.to(device), targets.to(device)
         with torch.no_grad():
             outputs = model(images)
-            loss = yolo_loss(outputs, targets, lambda_coord=5.0, lambda_noobj=5.0, lambda_count=1.0)
+            loss = yolo_loss(outputs, targets)
             val_loss += loss.item()
     avg_val_loss = val_loss / len(valid_loader)
     print(f"Valid Loss: {avg_val_loss:.4f}")

@@ -414,3 +414,5 @@ data/data_lab_03.zip
 project/dataset_project_iapr2025/
 project/density_maps/
 project/overlayed_maps/
+project/src/checkpoint_yolov1.pth
+project/src/images_validation_YOLO/
