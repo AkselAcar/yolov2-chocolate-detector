@@ -724,14 +724,30 @@ model = YOLOv4Small()
 print(model)
 print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}")
 
+
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
 
-epochs = 60
+# Load from checkpoint if it exists
+checkpoint_path = "checkpoint_yolov1.pth"
+start_epoch = 0
+best_val_loss = float('inf')
+
+if os.path.exists(checkpoint_path):
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    start_epoch = checkpoint['epoch']
+    best_val_loss = checkpoint.get('val_loss', float('inf'))
+    print(f"✅ Loaded checkpoint from epoch {start_epoch}, val_loss = {best_val_loss:.4f}")
+
+epochs = 30
 
 best_val_loss = float('inf')
-for epoch in range(epochs):
+epochs = start_epoch + epochs  
+
+for epoch in range(start_epoch, epochs):
     model.train()
     running_loss = 0.0
     for images, targets, _ in tqdm.tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs} [Train]"):
