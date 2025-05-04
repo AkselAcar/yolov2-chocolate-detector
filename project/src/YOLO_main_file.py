@@ -397,10 +397,10 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                         #class_id = np.argmax(class_scores)
                         cx = (col + x) / S_W
                         cy = (row + y) / S_H
-                        x1 = (cx - w / 2) * IMG_RESIZED_W
-                        y1 = (cy - h / 2) * IMG_RESIZED_H
-                        x2 = (cx + w / 2) * IMG_RESIZED_W
-                        y2 = (cy + h / 2) * IMG_RESIZED_H
+                        x1 = max(0, (cx - w / 2) * IMG_RESIZED_W)
+                        y1 = max(0, (cy - h / 2) * IMG_RESIZED_H)
+                        x2 = min(IMG_RESIZED_W, (cx + w / 2) * IMG_RESIZED_W)
+                        y2 = min(IMG_RESIZED_H, (cy + h / 2) * IMG_RESIZED_H)
 
                         if target[row, col, B * 5:].sum() > 0:
                             true_class = torch.argmax(target[row, col, B * 5:]).item()
@@ -416,7 +416,24 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                         })
 
         # NMS et affichage final
-        keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
+       # keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
+
+        keep = []
+        class_to_boxes = {}  # {class_id: [box_indices]}
+
+        # Group boxes by class
+        for idx, info in enumerate(boxes_info):
+            cls = info['class_id']
+            if cls not in class_to_boxes:
+                class_to_boxes[cls] = []
+            class_to_boxes[cls].append(idx)
+
+        # Apply NMS per class
+        for cls, indices in class_to_boxes.items():
+            cls_boxes = [boxes_info[i]['box'] for i in indices]
+            cls_scores = [boxes_info[i]['score'] for i in indices]
+            cls_keep = non_max_suppression(cls_boxes, cls_scores, iou_thresh)
+            keep.extend([indices[i] for i in cls_keep])
 
         for i in keep:
             info = boxes_info[i]
