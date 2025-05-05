@@ -15,11 +15,11 @@ from torchvision.transforms import functional as TF
 
 # Paramètres globaux
 IMG_W, IMG_H = 6000, 4000  # dimensions originales des images
-IMG_RESIZED_W, IMG_RESIZED_H = 640, 416  # divisible par 32
+IMG_RESIZED_W, IMG_RESIZED_H = 768, 512  # divisible par 64
 S_W = IMG_RESIZED_W // 32  # 640 / 32 = 20, 32 psk on fait 5 maxpool dans le CNN qui nous sort une image de 20x13
 S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
-B = 1   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
+B = 2   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 w_min_orig_size = 200 #pixels sur 6000
@@ -130,13 +130,16 @@ class YOLOv4Small(nn.Module):
         x = self.head(x) # (B, 23, S_H, S_W)
         x = x.permute(0, 2, 3, 1) # (B, S_H, S_W, 23) pour correspondre au target
         # appliquer sigmoid sur x, y, et conf
+        
         for b in range(B):
+            
             x[..., b * 5 + 0] = torch.sigmoid(x[..., b * 5 + 0])  # x
             x[..., b * 5 + 1] = torch.sigmoid(x[..., b * 5 + 1])  # y
             x[..., b * 5 + 4] = torch.sigmoid(x[..., b * 5 + 4])  # conf (commenté car new loss with BCE)
             
             x[..., b * 5 + 2] = w_min + (w_max - w_min) * torch.sigmoid(x[..., b * 5 + 2])  # w
             x[..., b * 5 + 3] = h_min + (h_max - h_min) * torch.sigmoid(x[..., b * 5 + 3])  # h
+            
         return x
     
     def _initialize_weights(self):
@@ -218,7 +221,7 @@ def yolo_loss(pred, target, lambda_coord=5.0, lambda_noobj=0.5, lambda_count=1.0
 
     total_loss += class_loss
 
-    # === 🔢 Ajout : count_loss ===
+    # ===  Ajout : count_loss ===
     true_counts = target[..., B * 5 : B * 5 + C].sum(dim=(0, 1))  # (C,)
     pred_class_probs = pred[..., B * 5 : B * 5 + C]  # (S_H, S_W, C)
     pred_conf = pred[..., [b * 5 + 4 for b in range(B)]].max(dim=-1).values.unsqueeze(-1)  # (S_H, S_W, 1)
@@ -292,7 +295,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=0.5, lambda_count=1.0):
 
     return total_loss
 """
-
+"""
 lambda_noobj_arg = 0.5
 print(f"lambda_noobj_arg = {lambda_noobj_arg}")
 def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=lambda_noobj_arg, lambda_count=0.0):
@@ -316,7 +319,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=lambda_noobj_arg, lambd
                     torch.sqrt(box_target[obj_mask][..., 2:4])
                 )
             )
-            conf_loss_obj = F.binary_cross_entropy_with_logits(
+            conf_loss_obj = F.binary_cross_entropy(
                 box_pred[obj_mask][..., 4], box_target[obj_mask][..., 4]
             )
         else:
@@ -324,7 +327,7 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=lambda_noobj_arg, lambd
             conf_loss_obj = torch.tensor(0.0, device=pred.device)
 
         # No-object confidence loss
-        conf_loss_noobj = F.binary_cross_entropy_with_logits(
+        conf_loss_noobj = F.binary_cross_entropy(
             box_pred[noobj_mask][..., 4], box_target[noobj_mask][..., 4]
         )
         total_loss += coord_loss + conf_loss_obj + lambda_noobj * conf_loss_noobj
@@ -354,18 +357,60 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=lambda_noobj_arg, lambd
     total_loss += lambda_count * count_loss
 
     return total_loss
+"""
+
+def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=1):
+    total_loss = 0.0
+
+    for b in range(B):
+        box_pred = pred[..., b * 5 : b * 5 + 5]
+        box_target = target[..., b * 5 : b * 5 + 5]
+
+        obj_mask = box_target[..., 4] == 1
+        cell_has_any_object = target[..., 4::5].any(dim=-1)
+        noobj_mask = ~cell_has_any_object
+
+        # --- Coordinate loss ---
+        if obj_mask.sum() > 0:
+            coord_loss = lambda_coord * (
+                F.mse_loss(box_pred[obj_mask][..., 0:2], box_target[obj_mask][..., 0:2]) +
+                F.mse_loss(
+                    torch.sqrt(torch.clamp(box_pred[obj_mask][..., 2:4], min=1e-6)),
+                    torch.sqrt(box_target[obj_mask][..., 2:4])
+                )
+            )
+            conf_loss_obj = F.binary_cross_entropy(box_pred[obj_mask][..., 4], box_target[obj_mask][..., 4])
+        else:
+            coord_loss = torch.tensor(0.0, device=pred.device)
+            conf_loss_obj = torch.tensor(0.0, device=pred.device)
+
+        conf_loss_noobj = lambda_noobj * F.binary_cross_entropy(
+            box_pred[noobj_mask][..., 4],
+            box_target[noobj_mask][..., 4]
+        )
+
+        total_loss += coord_loss + conf_loss_obj + conf_loss_noobj
+
+    # --- Classification loss ---
+    class_mask = target[..., B * 5 :].sum(dim=-1) > 0
+    class_loss = F.cross_entropy(
+        pred[class_mask][..., B * 5 : B * 5 + C],
+        torch.argmax(target[class_mask][..., B * 5 : B * 5 + C], dim=-1)
+    ) if class_mask.sum() > 0 else torch.tensor(0.0, device=pred.device)
+
+    total_loss += class_loss
+    return total_loss
 
 import shutil
 def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
-    #if os.path.exists(output_dir):
-    #    shutil.rmtree(output_dir)
-
+    # Nettoyage du dossier
     if os.path.exists(output_dir):
         for f in os.listdir(output_dir):
             if f.endswith(".png"):
                 os.remove(os.path.join(output_dir, f))
+    else:
+        os.makedirs(output_dir)
 
-    os.makedirs(output_dir, exist_ok=True)
     model.eval()
     for i in range(len(dataset)):
         img_tensor, target, fname = dataset[i]
@@ -374,19 +419,25 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
             pred = model(img_tensor).squeeze(0).cpu().numpy()
 
         img_np = np.transpose(img_tensor.squeeze(0).cpu().numpy(), (1, 2, 0))
+        img_np = np.clip(img_np, 0, 1)  # sécurité
+
         plt.figure(figsize=(6, 4))
         plt.imshow(img_np)
         ax = plt.gca()
 
-        boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
+        boxes_info = []
 
         for row in range(S_H):
             for col in range(S_W):
                 for b in range(B):
                     offset = b * 5
                     cell = pred[row, col]
+
                     conf = cell[offset + 4]
-                    class_scores = cell[B * 5:]
+
+                    # === Softmax sur les classes ===
+                    class_logits = cell[B * 5:]
+                    class_scores = np.exp(class_logits) / np.sum(np.exp(class_logits) + 1e-6)
                     score = conf * np.max(class_scores)
 
                     if score > score_thresh:
@@ -399,10 +450,8 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                         x2 = (cx + w / 2) * IMG_RESIZED_W
                         y2 = (cy + h / 2) * IMG_RESIZED_H
 
-                        if target[row, col, B * 5:].sum() > 0:
-                            true_class = torch.argmax(target[row, col, B * 5:]).item()
-                        else:
-                            true_class = -1  # signifie qu'aucun objet n'est présent
+                        true_class = torch.argmax(target[row, col, B * 5:]).item() if target[row, col, B * 5:].sum() > 0 else -1
+
                         boxes_info.append({
                             'box': [x1, y1, x2, y2],
                             'score': score,
@@ -412,9 +461,18 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                             'col': col
                         })
 
-        # NMS et affichage final
-        keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
+        # === NMS PAR CLASSE ===
+        keep = []
+        unique_classes = set(info['class_id'] for info in boxes_info)
+        for cls in unique_classes:
+            cls_indices = [i for i, info in enumerate(boxes_info) if info['class_id'] == cls]
+            cls_boxes = [boxes_info[i]['box'] for i in cls_indices]
+            cls_scores = [boxes_info[i]['score'] for i in cls_indices]
+            cls_keep = non_max_suppression(cls_boxes, cls_scores, iou_thresh)
+            keep.extend([cls_indices[i] for i in cls_keep])
+        keep = list(set(keep))  # remove duplicates if any
 
+        # === Dessin des boîtes ===
         for i in keep:
             info = boxes_info[i]
             x1, y1, x2, y2 = info['box']
@@ -532,7 +590,7 @@ class RandomAffineWithBoxes:
         return TF.to_tensor(image), new_boxes
 
 # Remplace la transformation simple par la version custom
-train_transform = RandomAffineWithBoxes(degrees=20, translate=(0.1, 0.1))
+train_transform = RandomAffineWithBoxes(degrees=180, translate=(0.1, 0.1))
 valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
 train_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", train_files, train_transform)
@@ -552,8 +610,8 @@ print(f"Nombre total de paramètres entraînables : {count_parameters(model):,}"
 model.to(device)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-4)
-epochs = 30
-
+epochs = 500
+print(f"Nombre d'epochs : {epochs}")
 best_val_loss = float('inf')
 for epoch in range(epochs):
     model.train()
