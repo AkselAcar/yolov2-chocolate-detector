@@ -95,3 +95,56 @@ print(f"\nAverage IoU with closest anchor: {average_iou:.4f}")
 yolo_anchors = [f"{int(w)},{int(h)}" for w, h in sorted_anchors]
 print("\nYOLO format anchors (width,height):")
 print(", ".join(yolo_anchors))
+
+
+# Save anchors to file
+import csv
+import os
+
+# Create output directory if needed
+os.makedirs('output', exist_ok=True)
+
+# 1. Save as CSV for YOLO training
+with open('output/yolo_anchors.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerow(['anchor_index', 'width', 'height'])
+    for i, (w, h) in enumerate(sorted_anchors):
+        writer.writerow([i, int(w), int(h)])
+
+# 2. Save in Darknet/YOLO config format
+with open('output/yolo_anchors.txt', 'w') as f:
+    # Format: anchors = w1,h1, w2,h2, ..., w9,h9
+    anchors_str = ", ".join([f"{int(w)},{int(h)}" for w, h in sorted_anchors])
+    f.write(f"anchors = {anchors_str}\n")
+
+# 3. Save as YOLOv5/YOLOv8 YAML format
+with open('output/yolo_anchors.yaml', 'w') as f:
+    f.write(f"anchors:\n")
+    # Group by 3 for each detection layer (standard practice)
+    for i in range(0, len(sorted_anchors), 3):
+        layer_anchors = sorted_anchors[i:i+3]
+        anchors_str = ", ".join([f"[{int(w)}, {int(h)}]" for w, h in layer_anchors])
+        f.write(f"  - {anchors_str}\n")
+
+print("\nAnchors saved in:")
+print("- output/yolo_anchors.csv (for documentation)")
+print("- output/yolo_anchors.txt (for Darknet config)")
+print("- output/yolo_anchors.yaml (for YOLOv5/v8)")
+
+# check in picture
+import matplotlib.pyplot as plt
+
+# Visualization
+plt.figure(figsize=(10, 10))
+for w, h in scaled_boxes[:500]:  # Plot first 500 boxes
+    plt.scatter(w, h, color='blue', alpha=0.1, s=10)
+    
+for i, (w, h) in enumerate(sorted_anchors):
+    plt.scatter(w, h, color='red', s=200, marker='x', linewidths=2)
+    plt.text(w, h, f'A{i+1}', fontsize=12, ha='center', va='bottom')
+
+plt.xlabel('Width (pixels)')
+plt.ylabel('Height (pixels)')
+plt.title('Anchors vs Actual Boxes (Blue=Boxes, Red=Anchors)')
+plt.savefig('output/anchors_visualization.png')
+plt.close()
