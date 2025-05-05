@@ -647,22 +647,36 @@ all_data = pd.read_csv("../labels_YOLO.csv")
 all_files = all_data['filename'].unique()
 train_files, valid_files = train_test_split(all_files, test_size=0.2) # , random_state=42 si on veut la même répartition à chaque fois
 
-
 class RandomAffineWithBoxes:
-    def __init__(self, degrees=0, translate=(0.0, 0.0)):
+    def __init__(self, degrees=0, translate=(0.0, 0.0), color_jitter_params=None):
         self.degrees = degrees
         self.translate = translate
+        # Default jitter if none provided
+        if color_jitter_params is None:
+            color_jitter_params = {
+                'brightness': 0.2,
+                'contrast': 0.2,
+                'saturation': 0.2,
+                'hue': 0.05
+            }
+        self.color_jitter = T.ColorJitter(**color_jitter_params)
 
     def __call__(self, image, boxes):
         original_image = image.copy()
         original_boxes = boxes.copy()
 
+        # === Geometric Transformations ===
         angle = np.random.uniform(-self.degrees, self.degrees)
         translate_x = int(self.translate[0] * image.size[0])
         translate_y = int(self.translate[1] * image.size[1])
-        translate = (np.random.randint(-translate_x, translate_x+1), np.random.randint(-translate_y, translate_y+1)) # np.random.randint(a, b) est inclusif pour a et exclusif pour b d'où les +1
-
+        translate = (
+            np.random.randint(-translate_x, translate_x + 1),
+            np.random.randint(-translate_y, translate_y + 1)
+        )
         image = TF.affine(image, angle=angle, translate=translate, scale=1.0, shear=0)
+
+        # === Color Jitter ===
+        image = self.color_jitter(image)
 
         new_boxes = []
         for box in boxes:
@@ -671,13 +685,13 @@ class RandomAffineWithBoxes:
             cy_pix = cy * IMG_RESIZED_H
 
             corners = torch.tensor([
-                [cx_pix - w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
-                [cx_pix + w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
-                [cx_pix + w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2],
-                [cx_pix - w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2]
+                [cx_pix - w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
+                [cx_pix + w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
+                [cx_pix + w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2],
+                [cx_pix - w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2]
             ], dtype=torch.float)
 
-            angle_rad = -angle * np.pi / 180.0 # signe inversé car axe y vers le bas
+            angle_rad = -angle * np.pi / 180.0
             rot_matrix = torch.tensor([
                 [np.cos(angle_rad), -np.sin(angle_rad)],
                 [np.sin(angle_rad),  np.cos(angle_rad)]
@@ -694,20 +708,78 @@ class RandomAffineWithBoxes:
             new_w = (x_coords.max() - x_coords.min()) / IMG_RESIZED_W
             new_h = (y_coords.max() - y_coords.min()) / IMG_RESIZED_H
 
-            if (
-                0 <= new_cx <= 1 and 0 <= new_cy <= 1 and
-                0 < new_w <= 1 and 0 < new_h <= 1
-            ): # on vérifie que la boîte est toujours dans l'image
+            if (0 <= new_cx <= 1 and 0 <= new_cy <= 1 and 0 < new_w <= 1 and 0 < new_h <= 1):
                 new_boxes.append([new_cx, new_cy, new_w, new_h])
 
-        # Si toutes les boîtes sont invalides, on annule la transformation
         if len(new_boxes) == 0:
             return TF.to_tensor(original_image), original_boxes
-        
         return TF.to_tensor(image), new_boxes
 
+# class RandomAffineWithBoxes:
+#     def __init__(self, degrees=0, translate=(0.0, 0.0)):
+#         self.degrees = degrees
+#         self.translate = translate
+
+#     def __call__(self, image, boxes):
+#         original_image = image.copy()
+#         original_boxes = boxes.copy()
+
+#         angle = np.random.uniform(-self.degrees, self.degrees)
+#         translate_x = int(self.translate[0] * image.size[0])
+#         translate_y = int(self.translate[1] * image.size[1])
+#         translate = (np.random.randint(-translate_x, translate_x+1), np.random.randint(-translate_y, translate_y+1)) # np.random.randint(a, b) est inclusif pour a et exclusif pour b d'où les +1
+
+#         image = TF.affine(image, angle=angle, translate=translate, scale=1.0, shear=0)
+
+#         new_boxes = []
+#         for box in boxes:
+#             cx, cy, w, h = box
+#             cx_pix = cx * IMG_RESIZED_W
+#             cy_pix = cy * IMG_RESIZED_H
+
+#             corners = torch.tensor([
+#                 [cx_pix - w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
+#                 [cx_pix + w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
+#                 [cx_pix + w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2],
+#                 [cx_pix - w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2]
+#             ], dtype=torch.float)
+
+#             angle_rad = -angle * np.pi / 180.0 # signe inversé car axe y vers le bas
+#             rot_matrix = torch.tensor([
+#                 [np.cos(angle_rad), -np.sin(angle_rad)],
+#                 [np.sin(angle_rad),  np.cos(angle_rad)]
+#             ], dtype=torch.float)
+
+#             center = torch.tensor([IMG_RESIZED_W / 2, IMG_RESIZED_H / 2], dtype=torch.float)
+#             rotated = (corners - center) @ rot_matrix.T + center
+#             rotated += torch.tensor(translate, dtype=torch.float)
+
+#             x_coords = rotated[:, 0].clamp(0, IMG_RESIZED_W)
+#             y_coords = rotated[:, 1].clamp(0, IMG_RESIZED_H)
+#             new_cx = (x_coords.min() + x_coords.max()) / 2 / IMG_RESIZED_W
+#             new_cy = (y_coords.min() + y_coords.max()) / 2 / IMG_RESIZED_H
+#             new_w = (x_coords.max() - x_coords.min()) / IMG_RESIZED_W
+#             new_h = (y_coords.max() - y_coords.min()) / IMG_RESIZED_H
+
+#             if (
+#                 0 <= new_cx <= 1 and 0 <= new_cy <= 1 and
+#                 0 < new_w <= 1 and 0 < new_h <= 1
+#             ): # on vérifie que la boîte est toujours dans l'image
+#                 new_boxes.append([new_cx, new_cy, new_w, new_h])
+
+#         # Si toutes les boîtes sont invalides, on annule la transformation
+#         if len(new_boxes) == 0:
+#             return TF.to_tensor(original_image), original_boxes
+        
+#         return TF.to_tensor(image), new_boxes
+
 # Remplace la transformation simple par la version custom
-train_transform = RandomAffineWithBoxes(degrees=20, translate=(0.1, 0.1))
+#train_transform = RandomAffineWithBoxes(degrees=20, translate=(0.1, 0.1))
+train_transform = RandomAffineWithBoxes(
+    degrees=20, 
+    translate=(0.1, 0.1),
+    color_jitter_params={'brightness': 0.2, 'contrast': 0.2, 'saturation': 0.2, 'hue': 0.05}
+)
 valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
 train_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", train_files, train_transform)
@@ -742,7 +814,7 @@ if os.path.exists(checkpoint_path):
     best_val_loss = checkpoint.get('val_loss', float('inf'))
     print(f"✅ Loaded checkpoint from epoch {start_epoch}, val_loss = {best_val_loss:.4f}")
 
-epochs = 30
+epochs = 500
 
 best_val_loss = float('inf')
 epochs = start_epoch + epochs  
