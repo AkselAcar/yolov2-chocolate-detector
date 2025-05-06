@@ -244,8 +244,9 @@ def wh_iou(wh1, wh2):
 
 
 from tqdm.auto import tqdm
+from torchvision.ops import nms
 
-def decode_predictions(preds, model, img_size=640, conf_threshold=0.2): # preds = (bs, 9*(5+13), 40, 40)
+def decode_predictions(preds, model, img_size=640, conf_threshold=0.2, iou_threshold=0.5): # preds = (bs, 9*(5+13), 40, 40)
     device = preds.device
     stride = img_size // preds.shape[2]  # Calculate stride based on grid size
     bs, _, h_grid, w_grid = preds.shape
@@ -281,6 +282,7 @@ def decode_predictions(preds, model, img_size=640, conf_threshold=0.2): # preds 
     conf = (obj * cls.max(dim=-1)[0]).view(bs, -1)
     cls_ids = cls.argmax(dim=-1).view(bs, -1)
 
+    
     # Apply confidence threshold
     batch_boxes = []
     for b in range(bs):
@@ -288,6 +290,9 @@ def decode_predictions(preds, model, img_size=640, conf_threshold=0.2): # preds 
         filtered = torch.cat([boxes[b][mask], 
                             conf[b][mask].unsqueeze(1), 
                             cls_ids[b][mask].unsqueeze(1)], dim=1)
+        if filtered.shape[0] > 0:
+            keep = nms(filtered[:, :4], filtered[:, 4], iou_threshold)
+            filtered = filtered[keep]
         batch_boxes.append(filtered)
     
     return batch_boxes
@@ -321,12 +326,12 @@ def train(model, dataloader, optimizer, epochs=100):
         tqdm.write(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
 
         # Save checkpoint
-        torch.save({
-            'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
-            'loss': avg_loss,
-        }, f'output/checkpoint_epoch_{epoch+1}.pth')
+        #torch.save({
+        #    'epoch': epoch,
+        #    'model_state_dict': model.state_dict(),
+        #    'optimizer_state_dict': optimizer.state_dict(),
+        #    'loss': avg_loss,
+        #}, f'output/checkpoint_epoch_{epoch+1}.pth')
 
         # Visualization after each epoch
         model.eval()
