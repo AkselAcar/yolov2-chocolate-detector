@@ -36,33 +36,170 @@ import torch
 from torch.utils.data import Dataset
 import cv2
 import numpy as np
+from PIL import Image
+import torchvision.transforms.functional as TF
 
 class ChocolateDataset(Dataset):
-    def __init__(self, img_dir, label_dir, img_size=640):
+    def __init__(self, img_dir, label_dir, filenames, img_size=640, transform=None):
         self.img_dir = img_dir
         self.label_dir = label_dir
         self.img_size = img_size
-        self.image_files = [f for f in os.listdir(img_dir) if f.endswith('.JPG')]
+        self.transform = transform
+        self.filenames = filenames
         
+        # Filter existing files
+        self.image_files = [f for f in self.filenames 
+                          if os.path.exists(os.path.join(img_dir, f)) and 
+                          os.path.exists(os.path.join(label_dir, f.replace('.JPG', '.txt')))]
+
     def __len__(self):
         return len(self.image_files)
     
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.image_files[idx])
-        image = cv2.imread(img_path) # original image 6000x4000
+        image = cv2.imread(img_path)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = cv2.resize(image, (self.img_size, self.img_size)) / 255.0 # Normalize to [0, 1] and resize to 640x640
+        h, w = image.shape[:2]
         
+        # Load boxes (original coordinates)
         label_path = os.path.join(self.label_dir, self.image_files[idx].replace('.JPG', '.txt'))
         boxes = []
         if os.path.exists(label_path):
             with open(label_path, 'r') as f:
                 for line in f:
                     cls, cx, cy, w, h = map(float, line.strip().split())
-                    boxes.append([cx, cy, w, h, int(cls)]) # Ajoute chaque boîte à la liste boxes sous la forme [cx, cy, w, h, classe]
-        return torch.tensor(image).permute(2, 0, 1).float(), torch.tensor(boxes) if boxes else torch.zeros((0, 5)) # L’image est convertie en tenseur PyTorch, puis permutée de [H, W, Channels] à [Channels, H, W] (ordre requis par PyTorch).
-        # shape de boxes = [0, 5] si pas de boîte, sinon [N, 5] où N est le nombre de boîtes
+                    boxes.append([cx, cy, w, h, int(cls)])
+        
+        # Convert to PIL for transformations
+        image_pil = Image.fromarray(image)
+        
+        # Apply transformations
+        if self.transform:
+            image_tensor, boxes = self.transform(image_pil, boxes)
+        else:
+            # Convert to tensor directly
+            image_tensor = TF.to_tensor(image_pil)
+        
+        # Resize and normalize
+        image_tensor = TF.resize(image_tensor, [self.img_size, self.img_size])
+        image_tensor = TF.normalize(image_tensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        
+        return image_tensor, torch.tensor(boxes) if boxes is not None else torch.zeros((0, 5))
+    
+from torchvision import transforms as T
+class RandomAffineWithBoxes:
+    def __init__(self, degrees=15, translate=(0.1, 0.1), color_jitter=(0.2, 0.2, 0.2, 0.1), img_size=640):
+        self.degrees = degrees
+        self.translate = translate
+        self.img_size = img_size
+        self.color_jitter = T.ColorJitter(
+            brightness=color_jitter[0],
+            contrast=color_jitter[1],
+            saturation=color_jitter[2],
+            hue=color_jitter[3]
+        )
+        self.to_tensor = T.ToTensor()
 
+    def __call__(self, image, boxes):
+        # Store original in case we need to revert
+        original_image = image.copy()
+        original_boxes = boxes.copy()
+        
+        # Apply color jitter first
+        image = self.color_jitter(image)
+        
+        # Random rotation and translation parameters
+        angle = np.random.uniform(-self.degrees, self.degrees)
+        max_trans_x = int(self.translate[0] * self.img_size)
+        max_trans_y = int(self.translate[1] * self.img_size)
+        translate = (np.random.randint(-max_trans_x, max_trans_x),
+                     np.random.randint(-max_trans_y, max_trans_y))
+
+        # Apply affine transformation to image
+        image = TF.affine(
+            image,
+            angle=angle,
+            translate=translate,
+            scale=1.0,
+            shear=0,
+            fill=(127, 127, 127)  # Gray padding for new areas
+        )
+
+        # Convert boxes to tensor if needed
+        if isinstance(boxes, torch.Tensor):
+            boxes = boxes.numpy()
+        boxes = np.array(boxes)
+
+        new_boxes = []
+        for box in boxes:
+            if len(box) == 0:
+                continue
+                
+            cls_id = box[4] if len(box) > 4 else 0
+            cx, cy, w, h = box[:4]
+
+            # Convert normalized coordinates to absolute pixels
+            cx_pix = cx * self.img_size
+            cy_pix = cy * self.img_size
+            w_pix = w * self.img_size
+            h_pix = h * self.img_size
+
+            # Generate original bounding box corners
+            corners = torch.tensor([
+                [cx_pix - w_pix/2, cy_pix - h_pix/2],  # Top-left
+                [cx_pix + w_pix/2, cy_pix - h_pix/2],  # Top-right
+                [cx_pix + w_pix/2, cy_pix + h_pix/2],  # Bottom-right
+                [cx_pix - w_pix/2, cy_pix + h_pix/2],  # Bottom-left
+            ], dtype=torch.float32)
+
+            # Rotation matrix (angle in radians)
+            angle_rad = np.deg2rad(angle)
+            rot_matrix = torch.tensor([
+                [np.cos(angle_rad), -np.sin(angle_rad)],
+                [np.sin(angle_rad), np.cos(angle_rad)]
+            ], dtype=torch.float32)
+
+            # Translation vector
+            translation = torch.tensor(translate, dtype=torch.float32)
+
+            # Rotate corners around image center
+            center = torch.tensor([self.img_size/2, self.img_size/2])
+            rotated_corners = (corners - center) @ rot_matrix.T + center
+
+            # Apply translation
+            translated_corners = rotated_corners + translation
+
+            # Clamp to image boundaries
+            translated_corners[:, 0] = translated_corners[:, 0].clamp(0, self.img_size)
+            translated_corners[:, 1] = translated_corners[:, 1].clamp(0, self.img_size)
+
+            # Calculate new bounding box
+            xmin, _ = translated_corners[:, 0].min(dim=0)
+            xmax, _ = translated_corners[:, 0].max(dim=0)
+            ymin, _ = translated_corners[:, 1].min(dim=0)
+            ymax, _ = translated_corners[:, 1].max(dim=0)
+
+            # Convert back to normalized coordinates
+            new_cx = ((xmin + xmax) / 2) / self.img_size
+            new_cy = ((ymin + ymax) / 2) / self.img_size
+            new_w = (xmax - xmin) / self.img_size
+            new_h = (ymax - ymin) / self.img_size
+
+            # Check validity
+            if (new_w > 0.01 and new_h > 0.01 and 
+                0 <= new_cx <= 1 and 0 <= new_cy <= 1):
+                new_boxes.append([new_cx, new_cy, new_w, new_h, cls_id])
+
+        # Revert if all boxes were invalid
+        if len(new_boxes) == 0:
+            return TF.to_tensor(original_image), original_boxes
+
+        return self.to_tensor(image), torch.tensor(new_boxes)
+    
+class ValTransform:
+    def __call__(self, image, boxes):
+        return TF.to_tensor(image), torch.tensor(boxes) if boxes is not None else torch.zeros((0, 5))
+    
 
 import torch
 import torch.nn as nn
@@ -300,18 +437,30 @@ def decode_predictions(preds, model, img_size=640, conf_threshold=0.2, iou_thres
 
 import shutil
 import os
-# Modified train function with visualization
-def train(model, dataloader, optimizer, epochs=100):
-    
-    model.train()
-    device = next(model.parameters()).device
-    
+from torch.optim.lr_scheduler import ReduceLROnPlateau
+import matplotlib.pyplot as plt
 
-    for epoch in tqdm(range(epochs), desc="Total Training"):
-        total_loss = 0
+def train(model, train_loader, valid_loader, optimizer, epochs=100, device='cuda'):
+    model.to(device)
+    best_loss = float('inf')
+    loss_fn = YOLOLoss()
+    scheduler = ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5)
+    
+    # Store metrics
+    metrics = {
+        'train_loss': [],
+        'val_loss': [],
+        'precision': [],
+        'recall': []
+    }
+    
+    for epoch in range(epochs):
+        # Training phase
         model.train()
+        train_loss = 0.0
+        progress_bar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs} [Train]')
         
-        for batch_idx, (images, targets) in tqdm(enumerate(dataloader), desc=f"Epoch {epoch+1}"):
+        for images, targets in progress_bar:
             images = images.to(device)
             targets = [t.to(device) for t in targets]
             
@@ -319,67 +468,198 @@ def train(model, dataloader, optimizer, epochs=100):
             outputs = model(images)
             loss = loss_fn(outputs, targets, model)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=10.0)
             optimizer.step()
-            total_loss += loss.item()
+            
+            train_loss += loss.item()
+            progress_bar.set_postfix({'loss': loss.item()})
 
-        avg_loss = total_loss / len(dataloader)
-        tqdm.write(f"Epoch {epoch+1}, Loss: {avg_loss:.4f}")
-
-        # Save checkpoint
-        #torch.save({
-        #    'epoch': epoch,
-        #    'model_state_dict': model.state_dict(),
-        #    'optimizer_state_dict': optimizer.state_dict(),
-        #    'loss': avg_loss,
-        #}, f'output/checkpoint_epoch_{epoch+1}.pth')
-
-        # Visualization after each epoch
-        model.eval()
-        with torch.no_grad():
-            viz_images, viz_targets = next(iter(dataloader)) # one batch for visualization
-            viz_images = viz_images.to(device)
-            outputs = model(viz_images)
-            pred_boxes = decode_predictions(outputs, model) # sh
-
-
-            # Supprimer le dossier s'il existe
-            save_dir = 'output/training_plots'
-            if os.path.exists(save_dir):
-                shutil.rmtree(save_dir)
-            os.makedirs(save_dir, exist_ok=True)
-
-            for idx in range(viz_images.size(0)):
-                # Convert tensor to OpenCV format
-                img = viz_images[idx].cpu().numpy().transpose(1, 2, 0)
-                img = (img * 255).astype(np.uint8)
-                img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-                # Draw ground truth
-                gt = viz_targets[idx].cpu().numpy()
-                for box in gt:
-                    cx, cy, w, h, cls_id = box
-                    x1 = int((cx - w/2) * 640)
-                    y1 = int((cy - h/2) * 640)
-                    x2 = int((cx + w/2) * 640)
-                    y2 = int((cy + h/2) * 640)
-                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    cv2.putText(img, f'GT:{int(cls_id)}', (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
-
-                # Draw predictions
-                boxes = pred_boxes[idx].cpu().numpy()
-                for box in boxes:
-                    cx, cy, w, h, conf, cls_id = box
-                    x1 = int((cx - w/2) * 640)
-                    y1 = int((cy - h/2) * 640)
-                    x2 = int((cx + w/2) * 640)
-                    y2 = int((cy + h/2) * 640)
-                    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                    cv2.putText(img, f'P:{int(cls_id)} {conf:.2f}', (x1, y1-20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
-
-                cv2.imwrite(f'{save_dir}/image_{idx}.jpg', img)
+        avg_train_loss = train_loss / len(train_loader)
+        metrics['train_loss'].append(avg_train_loss)
         
-        model.train()
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        total_tp = 0
+        total_fp = 0
+        total_fn = 0
+        
+        with torch.no_grad():
+            val_progress = tqdm(valid_loader, desc=f'Epoch {epoch+1}/{epochs} [Val]')
+            for images, targets in val_progress:
+                images = images.to(device)
+                targets = [t.to(device) for t in targets]
+                
+                outputs = model(images)
+                loss = loss_fn(outputs, targets, model)
+                val_loss += loss.item()
+                
+                # Calculate metrics
+                pred_boxes = decode_predictions(outputs, model)
+                for i, (preds, gt) in enumerate(zip(pred_boxes, targets)):
+                    gt = gt.cpu().numpy()
+                    preds = preds.cpu().numpy()
+                    
+                    # For each ground truth, find matching prediction
+                    matched = set()
+                    for gt_idx, gt_box in enumerate(gt):
+                        best_iou = 0.0
+                        best_pred = -1
+                        for pred_idx, pred_box in enumerate(preds):
+                            if pred_idx in matched:
+                                continue
+                            iou = calculate_iou(gt_box[:4], pred_box[:4])
+                            if iou > 0.5 and pred_box[5] == gt_box[4]:
+                                if iou > best_iou:
+                                    best_iou = iou
+                                    best_pred = pred_idx
+                        if best_pred != -1:
+                            total_tp += 1
+                            matched.add(best_pred)
+                        else:
+                            total_fn += 1
+                    
+                    # Remaining predictions are false positives
+                    total_fp += len(preds) - len(matched)
+        
+        avg_val_loss = val_loss / len(valid_loader)
+        metrics['val_loss'].append(avg_val_loss)
+        
+        # Calculate precision/recall
+        precision = total_tp / (total_tp + total_fp + 1e-6)
+        recall = total_tp / (total_tp + total_fn + 1e-6)
+        metrics['precision'].append(precision)
+        metrics['recall'].append(recall)
+        
+        # Update learning rate
+        scheduler.step(avg_val_loss)
+        
+        # Save best model
+        if avg_val_loss < best_loss:
+            best_loss = avg_val_loss
+            torch.save(model.state_dict(), f'output/best_model.pth')
+        
+        # Visualize validation results
+        visualize_validation(model, valid_loader, device, epoch+1)
+        
+        # Print epoch summary
+        print(f'Epoch {epoch+1}/{epochs}')
+        print(f'Train Loss: {avg_train_loss:.4f} | Val Loss: {avg_val_loss:.4f}')
+        print(f'Precision: {precision:.2f} | Recall: {recall:.2f}')
+        print('-' * 50)
+        
+        # Save metrics
+        torch.save(metrics, 'output/training_metrics.pth')
+    
+    # Plot training curves
+    plot_metrics(metrics)
+    return metrics
 
+def visualize_validation(model, valid_loader, device, epoch):
+    model.eval()
+    save_dir = f'output/val_vis/epoch_{epoch}'
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # Get one batch
+    images, targets = next(iter(valid_loader))
+    images = images.to(device)
+    
+    with torch.no_grad():
+        outputs = model(images)
+        pred_boxes = decode_predictions(outputs, model)
+    
+    # Convert images to numpy
+    images_np = images.cpu().permute(0, 2, 3, 1).numpy()
+    
+    for idx in range(images_np.shape[0]):
+        img = (images_np[idx] * 255).astype(np.uint8)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        
+        # Draw ground truth (green)
+        gt = targets[idx].cpu().numpy()
+        for box in gt:
+            cx, cy, w, h, cls_id = box
+            x1 = int((cx - w/2) * 640)
+            y1 = int((cy - h/2) * 640)
+            x2 = int((cx + w/2) * 640)
+            y2 = int((cy + h/2) * 640)
+            cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
+        
+        # Draw predictions
+        preds = pred_boxes[idx].cpu().numpy()
+        for box in preds:
+            cx, cy, w, h, conf, cls_id = box
+            x1 = int((cx - w/2) * 640)
+            y1 = int((cy - h/2) * 640)
+            x2 = int((cx + w/2) * 640)
+            y2 = int((cy + h/2) * 640)
+            
+            # Check if correct (IoU > 0.5 and class match)
+            is_correct = False
+            for gt_box in gt:
+                iou = calculate_iou(gt_box[:4], [cx, cy, w, h])
+                if iou > 0.5 and cls_id == gt_box[4]:
+                    is_correct = True
+                    break
+            
+            color = (0, 0, 255) if not is_correct else (255, 0, 0)
+            cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
+        
+        cv2.imwrite(f'{save_dir}/val_{idx}.jpg', img)
+
+def calculate_iou(box1, box2):
+    # box format: (cx, cy, w, h)
+    box1 = [
+        box1[0] - box1[2]/2,  # x1
+        box1[1] - box1[3]/2,  # y1
+        box1[0] + box1[2]/2,  # x2
+        box1[1] + box1[3]/2   # y2
+    ]
+    box2 = [
+        box2[0] - box2[2]/2,
+        box2[1] - box2[3]/2,
+        box2[0] + box2[2]/2,
+        box2[1] + box2[3]/2
+    ]
+    
+    # Calculate intersection
+    x_left = max(box1[0], box2[0])
+    y_top = max(box1[1], box2[1])
+    x_right = min(box1[2], box2[2])
+    y_bottom = min(box1[3], box2[3])
+    
+    if x_right < x_left or y_bottom < y_top:
+        return 0.0
+    
+    intersection = (x_right - x_left) * (y_bottom - y_top)
+    area1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
+    area2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
+    union = area1 + area2 - intersection
+    
+    return intersection / union if union > 0 else 0.0
+
+def plot_metrics(metrics):
+    plt.figure(figsize=(12, 4))
+    
+    plt.subplot(1, 2, 1)
+    plt.plot(metrics['train_loss'], label='Train Loss')
+    plt.plot(metrics['val_loss'], label='Val Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(metrics['precision'], label='Precision')
+    plt.plot(metrics['recall'], label='Recall')
+    plt.title('Precision and Recall')
+    plt.xlabel('Epoch')
+    plt.ylabel('Score')
+    plt.legend()
+    
+    plt.tight_layout()
+    plt.savefig('output/training_metrics.png')
+    plt.close()
 
 # Cette fonction permet : 
 # de gérer des tailles de cibles variables (nombre d’objets différent par image),
@@ -392,19 +672,56 @@ def collate_fn(batch):
     return images, labels
 
 from torch.utils.data import DataLoader
-# Dataset (STILL NEEDED)
-dataset = ChocolateDataset('../dataset_project_iapr2025/train', 'labels')
-dataloader = DataLoader(dataset, batch_size=8, collate_fn=collate_fn, shuffle=True)
+from sklearn.model_selection import train_test_split
 
-# Initialize model with explicit anchors
+
+# Load all filenames
+all_data = pd.read_csv("../labels_YOLO.csv")
+all_files = all_data['filename'].unique()
+train_files, valid_files = train_test_split(all_files, test_size=0.2)
+
+# Create datasets
+train_transform = RandomAffineWithBoxes(
+    degrees=15,
+    translate=(0.1, 0.1),
+    color_jitter=(0.2, 0.2, 0.2, 0.1),
+    img_size=640
+)
+
+# For validation dataset (no transformations)
+valid_transform = lambda img, boxes: (TF.to_tensor(img), torch.tensor(boxes))
+
+train_dataset = ChocolateDataset(
+    img_dir='../dataset_project_iapr2025/train',
+    label_dir='labels',
+    filenames=train_files,
+    transform=train_transform
+)
+
+valid_dataset = ChocolateDataset(
+    img_dir='../dataset_project_iapr2025/train',
+    label_dir='labels',
+    filenames=valid_files,
+    transform=valid_transform
+)
+
+# Create dataloaders
+train_loader = DataLoader(train_dataset, batch_size=8, collate_fn=collate_fn, shuffle=True)
+valid_loader = DataLoader(valid_dataset, batch_size=8, collate_fn=collate_fn, shuffle=False)
+
+# Initialize model and optimizer
 model = YOLOv5(num_classes=13, anchors=ANCHORS)
-print(f"Total parameters: {sum(p.numel() for p in model.parameters()) / 1e6:.2f}M")
-
-# Training setup
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
-loss_fn = YOLOLoss()
 
+# Start training
+metrics = train(
+    model=model,
+    train_loader=train_loader,
+    valid_loader=valid_loader,
+    optimizer=optimizer,
+    epochs=100,
+    device='cuda' if torch.cuda.is_available() else 'cpu'
+)
 
-# Training Loop (UPDATED)
-train(model, dataloader, optimizer)  # Uses both dataset and anchors
-
+# Start training
+train(model, train_loader, valid_loader, optimizer, epochs=100)
