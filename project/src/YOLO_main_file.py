@@ -715,18 +715,101 @@ train_loader = DataLoader(train_dataset, batch_size=8, collate_fn=collate_fn, sh
 valid_loader = DataLoader(valid_dataset, batch_size=8, collate_fn=collate_fn, shuffle=False)
 
 # Initialize model and optimizer
-model = YOLOv5(num_classes=13, anchors=ANCHORS)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+#model = YOLOv5(num_classes=13, anchors=ANCHORS)
+#optimizer = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
 
 # Start training
-metrics = train(
-    model=model,
-    train_loader=train_loader,
-    valid_loader=valid_loader,
-    optimizer=optimizer,
-    epochs=100,
-    device='cuda' if torch.cuda.is_available() else 'cpu'
+#metrics = train(
+#    model=model,
+#    train_loader=train_loader,
+#    valid_loader=valid_loader,
+#    optimizer=optimizer,
+#    epochs=100,
+#    device='cuda' if torch.cuda.is_available() else 'cpu'
+#)
+
+# Start training
+#train(model, train_loader, valid_loader, optimizer, epochs=100)
+
+def draw_boxes(image, boxes):
+    """
+    Draw bounding boxes on image
+    """
+    h, w = image.shape[:2]
+    img_with_boxes = image.copy()
+    
+    for box in boxes:
+        cx, cy, bw, bh, cls_id = box
+        # Convert normalized coordinates to absolute coordinates
+        x1 = int((cx - bw/2) * w)
+        y1 = int((cy - bh/2) * h)
+        x2 = int((cx + bw/2) * w)
+        y2 = int((cy + bh/2) * h)
+        
+        # Draw rectangle
+        color = (255, 0, 0)  # Red for boxes
+        cv2.rectangle(img_with_boxes, (x1, y1), (x2, y2), color, 2)
+    
+    return img_with_boxes
+
+
+def visualize_and_save_transformations(image_dir, label_dir, output_dir, transform=None, num_samples=10):
+    """
+    Applies transformations to images, draws bounding boxes, and saves results
+    """
+    # Create output directories
+    os.makedirs(os.path.join(output_dir, 'original'), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, 'augmented'), exist_ok=True)
+
+    # Get list of image files
+    image_files = [f for f in os.listdir(image_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+    for i, img_file in enumerate(image_files[:num_samples]):
+        # Load image
+        img_path = os.path.join(image_dir, img_file)
+        image = cv2.imread(img_path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        orig_image = image.copy()
+
+        # Load labels
+        label_path = os.path.join(label_dir, img_file.replace('.JPG', '.txt').replace('.jpg', '.txt'))
+        boxes = []
+        if os.path.exists(label_path):
+            with open(label_path, 'r') as f:
+                for line in f:
+                    cls_id, cx, cy, w, h = map(float, line.strip().split())
+                    boxes.append([cx, cy, w, h, int(cls_id)])
+
+        # Draw original image with boxes
+        orig_with_boxes = draw_boxes(orig_image, boxes)
+        cv2.imwrite(os.path.join(output_dir, 'original', img_file), cv2.cvtColor(orig_with_boxes, cv2.COLOR_RGB2BGR))
+
+        if transform:
+            # Apply transformation
+            pil_image = Image.fromarray(orig_image)
+            transformed_image, transformed_boxes = transform(pil_image, boxes)
+
+            # Convert tensor back to numpy array if needed
+            if isinstance(transformed_image, torch.Tensor):
+                transformed_image = transformed_image.permute(1, 2, 0).numpy()
+                transformed_image = (transformed_image * 255).astype(np.uint8)
+
+            # Draw transformed boxes
+            aug_with_boxes = draw_boxes(transformed_image, transformed_boxes)
+            cv2.imwrite(os.path.join(output_dir, 'augmented', img_file), cv2.cvtColor(aug_with_boxes, cv2.COLOR_RGB2BGR))
+
+
+augmenter = RandomAffineWithBoxes(
+        degrees=15,
+        translate=(0.1, 0.1),
+        color_jitter=(0.2, 0.2, 0.2, 0.1),
+        img_size=640
+    )
+
+visualize_and_save_transformations(
+    image_dir='../dataset_project_iapr2025/train',
+    label_dir='labels',
+    output_dir='output/visualizations',
+    transform=augmenter,
+    num_samples=20  # Number of images to process
 )
-
-# Start training
-train(model, train_loader, valid_loader, optimizer, epochs=100)
