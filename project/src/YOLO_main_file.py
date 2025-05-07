@@ -778,7 +778,7 @@ class RandomAffineWithBoxes:
 train_transform = RandomAffineWithBoxes(
     degrees=20, 
     translate=(0.1, 0.1),
-    color_jitter_params={'brightness': 0.2, 'contrast': 0.2, 'saturation': 0.2, 'hue': 0.05}
+    color_jitter_params={'brightness': 0.3, 'contrast': 0.3, 'saturation': 0.1, 'hue': 0.01}
 )
 valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
@@ -814,7 +814,7 @@ if os.path.exists(checkpoint_path):
     best_val_loss = checkpoint.get('val_loss', float('inf'))
     print(f"✅ Loaded checkpoint from epoch {start_epoch}, val_loss = {best_val_loss:.4f}")
 
-epochs = 500
+epochs = 600
 
 best_val_loss = float('inf')
 epochs = start_epoch + epochs  
