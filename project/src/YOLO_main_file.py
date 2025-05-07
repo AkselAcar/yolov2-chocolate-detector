@@ -75,16 +75,21 @@ class ChocolateDataset(Dataset):
         
         # Apply transformations
         if self.transform:
-            image_tensor, boxes = self.transform(image_pil, boxes)
+            image_tensor, boxes_tensor = self.transform(image_pil, boxes)
         else:
             # Convert to tensor directly
             image_tensor = TF.to_tensor(image_pil)
+            boxes_tensor = torch.tensor(boxes, dtype=torch.float32) if boxes else torch.zeros((0, 5), dtype=torch.float32)
         
+        # Ensure dtype consistency
+        boxes_tensor = boxes_tensor.to(dtype=torch.float32)
+
         # Resize and normalize
         image_tensor = TF.resize(image_tensor, [self.img_size, self.img_size])
         image_tensor = TF.normalize(image_tensor, mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         
-        return image_tensor, torch.tensor(boxes) if boxes is not None else torch.zeros((0, 5))
+        
+        return image_tensor, boxes_tensor if boxes is not None else torch.zeros((0, 5))
     
 from torchvision import transforms as T
 class RandomAffineWithBoxes:
@@ -194,7 +199,7 @@ class RandomAffineWithBoxes:
         if len(new_boxes) == 0:
             return TF.to_tensor(original_image), original_boxes
 
-        return self.to_tensor(image), torch.tensor(new_boxes)
+        return self.to_tensor(image), torch.tensor(new_boxes, dtype=torch.float32)
     
 class ValTransform:
     def __call__(self, image, boxes):
@@ -461,8 +466,8 @@ def train(model, train_loader, valid_loader, optimizer, epochs=100, device='cuda
         progress_bar = tqdm(train_loader, desc=f'Epoch {epoch+1}/{epochs} [Train]')
         
         for images, targets in progress_bar:
-            images = images.to(device)
-            targets = [t.to(device) for t in targets]
+            images = images.to(device).float()
+            targets = [t.to(device).float() for t in targets]
             
             optimizer.zero_grad()
             outputs = model(images)
@@ -573,7 +578,7 @@ def visualize_validation(model, valid_loader, device, epoch):
     
     for idx in range(images_np.shape[0]):
         img = (images_np[idx] * 255).astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        #img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         
         # Draw ground truth (green)
         gt = targets[idx].cpu().numpy()
@@ -667,8 +672,8 @@ def plot_metrics(metrics):
 # de garder les labels comme liste de torch.Tensor (non empilés).
 def collate_fn(batch):
     images, labels = zip(*batch)
-    images = torch.stack(images)
-    labels = [l for l in labels if l.shape[0] > 0]
+    images = torch.stack(images).float()
+    labels = [label.float() for label in labels]  # Convert all labels to float32
     return images, labels
 
 from torch.utils.data import DataLoader
