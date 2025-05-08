@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 from torchvision.transforms import functional as TF
+import csv
 
 # Paramètres globaux
 IMG_W, IMG_H = 6000, 4000  # dimensions originales des images
@@ -21,6 +22,13 @@ S_H = IMG_RESIZED_H // 32  # 416 / 32 = 13
 C = 13  # nombre de classes de chocolats
 B = 2   # nombre de boîtes par cellule (YOLOv1-style), on gardera celle avec la plus haute confiance
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# === Chocolate classes ===
+class_names = [
+        "Jelly White", "Jelly Milk", "Jelly Black", "Amandina", "Crème brulée",
+        "Triangolo", "Tentation noir", "Comtesse", "Noblesse", "Noir authentique",
+        "Passion au lait", "Arabia", "Stracciatella"
+    ]
 
 w_min_orig_size = 200 #pixels sur 6000
 w_max_orig_size = 1000 #pixels sur 6000
@@ -353,157 +361,6 @@ def yolo_loss(pred, target, lambda_coord=5, lambda_noobj=1, lambda_count=1.0):
     return total_loss
 
 import shutil
-# def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
-#     #if os.path.exists(output_dir):
-#     #    shutil.rmtree(output_dir)
-
-#     if os.path.exists(output_dir):
-#         for f in os.listdir(output_dir):
-#             if f.endswith(".png"):
-#                 os.remove(os.path.join(output_dir, f))
-
-#     os.makedirs(output_dir, exist_ok=True)
-#     model.eval()
-#     for i in range(len(dataset)):
-#         img_tensor, target, fname = dataset[i]
-#         img_tensor = img_tensor.unsqueeze(0).to(next(model.parameters()).device)
-#         with torch.no_grad():
-#             pred = model(img_tensor).squeeze(0).cpu().numpy()
-
-#         img_np = np.transpose(img_tensor.squeeze(0).cpu().numpy(), (1, 2, 0))
-#         plt.figure(figsize=(6, 4))
-#         plt.imshow(img_np)
-#         ax = plt.gca()
-
-#         boxes_info = []  # nouveau : stocke les infos utiles pour chaque boîte
-
-#         for row in range(S_H):
-#             for col in range(S_W):
-#                 for b in range(B):
-#                     offset = b * 5
-#                     cell = pred[row, col]
-                    
-#                     # Apply sigmoid to confidence
-#                     conf = 1 / (1 + np.exp(-cell[offset + 4]))
-                    
-#                     # Apply softmax to class scores
-#                     class_scores = cell[B*5:]
-#                     class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
-#                     score = conf * np.max(class_probs)
-#                     class_id = np.argmax(class_probs)
-
-#                     if score > score_thresh:
-#                         x, y, w, h = cell[offset + 0], cell[offset + 1], cell[offset + 2], cell[offset + 3]
-#                         #class_id = np.argmax(class_scores)
-#                         cx = (col + x) / S_W
-#                         cy = (row + y) / S_H
-#                         x1 = max(0, (cx - w / 2) * IMG_RESIZED_W)
-#                         y1 = max(0, (cy - h / 2) * IMG_RESIZED_H)
-#                         x2 = min(IMG_RESIZED_W, (cx + w / 2) * IMG_RESIZED_W)
-#                         y2 = min(IMG_RESIZED_H, (cy + h / 2) * IMG_RESIZED_H)
-
-#                         if target[row, col, B * 5:].sum() > 0:
-#                             true_class = torch.argmax(target[row, col, B * 5:]).item()
-#                         else:
-#                             true_class = -1  # signifie qu'aucun objet n'est présent
-#                         boxes_info.append({
-#                             'box': [x1, y1, x2, y2],
-#                             'score': score,
-#                             'class_id': class_id,
-#                             'true_class': true_class,
-#                             'row': row,
-#                             'col': col
-#                         })
-
-#         # NMS et affichage final
-#        # keep = non_max_suppression([info['box'] for info in boxes_info], [info['score'] for info in boxes_info], iou_thresh)
-
-#         keep = []
-#         class_to_boxes = {}  # {class_id: [box_indices]}
-
-#         # Group boxes by class
-#         for idx, info in enumerate(boxes_info):
-#             cls = info['class_id']
-#             if cls not in class_to_boxes:
-#                 class_to_boxes[cls] = []
-#             class_to_boxes[cls].append(idx)
-
-#         # Apply NMS per class
-#         for cls, indices in class_to_boxes.items():
-#             cls_boxes = [boxes_info[i]['box'] for i in indices]
-#             cls_scores = [boxes_info[i]['score'] for i in indices]
-#             cls_keep = non_max_suppression(cls_boxes, cls_scores, iou_thresh)
-#             keep.extend([indices[i] for i in cls_keep])
-
-#         for i in keep:
-#             info = boxes_info[i]
-#             x1, y1, x2, y2 = info['box']
-#             class_id = info['class_id']
-#             true_class = info['true_class']
-#             color = 'black' if class_id == true_class and true_class != -1 else 'red'
-#             rect = plt.Rectangle((x1, y1), x2 - x1, y2 - y1, edgecolor=color, facecolor='none', lw=1)
-#             ax.add_patch(rect)
-
-#         for x in range(1, S_W):
-#             plt.axvline(x * IMG_RESIZED_W / S_W, color='white', linewidth=0.5)
-#         for y in range(1, S_H):
-#             plt.axhline(y * IMG_RESIZED_H / S_H, color='white', linewidth=0.5)
-
-#         plt.axis('off')
-#         plt.savefig(os.path.join(output_dir, fname.replace(".JPG", ".png")))
-#         plt.close()
-
-# def non_max_suppression(boxes, scores, iou_threshold=0.5, img_width=IMG_RESIZED_W, img_height=IMG_RESIZED_H):
-#     """
-#     Args:
-#         boxes: List of [x1, y1, x2, y2] in pixel coordinates
-#         scores: List of confidence scores
-#         iou_threshold: Threshold for IoU to consider overlap
-#         img_width: Width of the resized image
-#         img_height: Height of the resized image
-#     """
-#     if len(boxes) == 0:
-#         return []
-    
-#     # Convert to tensors and clamp coordinates to image boundaries
-#     boxes = torch.tensor(boxes)
-#     boxes[:, 0] = torch.clamp(boxes[:, 0], min=0, max=img_width)   # x1
-#     boxes[:, 1] = torch.clamp(boxes[:, 1], min=0, max=img_height)  # y1
-#     boxes[:, 2] = torch.clamp(boxes[:, 2], min=0, max=img_width)   # x2
-#     boxes[:, 3] = torch.clamp(boxes[:, 3], min=0, max=img_height)  # y2
-    
-#     scores = torch.tensor(scores)
-    
-#     # Calculate areas of all boxes
-#     areas = (boxes[:, 2] - boxes[:, 0]) * (boxes[:, 3] - boxes[:, 1])
-    
-#     # Sort indices by descending scores
-#     _, order = scores.sort(descending=True)
-#     keep = []
-    
-#     while order.numel() > 0:
-#         # Pick the highest-scoring box
-#         i = order[0].item()
-#         keep.append(i)
-        
-#         if order.numel() == 1:
-#             break
-        
-#         # Compute IoU between the picked box and the rest
-#         xx1 = torch.max(boxes[i, 0], boxes[order[1:], 0])
-#         yy1 = torch.max(boxes[i, 1], boxes[order[1:], 1])
-#         xx2 = torch.min(boxes[i, 2], boxes[order[1:], 2])
-#         yy2 = torch.min(boxes[i, 3], boxes[order[1:], 3])
-        
-#         inter = (xx2 - xx1).clamp(min=0) * (yy2 - yy1).clamp(min=0)
-#         iou = inter / (areas[i] + areas[order[1:]] - inter + 1e-6)
-        
-#         # Keep boxes with IoU <= threshold
-#         mask = iou <= iou_threshold
-#         order = order[1:][mask]
-    
-#     return keep
-
 
 def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, iou_thresh=0.5):
     from collections import defaultdict
@@ -605,6 +462,71 @@ def save_validation_predictions(model, dataset, output_dir, score_thresh=0.3, io
                     bbox_inches='tight', pad_inches=0)
         plt.close()
 
+# === Fonction to generate Kaggle submission ===
+def generate_kaggle_submission(model, dataset, output_csv_path, class_names, score_thresh=0.8, iou_thresh=0.5):
+    model.eval()
+    predictions = []
+
+    for i in tqdm.tqdm(range(len(dataset)), desc="Generating submission"):
+        img_tensor, _, fname = dataset[i]  # ignore target
+        img_tensor = img_tensor.unsqueeze(0).to(device)
+
+        with torch.no_grad():
+            pred = model(img_tensor).squeeze(0).cpu().numpy()
+
+        boxes_info = []
+
+        for row in range(S_H):
+            for col in range(S_W):
+                for b in range(B):
+                    offset = b * 5
+                    cell = pred[row, col]
+                    conf = 1 / (1 + np.exp(-cell[offset + 4]))
+                    class_scores = cell[B * 5:]
+                    class_probs = np.exp(class_scores) / np.sum(np.exp(class_scores))
+                    score = conf * np.max(class_probs)
+                    class_id = np.argmax(class_probs)
+
+                    if score > score_thresh:
+                        x, y, w, h = cell[offset:offset + 4]
+                        cx = (col + x) / S_W
+                        cy = (row + y) / S_H
+                        x1 = (cx - w / 2) * IMG_RESIZED_W
+                        y1 = (cy - h / 2) * IMG_RESIZED_H
+                        x2 = (cx + w / 2) * IMG_RESIZED_W
+                        y2 = (cy + h / 2) * IMG_RESIZED_H
+
+                        boxes_info.append({
+                            'box': [x1, y1, x2, y2],
+                            'score': score,
+                            'class_id': class_id
+                        })
+
+        # === Class-aware NMS ===
+        from collections import defaultdict
+        class_groups = defaultdict(list)
+        for idx, info in enumerate(boxes_info):
+            class_groups[info['class_id']].append(idx)
+
+        final_counts = [0] * C
+        for cls, indices in class_groups.items():
+            cls_boxes = [boxes_info[i]['box'] for i in indices]
+            cls_scores = [boxes_info[i]['score'] for i in indices]
+            keep = non_max_suppression(cls_boxes, cls_scores, iou_threshold=iou_thresh)
+            final_counts[cls] = len(keep)
+
+        image_id = os.path.splitext(fname)[0].replace("IMG_", "").replace("img_", "")
+        predictions.append([image_id] + final_counts)
+
+    # Write to CSV
+    with open(output_csv_path, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["id"] + class_names)
+        writer.writerows(predictions)
+
+    print(f"✅ Submission file saved to: {output_csv_path}")
+
+
 def non_max_suppression(boxes, scores, iou_threshold=0.5):
     """Class-agnostic NMS for boxes of the same class"""
     if len(boxes) == 0:
@@ -647,89 +569,36 @@ all_data = pd.read_csv("../labels_YOLO.csv")
 all_files = all_data['filename'].unique()
 train_files, valid_files = train_test_split(all_files, test_size=0.2) # , random_state=42 si on veut la même répartition à chaque fois
 
-class RandomAffineWithBoxes:
-    def __init__(self, degrees=0, translate=(0.0, 0.0), color_jitter_params=None):
-        self.degrees = degrees
-        self.translate = translate
-        # Default jitter if none provided
-        if color_jitter_params is None:
-            color_jitter_params = {
-                'brightness': 0.2,
-                'contrast': 0.2,
-                'saturation': 0.2,
-                'hue': 0.05
-            }
-        self.color_jitter = T.ColorJitter(**color_jitter_params)
-
-    def __call__(self, image, boxes):
-        original_image = image.copy()
-        original_boxes = boxes.copy()
-
-        # === Geometric Transformations ===
-        angle = np.random.uniform(-self.degrees, self.degrees)
-        translate_x = int(self.translate[0] * image.size[0])
-        translate_y = int(self.translate[1] * image.size[1])
-        translate = (
-            np.random.randint(-translate_x, translate_x + 1),
-            np.random.randint(-translate_y, translate_y + 1)
-        )
-        image = TF.affine(image, angle=angle, translate=translate, scale=1.0, shear=0)
-
-        # === Color Jitter ===
-        image = self.color_jitter(image)
-
-        new_boxes = []
-        for box in boxes:
-            cx, cy, w, h = box
-            cx_pix = cx * IMG_RESIZED_W
-            cy_pix = cy * IMG_RESIZED_H
-
-            corners = torch.tensor([
-                [cx_pix - w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
-                [cx_pix + w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
-                [cx_pix + w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2],
-                [cx_pix - w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2]
-            ], dtype=torch.float)
-
-            angle_rad = -angle * np.pi / 180.0
-            rot_matrix = torch.tensor([
-                [np.cos(angle_rad), -np.sin(angle_rad)],
-                [np.sin(angle_rad),  np.cos(angle_rad)]
-            ], dtype=torch.float)
-
-            center = torch.tensor([IMG_RESIZED_W / 2, IMG_RESIZED_H / 2], dtype=torch.float)
-            rotated = (corners - center) @ rot_matrix.T + center
-            rotated += torch.tensor(translate, dtype=torch.float)
-
-            x_coords = rotated[:, 0].clamp(0, IMG_RESIZED_W)
-            y_coords = rotated[:, 1].clamp(0, IMG_RESIZED_H)
-            new_cx = (x_coords.min() + x_coords.max()) / 2 / IMG_RESIZED_W
-            new_cy = (y_coords.min() + y_coords.max()) / 2 / IMG_RESIZED_H
-            new_w = (x_coords.max() - x_coords.min()) / IMG_RESIZED_W
-            new_h = (y_coords.max() - y_coords.min()) / IMG_RESIZED_H
-
-            if (0 <= new_cx <= 1 and 0 <= new_cy <= 1 and 0 < new_w <= 1 and 0 < new_h <= 1):
-                new_boxes.append([new_cx, new_cy, new_w, new_h])
-
-        if len(new_boxes) == 0:
-            return TF.to_tensor(original_image), original_boxes
-        return TF.to_tensor(image), new_boxes
-
 # class RandomAffineWithBoxes:
-#     def __init__(self, degrees=0, translate=(0.0, 0.0)):
+#     def __init__(self, degrees=0, translate=(0.0, 0.0), color_jitter_params=None):
 #         self.degrees = degrees
 #         self.translate = translate
+#         # Default jitter if none provided
+#         if color_jitter_params is None:
+#             color_jitter_params = {
+#                 'brightness': 0.2,
+#                 'contrast': 0.2,
+#                 'saturation': 0.2,
+#                 'hue': 0.05
+#             }
+#         self.color_jitter = T.ColorJitter(**color_jitter_params)
 
 #     def __call__(self, image, boxes):
 #         original_image = image.copy()
 #         original_boxes = boxes.copy()
 
+#         # === Geometric Transformations ===
 #         angle = np.random.uniform(-self.degrees, self.degrees)
 #         translate_x = int(self.translate[0] * image.size[0])
 #         translate_y = int(self.translate[1] * image.size[1])
-#         translate = (np.random.randint(-translate_x, translate_x+1), np.random.randint(-translate_y, translate_y+1)) # np.random.randint(a, b) est inclusif pour a et exclusif pour b d'où les +1
-
+#         translate = (
+#             np.random.randint(-translate_x, translate_x + 1),
+#             np.random.randint(-translate_y, translate_y + 1)
+#         )
 #         image = TF.affine(image, angle=angle, translate=translate, scale=1.0, shear=0)
+
+#         # === Color Jitter ===
+#         image = self.color_jitter(image)
 
 #         new_boxes = []
 #         for box in boxes:
@@ -738,13 +607,13 @@ class RandomAffineWithBoxes:
 #             cy_pix = cy * IMG_RESIZED_H
 
 #             corners = torch.tensor([
-#                 [cx_pix - w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
-#                 [cx_pix + w*IMG_RESIZED_W/2, cy_pix - h*IMG_RESIZED_H/2],
-#                 [cx_pix + w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2],
-#                 [cx_pix - w*IMG_RESIZED_W/2, cy_pix + h*IMG_RESIZED_H/2]
+#                 [cx_pix - w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
+#                 [cx_pix + w * IMG_RESIZED_W / 2, cy_pix - h * IMG_RESIZED_H / 2],
+#                 [cx_pix + w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2],
+#                 [cx_pix - w * IMG_RESIZED_W / 2, cy_pix + h * IMG_RESIZED_H / 2]
 #             ], dtype=torch.float)
 
-#             angle_rad = -angle * np.pi / 180.0 # signe inversé car axe y vers le bas
+#             angle_rad = -angle * np.pi / 180.0
 #             rot_matrix = torch.tensor([
 #                 [np.cos(angle_rad), -np.sin(angle_rad)],
 #                 [np.sin(angle_rad),  np.cos(angle_rad)]
@@ -761,25 +630,173 @@ class RandomAffineWithBoxes:
 #             new_w = (x_coords.max() - x_coords.min()) / IMG_RESIZED_W
 #             new_h = (y_coords.max() - y_coords.min()) / IMG_RESIZED_H
 
-#             if (
-#                 0 <= new_cx <= 1 and 0 <= new_cy <= 1 and
-#                 0 < new_w <= 1 and 0 < new_h <= 1
-#             ): # on vérifie que la boîte est toujours dans l'image
+#             if (0 <= new_cx <= 1 and 0 <= new_cy <= 1 and 0 < new_w <= 1 and 0 < new_h <= 1):
 #                 new_boxes.append([new_cx, new_cy, new_w, new_h])
 
-#         # Si toutes les boîtes sont invalides, on annule la transformation
 #         if len(new_boxes) == 0:
 #             return TF.to_tensor(original_image), original_boxes
-        
 #         return TF.to_tensor(image), new_boxes
 
-# Remplace la transformation simple par la version custom
-#train_transform = RandomAffineWithBoxes(degrees=20, translate=(0.1, 0.1))
-train_transform = RandomAffineWithBoxes(
-    degrees=20, 
-    translate=(0.1, 0.1),
-    color_jitter_params={'brightness': 0.3, 'contrast': 0.3, 'saturation': 0.1, 'hue': 0.01}
+class EnhancedDataAugmentation:
+    def __init__(self, 
+                degrees=15,             # Mild rotation (since images are top-down)
+                translate=(0.1, 0.1),   # Moderate translation
+                scale=(0.8, 1.2),       # Zoom in/out
+                shear=10,               # Slight shear distortion
+                brightness=0.4,         # Stronger brightness variation
+                contrast=0.4,           # Stronger contrast variation
+                saturation=0.2,         # Moderate saturation variation
+                hue=0.015,              # Slight hue shift
+                blur_prob=0.3,          # Probability of applying blur
+                noise_prob=0.2):        # Probability of adding noise
+                
+        self.degrees = degrees
+        self.translate = translate
+        self.scale = scale
+        self.shear = shear
+        self.blur_prob = blur_prob
+        self.noise_prob = noise_prob
+        self.jitter = T.ColorJitter(
+            brightness=brightness, 
+            contrast=contrast,
+            saturation=saturation,
+            hue=hue
+        )
+        
+    def _apply_blur(self, image):
+        # Apply Gaussian blur with random radius
+        radius = np.random.uniform(0.5, 1.5)
+        return image.filter(Image.GaussianBlur(radius=radius))
+    
+    def _apply_noise(self, image):
+        # Add random Gaussian noise to the image
+        img_np = np.array(image).astype(np.float32)
+        noise = np.random.normal(0, 10, img_np.shape)
+        img_np = np.clip(img_np + noise, 0, 255).astype(np.uint8)
+        return Image.fromarray(img_np)
+        
+    def _transform_box(self, box, angle, translate, scale, shear, img_size):
+        cx, cy, w, h = box
+        cx_pix = cx * img_size[0]
+        cy_pix = cy * img_size[1]
+
+        # Get corner points of the box
+        corners = torch.tensor([
+            [cx_pix - w * img_size[0] / 2, cy_pix - h * img_size[1] / 2],
+            [cx_pix + w * img_size[0] / 2, cy_pix - h * img_size[1] / 2],
+            [cx_pix + w * img_size[0] / 2, cy_pix + h * img_size[1] / 2],
+            [cx_pix - w * img_size[0] / 2, cy_pix + h * img_size[1] / 2]
+        ], dtype=torch.float)
+        
+        center = torch.tensor([img_size[0] / 2, img_size[1] / 2])
+        
+        # Apply scale
+        corners = center + (corners - center) * scale
+        
+        # Apply rotation
+        angle_rad = -angle * np.pi / 180.0
+        rot_matrix = torch.tensor([
+            [np.cos(angle_rad), -np.sin(angle_rad)],
+            [np.sin(angle_rad),  np.cos(angle_rad)]
+        ], dtype=torch.float)
+        corners = center + (corners - center) @ rot_matrix.T
+        
+        # Apply shear
+        shear_rad = shear * np.pi / 180.0
+        shear_matrix = torch.tensor([
+            [1, np.tan(shear_rad)],
+            [0, 1]
+        ], dtype=torch.float)
+        corners = center + (corners - center) @ shear_matrix.T
+        
+        # Apply translation
+        corners += torch.tensor(translate, dtype=torch.float)
+        
+        # Recompute new box
+        x_coords = corners[:, 0].clamp(0, img_size[0])
+        y_coords = corners[:, 1].clamp(0, img_size[1])
+        
+        new_cx = (x_coords.min() + x_coords.max()) / 2 / img_size[0]
+        new_cy = (y_coords.min() + y_coords.max()) / 2 / img_size[1]
+        new_w = (x_coords.max() - x_coords.min()) / img_size[0]
+        new_h = (y_coords.max() - y_coords.min()) / img_size[1]
+        
+        # Discard invalid boxes
+        if 0 <= new_cx <= 1 and 0 <= new_cy <= 1 and 0 < new_w <= 1 and 0 < new_h <= 1:
+            return [new_cx, new_cy, new_w, new_h]
+        return None
+            
+    def __call__(self, image, boxes):
+        original_image = image.copy()
+        original_boxes = boxes.copy()
+        img_size = (IMG_RESIZED_W, IMG_RESIZED_H)
+        
+        # Generate transformation parameters
+        angle = np.random.uniform(-self.degrees, self.degrees)
+        translate_x = int(self.translate[0] * image.size[0])
+        translate_y = int(self.translate[1] * image.size[1])
+        translate = (
+            np.random.randint(-translate_x, translate_x + 1),
+            np.random.randint(-translate_y, translate_y + 1)
+        )
+        scale = np.random.uniform(self.scale[0], self.scale[1])
+        shear = np.random.uniform(-self.shear, self.shear)
+        
+        # Apply affine transform to the image
+        image = TF.affine(
+            image, 
+            angle=angle, 
+            translate=translate, 
+            scale=scale, 
+            shear=shear
+        )
+        
+        # Apply color jitter
+        image = self.jitter(image)
+        
+        # Optionally apply blur
+        if np.random.random() < self.blur_prob:
+            image = self._apply_blur(image)
+            
+        # Optionally apply noise
+        if np.random.random() < self.noise_prob:
+            image = self._apply_noise(image)
+            
+        # Transform each bounding box
+        new_boxes = []
+        for box in boxes:
+            transformed_box = self._transform_box(
+                box, angle, translate, scale, shear, img_size
+            )
+            if transformed_box:
+                new_boxes.append(transformed_box)
+                
+        # Fallback to original image if no boxes remain
+        if len(new_boxes) == 0:
+            return TF.to_tensor(original_image), original_boxes
+            
+        return TF.to_tensor(image), new_boxes
+
+
+
+train_transform = EnhancedDataAugmentation(
+    degrees=15,             # Rotation limitée car vue du dessus
+    translate=(0.1, 0.1),   # Translation modérée
+    scale=(0.8, 1.2),       # Zoom in/out
+    shear=10,               # Déformation légère
+    brightness=0.4,         # Variation de luminosité
+    contrast=0.4,           # Variation de contraste
+    saturation=0.2,         # Variation de saturation
+    hue=0.015,              # Variation légère de teinte
+    blur_prob=0.3,          # Probabilité d'appliquer du flou
+    noise_prob=0.2          # Probabilité d'ajouter du bruit
 )
+
+# train_transform = RandomAffineWithBoxes(
+#     degrees=20, 
+#     translate=(0.1, 0.1),
+#     color_jitter_params={'brightness': 0.3, 'contrast': 0.3, 'saturation': 0.1, 'hue': 0.01}
+# )
 valid_transform = lambda img, boxes: (T.ToTensor()(img), boxes)
 
 train_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO.csv", train_files, train_transform)
@@ -787,6 +804,44 @@ valid_dataset = YOLODataset("../dataset_project_iapr2025/train", "../labels_YOLO
 
 train_loader = DataLoader(train_dataset, batch_size=2, shuffle=True)
 valid_loader = DataLoader(valid_dataset, batch_size=2, shuffle=False)
+
+
+# === Test Dataset Setup ===
+
+# Step 1: List test image files
+test_dir = "../dataset_project_iapr2025/test"
+test_files = sorted([f for f in os.listdir(test_dir) if f.endswith(".JPG")])
+
+# Step 2: Define test dataset class (if not already defined)
+class YOLOTestDataset(Dataset):
+    def __init__(self, img_dir, filenames, transform=None):
+        self.img_dir = img_dir
+        self.filenames = filenames
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.filenames)
+
+    def __getitem__(self, idx):
+        fname = self.filenames[idx]
+        img_path = os.path.join(self.img_dir, fname)
+        image = Image.open(img_path).convert("RGB")
+        image = image.resize((IMG_RESIZED_W, IMG_RESIZED_H))
+
+        if self.transform:
+            image, _ = self.transform(image, [])
+        else:
+            image = T.ToTensor()(image)
+
+        dummy_boxes = torch.zeros((S_H, S_W, B * 5 + C))  # Needed to keep return format compatible
+        return image, dummy_boxes, fname
+
+# Step 3: Create test dataset
+test_dataset = YOLOTestDataset(
+    img_dir=test_dir,
+    filenames=test_files,
+    transform=valid_transform
+)
 
 
 def count_parameters(model):
@@ -814,7 +869,7 @@ if os.path.exists(checkpoint_path):
     best_val_loss = checkpoint.get('val_loss', float('inf'))
     print(f"✅ Loaded checkpoint from epoch {start_epoch}, val_loss = {best_val_loss:.4f}")
 
-epochs = 600
+epochs = 10
 
 best_val_loss = float('inf')
 epochs = start_epoch + epochs  
@@ -845,7 +900,7 @@ for epoch in range(start_epoch, epochs):
     print(f"Valid Loss: {avg_val_loss:.4f}")
 
     # Sauvegarde des prédictions visuelles
-    save_validation_predictions(model, valid_dataset, "images_validation_YOLO", score_thresh=0.6, iou_thresh=0.6)
+    save_validation_predictions(model, valid_dataset, "images_validation_YOLO", score_thresh=0.75, iou_thresh=0.5) # 
 
     # Sauvegarde du meilleur modèle complet (weights + optimizer + epoch)
     if avg_val_loss < best_val_loss:
@@ -858,3 +913,34 @@ for epoch in range(start_epoch, epochs):
         }
         torch.save(checkpoint, "checkpoint_yolov1.pth")
         print(f"✔ Best model saved at epoch {epoch+1} with val_loss = {avg_val_loss:.4f}")
+
+    class_names = [
+        "Jelly White", "Jelly Milk", "Jelly Black", "Amandina", "Crème brulée",
+        "Triangolo", "Tentation noir", "Comtesse", "Noblesse", "Noir authentique",
+        "Passion au lait", "Arabia", "Stracciatella"
+    ]
+
+    # Generate the Kaggle submission CSV
+    os.makedirs("output", exist_ok=True)
+    generate_kaggle_submission(model, valid_dataset, "output/kaggle_submission.csv", class_names,score_thresh=0.75, iou_thresh=0.5)
+
+# === Test the model on the test dataset ===
+# === ✅ Generate Kaggle CSV on test set ===
+os.makedirs("output", exist_ok=True)
+generate_kaggle_submission(
+    model, 
+    test_dataset, 
+    "output/test_submission.csv", 
+    class_names,
+    score_thresh=0.75, 
+    iou_thresh=0.5
+)
+
+# === 👁️ Visual sanity check for test set ===
+save_validation_predictions(
+    model, 
+    test_dataset, 
+    "images_test_predictions", 
+    score_thresh=0.75, 
+    iou_thresh=0.5
+)
