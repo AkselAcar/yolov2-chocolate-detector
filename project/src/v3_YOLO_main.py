@@ -409,16 +409,17 @@ save_model = True
 # model checkpoint file name 
 checkpoint_file = "checkpoint.pth.tar"
 
-# Anchor boxes for each feature map scaled between 0 and 1 
-# 3 feature maps at 3 different scales based on YOLOv3 paper 
+# Anchor boxes scaled between 0 and 1 
+# list de 9 tuples
 ANCHORS = [                                                               
 	(0.14105, 0.10625), (0.11015, 0.16249), (0.09875, 0.14781),
 	(0.08998, 0.13511), (0.08254, 0.12333), (0.07731, 0.19987),
 	(0.07835, 0.09580), (0.06312, 0.11607), (0.06459, 0.21892)]
 
 
+
 # Batch size for training 
-batch_size = 32
+batch_size = 1
 
 # Learning rate for training 
 learning_rate = 1e-4
@@ -459,9 +460,9 @@ class Dataset(torch.utils.data.Dataset):
 		# Grid sizes for each scale 
 		self.grid_size = grid_size
 		# Anchor boxes # anchors is initially a list of 3 lists, each containing 3 tuples (width, height) normalized between 0 and 1
-		self.anchors = torch.tensor(anchors[0]) # anchors is now a tensor of shape (9, 2)
+		self.anchors = torch.tensor(anchors) # anchors is now a tensor of shape (9, 2)
 		# Number of anchor boxes 
-		self.num_anchors = self.anchors.shape[0]
+		self.num_anchors = len(self.anchors) # 9 anchors
 		# Number of classes 
 		self.num_classes = num_classes 
 		# Ignore IoU threshold 
@@ -470,7 +471,7 @@ class Dataset(torch.utils.data.Dataset):
 	def __len__(self): 
 		return len(self.label_list) 
 	
-	def __getitem__(self, idx): 
+	def __getitem__(self, idx):
 		# Getting the label path 
 		label_path = os.path.join(self.label_dir, self.label_list.iloc[idx, 1]) #self.label_list.iloc[idx, 1] récupère la valeur de la colonne 1 (donc label_name) à la ligne idx
 		# We are applying roll to move class label to the last column 
@@ -493,17 +494,18 @@ class Dataset(torch.utils.data.Dataset):
 		# Below assumes 3 scale predictions (as paper) and same num of anchors per scale 
 		# target : [probabilities, x, y, width, height, class_label] 
 		# for now targets is empty
-		target = torch.zeros((self.num_anchors, self.grid_size, self.grid_size, 6)) # targets is a list of |s| tensors of shape (num_anchors_per_scale, s_i, s_i, 6) et 6 car [probabilities, x, y, width, height, class_label]
+		target = torch.zeros((self.num_anchors, self.grid_size, self.grid_size, 6)) # targets is a tensor of shape (num_anchors_per_scale, s_i, s_i, 6) et 6 car [probabilities, x, y, width, height, class_label]
 										  # en gros pour chaque échelle on crée une grille dont chaque case contient 6 valeurs (probabilité, x, y, width, height, class_label)
 										  # targets shape:  torch.Size([9, 26, 26, 6])
+
 		# Identify anchor box and cell for each bounding box 
 		for box in bboxes: 
 			# Calculate iou of each bounding box WITH ANCHOR BOXES
-			iou_anchors = iou(torch.tensor(box[2:4]), self.anchors, is_pred=False)
+			iou_anchors = iou(torch.tensor(box[2:4]), self.anchors, is_pred=False) # iou_anchors is a tensor of shape (9,)
 													  
 			# Selecting the best anchor box 
-			anchor_indices = iou_anchors.argsort(descending=True, dim=0)
-			x, y, width, height, class_label = box 
+			anchor_indices = iou_anchors.argsort(descending=True, dim=0) # anchor_indices is a tensor of shape (9,)
+			x, y, width, height, class_label = box # x,y,width,height,class_label are all normalized between 0 and 1
 
 			# Assigning the bounding box to the best matching anchor box
 			has_anchor = False
@@ -520,10 +522,10 @@ class Dataset(torch.utils.data.Dataset):
 					target[anchor_idx, i, j, 0] = 1
 
 					# Calculating the center of the bounding box relative to the cell 
-					x_cell, y_cell = self.grid_size * x - j, self.grid_size * y - i 
+					x_cell, y_cell = self.grid_size * x - j, self.grid_size * y - i  # x_cell, y_cell are the coordinates of the center of the bounding box relative to the cell (0-1)
 
-					# Calculating the width and height of the bounding box relative to the cell 
-					width_cell, height_cell = (width * self.grid_size, height * self.grid_size)
+					# Calculating the width and height of the bounding box relative to the grid 
+					width_cell, height_cell = (width * self.grid_size, height * self.grid_size) # width_cell, height_cell are the width and height of the bounding box relative to the grid
 
 					# Identify the box coordinates 
 					box_coordinates = torch.tensor([x_cell, y_cell, width_cell, height_cell])
@@ -851,22 +853,24 @@ class ResidualBlock(nn.Module):
 
 # Defining scale prediction class 
 class ScalePrediction(nn.Module): 
-	def __init__(self, in_channels, num_classes): 
+	def __init__(self, in_channels, num_classes, num_anchors): 
 		super().__init__() 
 		# Defining the layers in the network 
 		self.pred = nn.Sequential( 
 			nn.Conv2d(in_channels, 2*in_channels, kernel_size=3, padding=1), 
 			nn.BatchNorm2d(2*in_channels), 
 			nn.LeakyReLU(0.1), 
-			nn.Conv2d(2*in_channels, (num_classes + 5) * 3, kernel_size=1), 
+			nn.Conv2d(2*in_channels, (num_classes + 5) * num_anchors, kernel_size=1), 
 		) 
 		self.num_classes = num_classes 
+		self.num_anchors = num_anchors
 	
 	# Defining the forward pass and reshaping the output to the desired output 
 	# format: (batch_size, 3, grid_size, grid_size, num_classes + 5) 
 	def forward(self, x): 
+		B, _, H, W = x.shape
 		output = self.pred(x) 
-		output = output.view(x.size(0), 3, self.num_classes + 5, x.size(2), x.size(3)) 
+		output = output.view(B, self.num_anchors, self.num_classes + 5, H, W)
 		output = output.permute(0, 1, 3, 4, 2) 
 		return output
 
@@ -879,7 +883,7 @@ class YOLOv3(nn.Module):
 		self.in_channels = in_channels 
 
 		# Layers list for YOLOv3 
-		self.layers = nn.ModuleList([ 
+		self.model = nn.Sequential(
 			CNNBlock(in_channels, 32, kernel_size=3, stride=1, padding=1), 
 			CNNBlock(32, 64, kernel_size=3, stride=2, padding=1), 
 			ResidualBlock(64, num_repeats=1), 
@@ -889,23 +893,19 @@ class YOLOv3(nn.Module):
 			ResidualBlock(256, num_repeats=8), 
 			CNNBlock(256, 512, kernel_size=3, stride=2, padding=1), 
 			ResidualBlock(512, num_repeats=8), 
-			CNNBlock(512, 1024, kernel_size=3, stride=2, padding=1), 
+			CNNBlock(512, 1024, kernel_size=3, stride=1, padding=1), 
 			ResidualBlock(1024, num_repeats=4), 
 			CNNBlock(1024, 512, kernel_size=1, stride=1, padding=0), 
 			CNNBlock(512, 1024, kernel_size=3, stride=1, padding=1), 
 			ResidualBlock(1024, use_residual=False, num_repeats=1), 
 			CNNBlock(1024, 512, kernel_size=1, stride=1, padding=0), 
-			ScalePrediction(512, num_classes=num_classes)
-		]) 
+			ScalePrediction(512, num_classes=num_classes, num_anchors=len(ANCHORS))
+		) 
 	
 	# Forward pass for YOLOv3 with route connections and scale predictions 
 	def forward(self, x):
-		for layer in self.layers:
-			x = layer(x) 
-
-			if isinstance(layer, ScalePrediction):
-				return [x]
-		return [x]
+		x = self.model(x)
+		return x
 # input.shape = (batch_size, 3, 416, 416)
 # output = liste de |s| tenseurs de forme (batch_size, num_anchors dans chaque scale, grid_size, grid_size, num_classes + 5)
 
@@ -925,10 +925,12 @@ class YOLOLoss(nn.Module):
 		self.cross_entropy = nn.CrossEntropyLoss() # pour la classification (classes)
 		self.sigmoid = nn.Sigmoid()                # pour forcer x, y, objectness ∈ [0,1]
 	
-	def forward(self, pred, target, anchors): 
+	def forward(self, pred, target, anchors): # target = (batch_size, 9, 26, 26, 6) = (batch_size, num_anchors, grid_size, grid_size, 6), 6 = (objectness, x, y, w, h, class_label), (x,y) relatif to the cell, (w,h) relative to the grid size
+		                                      # pred = (batch_size, 9, 26, 26, num_classes + 5)
+						      				  # anchors sera le scale_anchors entre 0 et 26
 		# Identifying which cells in target have objects 
-		# and which have no objects 
-		obj = target[..., 0] == 1
+		# and which have no objects
+		obj = target[..., 0] == 1 # obj.sum = nombre d'objets dans la batch
 		no_obj = target[..., 0] == 0
 
 		# Calculating No object loss 
@@ -938,7 +940,14 @@ class YOLOLoss(nn.Module):
 
 		
 		# Reshaping anchors to match predictions 
-		anchors = anchors.reshape(1, 3, 1, 1, 2).to(pred.device)
+		anchors = anchors.reshape(1, pred.size(1), 1, 1, 2).to(pred.device) # pred.size(1) = 9 ==> anchors = (1, 9, 1, 1, 2) ce qui est compatible avec pred[..., 3:5].shape
+					#             │     │            │  │  │
+		    		#             │     │            │  │  └─ largeur et hauteur (w, h)
+					#             │     │            │  └──── broadcasté sur chaque cellule colonne (W)
+					#             │     │            └─────── broadcasté sur chaque cellule ligne (H)
+					#             │     └──────────────────── num_anchors (ex: 9)
+					#             └────────────────────────── batch_size (à broadcast)
+
 		# Box prediction confidence 
 		box_preds = torch.cat([self.sigmoid(pred[..., 1:3]), 
 							torch.exp(pred[..., 3:5]) * anchors 
@@ -947,7 +956,7 @@ class YOLOLoss(nn.Module):
 		ious = iou(box_preds[obj], target[..., 1:5][obj]).detach() 
 		# Calculating Object loss 
 		object_loss = self.mse(self.sigmoid(pred[..., 0:1][obj]), 
-							ious * target[..., 0:1][obj]) 
+							   ious * target[..., 0:1][obj]) #target[..., 0:1] == 1 quand il y a un objet (sinon 0). But : la sortie pred[..., 0] doit être proche de IoU si l’objet est bien prédit.
 
 		
 		# Predicted box coordinates 
@@ -961,7 +970,7 @@ class YOLOLoss(nn.Module):
 		
 		# Claculating class loss 
 		class_loss = self.cross_entropy((pred[..., 5:][obj]), 
-								target[..., 5][obj].long()) 
+									     target[..., 5][obj].long()) 
 
 		# Total loss 
 		return ( 
@@ -977,10 +986,10 @@ def evaluate(loader, model, loss_fn, scaled_anchors, device):
 	with torch.no_grad():
 		for x, y in loader:
 			x = x.to(device)
-			y0 = y[0].to(device)
+			y = y.to(device)
 			with torch.amp.autocast(device):
 				outputs = model(x)
-				loss = loss_fn(outputs[0], y0, scaled_anchors[0])
+				loss = loss_fn(outputs, y, scaled_anchors)
 				losses.append(loss.item())
 	mean_loss = sum(losses) / len(losses) if losses else 0
 	return mean_loss
@@ -992,23 +1001,18 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
 	# Initializing a list to store the losses 
 	losses = [] 
-
 	# Iterating over the training data 
 	for _, (x, y) in enumerate(progress_bar): 
-		x = x.to(device) 
-		y0 = y[0].to(device)
-		print("x.shape", x.shape)
-		print("y0.shape", y0.shape)
+		x = x.to(device) # x is a tensor of shape (batch_size, 3, 416, 416)
+		y = y.to(device) # y0 is a tensor of shape (batch_size, 9, 26, 26, 6) (num_anchors, grid_size, grid_size, 6)
+
 		with torch.amp.autocast(device): 
 			# Getting the model predictions 
-			print("input model", x.shape)
-			outputs = model(x) 
-			print("output model", outputs.shape)
-			print("output model type", type(outputs))
+			outputs = model(x) # tensor (batch_size, 9, grid_size, grid_size, num_classes + 5)
 			# Calculating the loss at each scale 
-			loss = loss_fn(outputs[0], y0, scaled_anchors[0])
+			loss = loss_fn(outputs, y, scaled_anchors) # scaled_anchors is a tensor of shape (9, 2) (num_anchors, 2)
 
-		# Add the loss to the list 
+		# Add the loss to the list
 		losses.append(loss.item()) 
 
 		# Reset gradients 
@@ -1031,7 +1035,8 @@ def training_loop(loader, model, optimizer, loss_fn, scaler, scaled_anchors):
 
 # Creating the model from YOLOv3 class 
 model = YOLOv3().to(device) 
-
+num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+print(f"Nombre de paramètres entraînables : {num_params}")
 # Defining the optimizer 
 optimizer = optim.Adam(model.parameters(), lr = learning_rate) 
 
@@ -1206,7 +1211,7 @@ def save_gt_images(loader, class_labels, save_dir="gt_visualizations"):
 	
 	for batch_idx, (images, targets) in enumerate(tqdm(loader)):
 		# Convert images from tensor to numpy and denormalize
-		images = images.permute(0, 2, 3, 1).cpu().numpy()
+		images = images.permute(0, 2, 3, 1).cpu().numpy() # shape (batch_size, channels, height, width) to (batch_size, height, width, channels)
 		images = (images * 255).astype(np.uint8)
 		
 		# Process each image in the batch
@@ -1221,19 +1226,20 @@ def save_gt_images(loader, class_labels, save_dir="gt_visualizations"):
 			anchor_indices = torch.where(target[..., 0] == 1)  # Cells with objects
 			
 			for anchor, i, j in zip(*anchor_indices):
-				# Get box coordinates (already in [0,1] range)
+				# par ex anchor = 0, i = 7, j = 15
+				# Get box coordinates : x,y in [0,1] relative to the cell, w,h in [0,26] so relative to the grid size
 				x, y, w, h = target[anchor, i, j, 1:5]
-				class_id = target[anchor, i, j, 5].int()
+				class_id = target[anchor, i, j, 5].int() # in [0, 12]
 				
 				# Convert from grid coordinates to image coordinates
 				cell_size = 1/26
 				
 				# Calculate box coordinates in image space
-				x_center = (j + x) * cell_size
+				x_center = (j + x) * cell_size # remet entre 0 et 1 relative to the grid size
 				y_center = (i + y) * cell_size
-				width = w * cell_size
+				width = w * cell_size # remet entre 0 et 1 relative to the grid size
 				height = h * cell_size
-				
+
 				all_boxes.append([
 					class_id.item(),  # class
 					1.0,             # confidence (ground truth)
@@ -1244,7 +1250,7 @@ def save_gt_images(loader, class_labels, save_dir="gt_visualizations"):
 				])
 			
 			# Draw all ground truth boxes
-			for box in all_boxes:
+			for box in all_boxes: # all_boxes est toutes les boites d'une image normalisées entre 0 et 1
 				class_id, conf, x, y, w, h = box
 				
 				# Skip if confidence is too low (shouldn't happen for GT)
@@ -1252,7 +1258,7 @@ def save_gt_images(loader, class_labels, save_dir="gt_visualizations"):
 					continue
 				
 				# Calculate coordinates
-				x1 = (x - w/2) * img.shape[1]
+				x1 = (x - w/2) * img.shape[1] # trouve le coin supérieur gauche de la boite en pixels (416x416)
 				y1 = (y - h/2) * img.shape[0]
 				width = w * img.shape[1]
 				height = h * img.shape[0]
@@ -1286,12 +1292,12 @@ def save_gt_images(loader, class_labels, save_dir="gt_visualizations"):
 			plt.close()
 
 # Usage example
-save_gt_images(
-    loader=train_loader,
-    class_labels=class_labels,
-    save_dir="train_gt_visualizations"
-)
-print(f"Saved ground truth visualizations to train_gt_visualizations/")
+#save_gt_images(
+#    loader=train_loader,
+#    class_labels=class_labels,
+#    save_dir="train_gt_visualizations"
+#)
+#print(f"Saved ground truth visualizations to train_gt_visualizations/")
 
 if load_model:
 	load_checkpoint("checkpoint.pth.tar", model, optimizer, learning_rate)
