@@ -180,46 +180,38 @@ def nms(bboxes, iou_threshold, threshold):
 
 ##################################### CONVERTS CELLS TO BOUNDING BOXES #####################################
 
-# Function to convert cells to bounding boxes, predictions = [B, A, S, S, 5 + C]
-# return : Une liste de taille B, où chaque élément est une liste de A × S × S boîtes, et chaque boîte est un vecteur de 6 valeurs : [class, score, x_center, y_center, width, height]
-def convert_cells_to_bboxes(predictions, anchors, s, is_predictions=True): 
-	# Batch size used on predictions 
-	batch_size = predictions.shape[0] 
+# anchors sera les scaled_anchors entre 0 et 26 et prediction est la sortie du modèle
+def convert_cell_to_bboxes(prediction, anchors, grid_size): # prediction est de la forme (BATCH_SIZE, num_anchors, S, S, 5 + num_classes)
 	# Number of anchors 
 	num_anchors = len(anchors) 
 	# List of all the predictions 
-	box_predictions = predictions[..., 1:5] 
+	box_predictions = prediction[..., 1:5] 
 
-	# If the input is predictions then we will pass the x and y coordinate 
+	# The input is predictions then we will pass the x and y coordinate 
 	# through sigmoid function and width and height to exponent function and 
 	# calculate the score and best class. 
-	if is_predictions: 
-		anchors = anchors.reshape(1, num_anchors, 1, 1, 2).to(predictions.device)
-		box_predictions[..., 0:2] = torch.sigmoid(box_predictions[..., 0:2]) 
-		box_predictions[..., 2:] = torch.exp(box_predictions[..., 2:]) * anchors 
-		scores = torch.sigmoid(predictions[..., 0:1]) 
-		best_class = torch.argmax(predictions[..., 5:], dim=-1).unsqueeze(-1) 
 	
-	# Else we will just calculate scores and best class. 
-	else: 
-		scores = predictions[..., 0:1] 
-		best_class = predictions[..., 5:6] 
+	anchors = anchors.reshape(1, num_anchors, 1, 1, 2).to(prediction.device)
+	box_predictions[..., 0:2] = torch.sigmoid(box_predictions[..., 0:2]) # coord dans la cell
+	box_predictions[..., 2:] = torch.exp(box_predictions[..., 2:]) * anchors 
+	scores = torch.sigmoid(prediction[..., 0:1]) 
+	best_class = torch.argmax(prediction[..., 5:], dim=-1, keepdim=True)
+	# on a donc x et y entre 0 et 1 pour la cellule, width 
 
 	# Calculate cell indices 
-	cell_indices = (torch.arange(s).repeat(batch_size, num_anchors, s, 1).unsqueeze(-1).to(predictions.device))
+	cell_indices = (torch.arange(grid_size).repeat(batch_size, num_anchors, grid_size, 1).unsqueeze(-1).to(prediction.device))
 
 	# Calculate x, y, width and height with proper scaling 
-	x = 1 / s * (box_predictions[..., 0:1] + cell_indices) 
-	y = 1 / s * (box_predictions[..., 1:2] + cell_indices.permute(0, 1, 3, 2, 4)) 
-	width_height = 1 / s * box_predictions[..., 2:4] 
+	x = 1 / grid_size * (box_predictions[..., 0:1] + cell_indices) 
+	y = 1 / grid_size * (box_predictions[..., 1:2] + cell_indices.permute(0,2,1,3)) 
+	width_height = 1 / grid_size * box_predictions[..., 2:4] 
 
 	# Concatinating the values and reshaping them in 
 	# (BATCH_SIZE, num_anchors * S * S, 6) shape 
-	converted_bboxes = torch.cat((best_class, scores, x, y, width_height), dim=-1)
-	converted_bboxes = converted_bboxes.reshape(batch_size, num_anchors * s * s, 6)
+	converted_bboxes = torch.cat([best_class, scores, x, y, width_height], dim=-1)
 
 	# Returning the reshaped and converted bounding box list 
-	return converted_bboxes.tolist()
+	return converted_bboxes.viex(-1, 6)
 
 ###################################### PLOT IMAGES WITH BOUNDING BOXES AND CLASS LABELS ######################################
 """
@@ -281,7 +273,8 @@ def plot_image(image, boxes, save_dir=None, filename="image.png"):
 	else:
 		plt.show()
 """
-def plot_image(image, boxes, save_dir=None, filename="image.png"):
+def plot_image(image, boxes, save_dir=None, filename="image.png"): # attend des boxes de format [class, confidence, x, y, width, height]
+																   # avec x,y,width,height entre 0 et 1 et class entre 0 et 12
 	"""
 	Function to plot images with bounding boxes and class labels.
 	
@@ -884,22 +877,28 @@ class YOLOv3(nn.Module):
 
 		# Layers list for YOLOv3 
 		self.model = nn.Sequential(
-			CNNBlock(in_channels, 32, kernel_size=3, stride=1, padding=1), 
+			CNNBlock(in_channels, 16, kernel_size=3, stride=1, padding=1), 
+			CNNBlock(16, 32, kernel_size=3, stride=2, padding=1), 
+			ResidualBlock(32, num_repeats=1),
+
 			CNNBlock(32, 64, kernel_size=3, stride=2, padding=1), 
-			ResidualBlock(64, num_repeats=1), 
+			ResidualBlock(64, num_repeats=2),
+
 			CNNBlock(64, 128, kernel_size=3, stride=2, padding=1), 
-			ResidualBlock(128, num_repeats=2), 
+			ResidualBlock(128, num_repeats=4),
+
 			CNNBlock(128, 256, kernel_size=3, stride=2, padding=1), 
-			ResidualBlock(256, num_repeats=8), 
-			CNNBlock(256, 512, kernel_size=3, stride=2, padding=1), 
-			ResidualBlock(512, num_repeats=8), 
-			CNNBlock(512, 1024, kernel_size=3, stride=1, padding=1), 
-			ResidualBlock(1024, num_repeats=4), 
-			CNNBlock(1024, 512, kernel_size=1, stride=1, padding=0), 
-			CNNBlock(512, 1024, kernel_size=3, stride=1, padding=1), 
-			ResidualBlock(1024, use_residual=False, num_repeats=1), 
-			CNNBlock(1024, 512, kernel_size=1, stride=1, padding=0), 
-			ScalePrediction(512, num_classes=num_classes, num_anchors=len(ANCHORS))
+			ResidualBlock(256, num_repeats=4),
+			
+			CNNBlock(256, 512, kernel_size=3, stride=1, padding=1), 
+			ResidualBlock(512, num_repeats=2),
+
+			CNNBlock(512, 256, kernel_size=1, stride=1, padding=0), 
+			CNNBlock(256, 512, kernel_size=3, stride=1, padding=1),
+			ResidualBlock(512, use_residual=False, num_repeats=1), 
+			CNNBlock(512, 256, kernel_size=1, stride=1, padding=0),
+
+			ScalePrediction(256, num_classes=num_classes, num_anchors=len(ANCHORS))
 		) 
 	
 	# Forward pass for YOLOv3 with route connections and scale predictions 
@@ -907,7 +906,7 @@ class YOLOv3(nn.Module):
 		x = self.model(x)
 		return x
 # input.shape = (batch_size, 3, 416, 416)
-# output = liste de |s| tenseurs de forme (batch_size, num_anchors dans chaque scale, grid_size, grid_size, num_classes + 5)
+# output = tensor de forme (batch_size, num_anchors, grid_size, grid_size, num_classes + 5)
 
 ##################################### TESTING THE MODEL #####################################
 # Setting number of classes and image size 
@@ -926,8 +925,8 @@ class YOLOLoss(nn.Module):
 		self.sigmoid = nn.Sigmoid()                # pour forcer x, y, objectness ∈ [0,1]
 	
 	def forward(self, pred, target, anchors): # target = (batch_size, 9, 26, 26, 6) = (batch_size, num_anchors, grid_size, grid_size, 6), 6 = (objectness, x, y, w, h, class_label), (x,y) relatif to the cell, (w,h) relative to the grid size
-		                                      # pred = (batch_size, 9, 26, 26, num_classes + 5)
-						      				  # anchors sera le scale_anchors entre 0 et 26
+											  # pred = (batch_size, 9, 26, 26, 5 + num_classes))
+							  				  # anchors sera le scale_anchors entre 0 et 26
 		# Identifying which cells in target have objects 
 		# and which have no objects
 		obj = target[..., 0] == 1 # obj.sum = nombre d'objets dans la batch
@@ -938,39 +937,46 @@ class YOLOLoss(nn.Module):
 		# Cela apprend au modèle à ne pas détecter d’objets là où il n’y en a pas.
 		no_object_loss = self.bce(pred[..., 0:1][no_obj], target[..., 0:1][no_obj])
 
-		
+		# anchors est entre 0 et 26
 		# Reshaping anchors to match predictions 
 		anchors = anchors.reshape(1, pred.size(1), 1, 1, 2).to(pred.device) # pred.size(1) = 9 ==> anchors = (1, 9, 1, 1, 2) ce qui est compatible avec pred[..., 3:5].shape
 					#             │     │            │  │  │
-		    		#             │     │            │  │  └─ largeur et hauteur (w, h)
+					#             │     │            │  │  └─ largeur et hauteur (w, h)
 					#             │     │            │  └──── broadcasté sur chaque cellule colonne (W)
 					#             │     │            └─────── broadcasté sur chaque cellule ligne (H)
 					#             │     └──────────────────── num_anchors (ex: 9)
 					#             └────────────────────────── batch_size (à broadcast)
-
-		# Box prediction confidence 
-		box_preds = torch.cat([self.sigmoid(pred[..., 1:3]), 
-							torch.exp(pred[..., 3:5]) * anchors 
-							],dim=-1) 
+		
+		# Box prediction confidence
+		pred_copy_for_score_loss = pred.clone() # clone pour ne pas modifier l'original
+		
+		pred_xy_01_for_score_loss = self.sigmoid(pred_copy_for_score_loss[..., 1:3]) # DONC LE MODELE VA PREDIRE x et y tels que APRES SIGMOID ils sont entre 0 et 1 (dans la cellule)
+		pred_wh_ratio_for_score_loss = torch.exp(pred_copy_for_score_loss[..., 3:5]) * anchors # DONC LE MODELE VA PREDIRE w tel que quand on fait exp(w) on a le rapport entre la taille de la boîte et la taille de l’ancre_scaled prédite.
+		box_preds_for_score_loss = torch.cat([pred_xy_01_for_score_loss, pred_wh_ratio_for_score_loss],dim=-1)
+		
 		# Calculating intersection over union for prediction and target 
-		ious = iou(box_preds[obj], target[..., 1:5][obj]).detach() 
-		# Calculating Object loss 
-		object_loss = self.mse(self.sigmoid(pred[..., 0:1][obj]), 
-							   ious * target[..., 0:1][obj]) #target[..., 0:1] == 1 quand il y a un objet (sinon 0). But : la sortie pred[..., 0] doit être proche de IoU si l’objet est bien prédit.
-
+		ious = iou(box_preds_for_score_loss[obj], target[..., 1:5][obj]).detach()
+		# Calculating Object loss
+		pred_score_for_score_loss = self.sigmoid(pred_copy_for_score_loss[..., 0:1]) # pred[..., 0:1] = score (logit) de l'objet
+		
+		object_loss = self.mse(pred_score_for_score_loss[obj], ious * target[...,0:1][obj]) #target[..., 0:1] == 1 quand il y a un objet (sinon 0). But : la sortie pred[..., 0] doit être proche de IoU si l’objet est bien prédit.
+		# DONC LE MODELE VA PREDIRE le score tel que APRES SIGMOID il ressemble à IoU (intersection over union) entre la boîte prédite et la boîte cible.
 		
 		# Predicted box coordinates 
-		pred[..., 1:3] = self.sigmoid(pred[..., 1:3]) 
-		# Target box coordinates 
-		target[..., 3:5] = torch.log(1e-6 + target[..., 3:5] / anchors) 
+		pred_copy_for_box_loss = pred.clone()
+		pred_copy_for_box_loss[..., 1:3] = self.sigmoid(pred_copy_for_box_loss[..., 1:3])
+		# Target box coordinates
+		target_copy_for_box_loss = target.clone()
+		target_copy_for_box_loss[..., 3:5] = torch.log(1e-6 + target_copy_for_box_loss[..., 3:5] / anchors)
 		# Calculating box coordinate loss 
-		box_loss = self.mse(pred[..., 1:5][obj], 
-							target[..., 1:5][obj]) 
+		box_loss = self.mse(pred_copy_for_box_loss[..., 1:5][obj], target_copy_for_box_loss[..., 1:5][obj]) 
 
-		
+		# DONC LE RESEAU SORT :
+		# x, y qui sont la coord dans la cell APRES SIGMOID
+		# w, h: Le modèle prédit le logarithme du ratio entre la taille de la boîte et la taille de l'ancre
 		# Claculating class loss 
 		class_loss = self.cross_entropy((pred[..., 5:][obj]), 
-									     target[..., 5][obj].long()) 
+										 target[..., 5][obj].long()) 
 
 		# Total loss 
 		return ( 
@@ -1115,78 +1121,55 @@ def save_val_images(model, loader, device, anchors, grid_sizes, save_dir, epoch,
 """
 from torchvision.ops import nms as torch_nms
 
-def save_val_images(model, loader, device, anchors, grid_sizes, save_dir, epoch, num_images=3):
+def save_val_images(model, loader, device, anchors, grid_size, save_dir, epoch, num_images=3):
 	model.eval()
 	os.makedirs(save_dir, exist_ok=True)
 	with torch.no_grad():
 		x, _ = next(iter(loader))
 		x = x.to(device)
-		outputs = model(x)
+		outputs = model(x) # shape (batch_size, num_anchors, grid_size, grid_size, 5 + num_classes)
 		
 		for img_idx in range(min(num_images, x.size(0))):
-			# Prepare tensors for torchvision NMS
-			all_boxes = []
-			all_scores = []
-			all_labels = []
+
+			anchors = torch.tensor(anchors).to(device)
+			pred = outputs[img_idx] # prend l'image img_idx dans le batch
 			
-			for scale_idx in range(3):
-				anchor = torch.tensor(anchors[scale_idx]).to(device)
-				s = grid_sizes[scale_idx]
-				pred = outputs[scale_idx][img_idx].unsqueeze(0)
-				
-				# Convert predictions to boxes [batch_size, num_anchors*s*s, 6]
-				boxes = convert_cells_to_bboxes(pred, anchor, s, is_predictions=True)
-				boxes = torch.tensor(boxes[0]).to(device)  # Get first (and only) batch item
-				
-				# Split into components
-				labels = boxes[:, 0]        # class indices
-				scores = boxes[:, 1]        # confidences
-				coords = boxes[:, 2:6]      # [x_center, y_center, width, height]
-				
-				# Convert from center to corner coordinates [x1, y1, x2, y2]
-				boxes_corners = torch.zeros_like(coords)
-				boxes_corners[:, 0] = coords[:, 0] - coords[:, 2]/2  # x1
-				boxes_corners[:, 1] = coords[:, 1] - coords[:, 3]/2  # y1
-				boxes_corners[:, 2] = coords[:, 0] + coords[:, 2]/2  # x2
-				boxes_corners[:, 3] = coords[:, 1] + coords[:, 3]/2  # y2
-				
-				all_boxes.append(boxes_corners)
-				all_scores.append(scores)
-				all_labels.append(labels)
+			# Convert predictions to boxes [batch_size, num_anchors*s*s, 6]
+			boxes = convert_cell_to_bboxes(pred, anchors, grid_size)
+			boxes = torch.tensor(boxes[0]).to(device)  # Get first (and only) batch item
 			
-			if len(all_boxes) > 0:
-				all_boxes = torch.cat(all_boxes)
-				all_scores = torch.cat(all_scores)
-				all_labels = torch.cat(all_labels)
-				
-				# NEW: Single NMS across all classes
-				keep = torch_nms(all_boxes, all_scores, iou_threshold=0.5)
-				
-				# Get top scoring boxes
-				boxes_nms = all_boxes[keep]
-				scores_nms = all_scores[keep]
-				labels_nms = all_labels[keep]
-				
-				# Convert back to [class, score, x_center, y_center, width, height] format
-				final_boxes = []
-				for box, score, label in zip(boxes_nms, scores_nms, labels_nms):
-					width = box[2] - box[0]
-					height = box[3] - box[1]
-					x_center = box[0] + width/2
-					y_center = box[1] + height/2
-					final_boxes.append([label.item(), score.item(), 
-									  x_center.item(), y_center.item(), 
-									  width.item(), height.item()])
-			else:
-				final_boxes = []
+			# Split into components
+			labels = boxes[:, 0]        # class indices
+			scores = boxes[:, 1]        # confidences
+			coords = boxes[:, 2:6]      # [x_center, y_center, width, height]
 			
-			# Convert tensor to image
+			# Convert from center to corner coordinates [x1, y1, x2, y2]
+			boxes_corners = torch.zeros_like(coords)
+			boxes_corners[:, 0] = coords[:, 0] - coords[:, 2]/2  # x1
+			boxes_corners[:, 1] = coords[:, 1] - coords[:, 3]/2  # y1
+			boxes_corners[:, 2] = coords[:, 0] + coords[:, 2]/2  # x2
+			boxes_corners[:, 3] = coords[:, 1] + coords[:, 3]/2  # y2
+			
+			keep = torch_nms(boxes_corners, scores, iou_threshold=0.5)
+			boxes_nms = boxes_corners[keep]
+			scores_nms = scores[keep]
+			labels_nms = labels[keep]
+			
+			final_boxes = []
+			for box, score, label in zip(boxes_nms, scores_nms, labels_nms):
+				width = box[2] - box[0]
+				height = box[3] - box[1]
+				x_center = box[0] + width / 2
+				y_center = box[1] + height / 2
+				final_boxes.append([label.item(), score.item(),
+									x_center.item(), y_center.item(),
+									width.item(), height.item()])
+
 			img = x[img_idx].permute(1, 2, 0).cpu().numpy()
 			img = (img * 255).astype(np.uint8)
-			
-			# Plot and save image with predictions
-			plot_image(img, final_boxes, save_dir=save_dir, 
-					 filename=f"epoch_{epoch}_img_{img_idx}.png")
+			# plot_image attend des boxes de format [class, confidence, x, y, width, height] avec conf,x,y,w,h entre 0 et 1, et class entre 0 et 12
+			plot_image(img, final_boxes, save_dir=save_dir, filename=f"epoch_{epoch}_img_{img_idx}.png")
+
 	
 	model.train()
 
@@ -1312,7 +1295,7 @@ for e in range(1, epochs+1):
 	print(f"Validation Loss: {val_loss:.4f}")
 	
 	# Save validation images
-	save_val_images(model, val_loader, device, ANCHORS, s, save_dir="val_images", epoch=e)
+	save_val_images(model, val_loader, device, scaled_anchors, GRID_SIZE, save_dir="val_images", epoch=e)
 
 	# Saving the model 
 	if save_model: 
