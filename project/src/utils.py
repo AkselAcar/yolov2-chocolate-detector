@@ -441,19 +441,14 @@ class YoloCompatibleTransform:
 
         # Resize image
         orig_width, orig_height = image.size
+        scale = min(self.resized_img_width / orig_width, self.resized_img_height / orig_height) # = 0.096
         image = image.resize((self.resized_img_width, self.resized_img_height))
         x_scale = self.resized_img_width / orig_width
         y_scale = self.resized_img_height / orig_height
+        # Calculate center position for pasting the resized image
+		paste_x = (self.resized_img_width - new_w) // 2
+		paste_y = (self.resized_img_height - new_h) // 2
 
-        # Scale bboxes
-        scaled_bboxes = []
-        for box in bboxes:
-            x_center, y_center, width, height, class_label = box
-            x_center *= x_scale
-            y_center *= y_scale
-            width *= x_scale
-            height *= y_scale
-            scaled_bboxes.append([x_center, y_center, width, height, class_label])
 
         if self.train:
             # Random rotation
@@ -463,14 +458,6 @@ class YoloCompatibleTransform:
             # Rotate bboxes (approximate using affine math)
             angle_rad = -np.radians(angle)
             cx, cy = self.resized_img_width / 2, self.resized_img_height / 2
-            rotated_bboxes = []
-            for box in scaled_bboxes:
-                x, y, w, h, label = box
-                x_shifted, y_shifted = x - cx, y - cy
-                x_rot = x_shifted * np.cos(angle_rad) - y_shifted * np.sin(angle_rad) + cx
-                y_rot = x_shifted * np.sin(angle_rad) + y_shifted * np.cos(angle_rad) + cy
-                rotated_bboxes.append([x_rot, y_rot, w, h, label])
-            scaled_bboxes = rotated_bboxes
 
             # Random translation
             max_dx = self.max_translation * self.resized_img_width
@@ -479,11 +466,6 @@ class YoloCompatibleTransform:
             dy = np.random.uniform(-max_dy, max_dy)
 
             image = F.affine(image, angle=0, translate=(dx, dy), scale=1.0, shear=0)
-            translated_bboxes = []
-            for box in scaled_bboxes:
-                x, y, w, h, label = box
-                translated_bboxes.append([x + dx, y + dy, w, h, label])
-            scaled_bboxes = translated_bboxes
 
             # Color jitter
             image = self.color_jitter(image)
@@ -501,21 +483,113 @@ class YoloCompatibleTransform:
         else:
             # Convert to tensor for non-augmented data
             image = self.to_tensor(image)
-
-        # Clip bboxes and ensure within image bounds
-        final_bboxes = []
-        for box in scaled_bboxes:
-            x, y, w, h, label = box
-            x = np.clip(x, 0, self.resized_img_width)
-            y = np.clip(y, 0, self.resized_img_height)
-            w = np.clip(w, 0, self.resized_img_width)
-            h = np.clip(h, 0, self.resized_img_height)
-            final_bboxes.append([x, y, w, h, label])
-
-        return {
-            "image": image.float(),
-            "bboxes": final_bboxes
-        }
+            
+        transformed_bboxes = []
+        
+        # Calculate transformation matrix for bounding boxes
+        # For simplicity, we'll apply transformations in reverse order:
+        # 1. Scale and center (always applied)
+        # 2. Flip (if applicable)
+        # 3. Rotate and translate (if applicable)
+        
+        for box in bboxes:
+            x_center, y_center, w, h, cls = box
+            
+            # Original image coordinates
+            x1 = (x_center - w/2) * orig_width
+            y1 = (y_center - h/2) * orig_height
+            x2 = (x_center + w/2) * orig_width
+            y2 = (y_center + h/2) * orig_height
+            
+            # Step 1: Scale coordinates to resized image
+            x1 = x1 * scale
+            y1 = y1 * scale
+            x2 = x2 * scale
+            y2 = y2 * scale
+            
+            # Step 2: Add padding to center in the image
+            x1 += paste_x
+            y1 += paste_y
+            x2 += paste_x
+            y2 += paste_y
+            
+            # Step 3: Apply horizontal flip if needed
+            if do_flip:
+                x1, x2 = self.resized_img_width - x2, self.resized_img_width - x1
+            
+            # Step 4: Apply rotation and translation
+            if angle != 0 or translate != (0, 0):
+                # Convert box to 4 corner points
+                points = [
+                    (x1, y1),  # top-left
+                    (x2, y1),  # top-right
+                    (x2, y2),  # bottom-right
+                    (x1, y2),  # bottom-left
+                ]
+                
+                # Apply transformation to each point
+                transformed_points = []
+                for px, py in points:
+                    # Center for rotation
+                    cx, cy = self.resized_img_width / 2, self.resized_img_height / 2
+                    
+                    # Translate point to origin
+                    px -= cx
+                    py -= cy
+                    
+                    # Apply rotation (convert angle to radians)
+                    angle_rad = -angle * np.pi / 180.0  # Negative for clockwise rotation
+                    px_rot = px * np.cos(angle_rad) - py * np.sin(angle_rad)
+                    py_rot = px * np.sin(angle_rad) + py * np.cos(angle_rad)
+                    
+                    # Translate back and apply translation
+                    px = px_rot + cx + translate[0]
+                    py = py_rot + cy + translate[1]
+                    
+                    transformed_points.append((px, py))
+                
+                # Get axis-aligned bounding box (AABB) of transformed points
+                # This ensures the box remains aligned with horizontal/vertical axes
+                x_coords = [p[0] for p in transformed_points]
+                y_coords = [p[1] for p in transformed_points]
+                x1, x2 = min(x_coords), max(x_coords)
+                y1, y2 = min(y_coords), max(y_coords)
+            
+            # Ensure coordinates are within image bounds and calculate intersection with image
+            x1_orig, y1_orig, x2_orig, y2_orig = x1, y1, x2, y2
+            
+            # Clip coordinates to image boundaries
+            x1 = np.clip(x1, 0, self.resized_img_width)
+            y1 = np.clip(y1, 0, self.resized_img_height)
+            x2 = np.clip(x2, 0, self.resized_img_width)
+            y2 = np.clip(y2, 0, self.resized_img_height)
+            
+            # Calculate how much of the box is still inside the image
+            original_area = (x2_orig - x1_orig) * (y2_orig - y1_orig) # area of the box potentially outside
+            if original_area <= 0:  # Avoid division by zero
+                continue
+                
+            intersection_area = (x2 - x1) * (y2 - y1)
+            visibility_ratio = intersection_area / original_area
+            
+            # If less than 25% of the box is visible, we skip the box
+            if visibility_ratio < 0.25:
+                continue
+            
+            # Convert back to YOLO format (x_center, y_center, width, height) normalized
+            w = (x2 - x1) / self.resized_img_width
+            h = (y2 - y1) / self.resized_img_height
+            x_center = (x1 + x2) / 2 / self.resized_img_width
+            y_center = (y1 + y2) / 2 / self.resized_img_height
+            
+            # Add transformed box if it's still visible
+            if visibility_ratio >= 0.4:  # Minimum size threshold
+                transformed_bboxes.append([x_center, y_center, w, h, cls])
+        
+        # Convert to tensor and normalize
+        image_tensor = self.to_tensor(canvas)
+        
+        return {"image": image_tensor, "bboxes": transformed_bboxes}
     
 # Create a dataset class to load the images and labels from the folder 
 class Dataset(torch.utils.data.Dataset): 
@@ -561,25 +635,24 @@ class Dataset(torch.utils.data.Dataset):
         return 2 * len(self.label_list) 
 
     def __getitem__(self, idx):
-        original_length = len(self.label_list)
-        original_idx = idx % original_length
-
-        # Load image and bboxes
-        label_path = os.path.join(self.label_dir, self.label_list.iloc[original_idx, 1])
-        bboxes = np.roll(np.loadtxt(fname=label_path, delimiter=" ", ndmin=2), 4, axis=1).tolist()
-        img_path = os.path.join(self.image_dir, self.label_list.iloc[original_idx, 0])
-        image = np.array(Image.open(img_path).convert("RGB"))
-
-        # Apply appropriate transform
-        if self.transform is not None:
-            if idx < original_length:
-                transform = self.original_transform
-            else:
-                transform = self.transform
-            augs = transform(image=image, bboxes=bboxes)
-            image = augs["image"]
-            bboxes = augs["bboxes"]
-
+        # Getting the label path of the idx
+        label_path = os.path.join(self.label_dir, self.label_list.iloc[idx, 1]) #self.label_list.iloc[idx, 1] gets the value of the first column (label_name) in the row "idx"
+        # We are applying roll to move class label to the last column => 5 columns: x, y, width, height, class_label 
+        bboxes = np.roll(np.loadtxt(fname=label_path, 
+                        delimiter=" ", ndmin=2), 4, axis=1).tolist() # np.loadtxt() loads the file label_path (file .txt) containing the YOLO annotations of the corresponding image.
+                                                                     # ndmin=2 to ensure that even if there is only one box/row, we obtain a 2D table.
+                                                                     # .tolist() makes a list from numpy table.
+        # Getting the image path of the idx
+        img_path = os.path.join(self.image_dir, self.label_list.iloc[idx, 0]) 
+        image = np.array(Image.open(img_path).convert("RGB")) # open the image and convert to numpy array
+        
+        # Augmentations : always resize from 6000x4000 to 576x384 (for our case) and apply randomly flips, translations, rotations
+        if self.transform: 
+            augs = self.transform(image=image, bboxes=bboxes) 
+            image = augs["image"] # image is a tensor of shape (3, 416, 416)
+            bboxes = augs["bboxes"] # bboxes is a list of bounding boxes in the format [x, y, width, height, class_label] with x,y,w,h normalized between 0 and 1
+        
+        
         # Be carefull : first dimension is vertical cells = Y-axis and second dimension is horizontal cells = X-axis
         target = torch.zeros((self.num_anchors, self.grid_height, self.grid_width, 6))
         # targets is a tensor of shape (num_anchors, grid_height, grid_width, 6) and 6 for [probabilities, x, y, width, height, class_label]
@@ -1076,6 +1149,7 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
         # Convert images from tensor to numpy and denormalize
         images = images.permute(0, 2, 3, 1).cpu().numpy() # shape (batch_size, channels, height, width) to (batch_size, height, width, channels)
         images = (images * 255).astype(np.uint8)
+        print('TARGETS', targets.shape)
         
         # Process each image in the batch
         for img_idx in range(images.shape[0]):
@@ -1094,7 +1168,7 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
                 x, y, w, h = target[anchor, i, j, 1:5]
                 class_id = target[anchor, i, j, 5].int() # in [0, 12]
                 
-                
+                print('Dim : ', x,y,w,h)
                 # Calculate box coordinates normalized to [0,1] with respect to the resized image size
                 x_center = (j + x) / grid_width # normalize to [0,1]
                 y_center = (i + y) / grid_height
@@ -1109,6 +1183,8 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
                     width.item(),
                     height.item()
                 ])
+
+            print(all_boxes)
             
             # Draw all ground truth boxes
             for box in all_boxes:
