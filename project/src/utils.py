@@ -31,7 +31,7 @@ import shutil
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load and save model variable 
-LOAD_MODEL = False
+LOAD_MODEL = True
 SAVE_MODEL = True
 
 # model checkpoint file name 
@@ -52,7 +52,7 @@ BATCH_SIZE = 9
 LEARNING_RATE = 1e-3
 
 # Number of epochs for training 
-NB_EPOCHS = 200
+NB_EPOCHS = 1
 
 # Image sizes
 ORIG_IMG_WIDTH = 6000
@@ -930,47 +930,78 @@ class YOLOLoss(nn.Module):
 	
 ########################################## CSV SUBMISSION ############################################################
 
-def generate_submission_csv(model, test_dataset, output_csv_path="submission.csv", conf_threshold=0.6):
-	model.eval()
-	predictions = []
+def generate_submission_csv_with_nms(
+    model, 
+    test_dataset, 
+    output_csv_path="submission.csv",
+    conf_threshold=0.6,
+    iou_threshold=0.4,
+    resized_img_width=RESIZED_IMG_WIDTH,
+    resized_img_height=RESIZED_IMG_HEIGHT
+):
+    """Generate Kaggle submission CSV with proper NMS handling"""
+    from collections import defaultdict
+    
+    model.eval()
+    predictions = []
 
-	for img_tensor, _, fname in tqdm(test_dataset, desc=" Running inference for submission"):
-		img_tensor = img_tensor.unsqueeze(0).to(DEVICE)
+    for img_tensor, fname in tqdm(test_dataset, desc="Generating submission"):
+        img_tensor = img_tensor.unsqueeze(0).to(DEVICE)
+        
+        with torch.no_grad():
+            pred = model(img_tensor).squeeze(0).cpu()
 
-		with torch.no_grad():
-			pred = model(img_tensor)
-			pred = pred.squeeze(0).cpu()
+        # Convert predictions to bounding boxes
+        bboxes = convert_cell_to_bboxes(
+            pred, 
+            scaled_anchors=SCALED_ANCHORS,
+            grid_width=GRID_WIDTH,
+            grid_height=GRID_HEIGHT,
+            resized_img_width=resized_img_width,
+            resized_img_height=resized_img_height,
+            num_classes=NUM_CLASSES,
+            conf_threshold=conf_threshold
+        )
 
-		# Apply your own convert_cell_to_bboxes function to convert predictions
-		bboxes = convert_cell_to_bboxes(
-			pred, 
-			scaled_anchors=SCALED_ANCHORS,
-			grid_width=GRID_WIDTH, 
-			grid_height=GRID_HEIGHT, 
-			resized_img_width=RESIZED_IMG_WIDTH,
-			resized_img_height=RESIZED_IMG_HEIGHT,
-			num_classes=NUM_CLASSES,
-			conf_threshold=conf_threshold
-		)
+        # Process boxes with class-aware NMS
+        final_counts = defaultdict(int)
+        if len(bboxes) > 0:
+            # Convert to [x1, y1, x2, y2] format for NMS
+            boxes_corners = torch.zeros((len(bboxes), 4))
+            boxes_corners[:, 0] = bboxes[:, 0] - bboxes[:, 2]/2  # x1
+            boxes_corners[:, 1] = bboxes[:, 1] - bboxes[:, 3]/2  # y1
+            boxes_corners[:, 2] = bboxes[:, 0] + bboxes[:, 2]/2  # x2
+            boxes_corners[:, 3] = bboxes[:, 1] + bboxes[:, 3]/2  # y2
+            
+            scores = bboxes[:, 4]
+            class_ids = bboxes[:, 5].int()
 
-		# Count per class
-		class_counts = defaultdict(int)
-		for box in bboxes:
-			class_id = int(box[5])  # class is in the 6th column of the box
-			class_counts[class_id] += 1
+            # Class-aware NMS
+            for cls_id in torch.unique(class_ids):
+                cls_mask = class_ids == cls_id
+                cls_boxes = boxes_corners[cls_mask]
+                cls_scores = scores[cls_mask]
+                
+                if len(cls_boxes) == 0:
+                    continue
+                
+                # Apply NMS for this class
+                keep = torch_nms(cls_boxes, cls_scores, iou_threshold)
+                final_counts[cls_id.item()] = len(keep)
 
-		# Format row: [id, count_0, count_1, ..., count_12]
-		image_id = os.path.splitext(fname)[0].replace("L", "")  # from "LXXXXXXX.JPG" to "XXXXXXX"
-		row = [image_id] + [class_counts[i] for i in range(NUM_CLASSES)]
-		predictions.append(row)
+        # Format row
+        image_id = os.path.splitext(fname)[0].replace("L", "").replace("IMG_", "")
+        row = [image_id] + [final_counts[i] for i in range(NUM_CLASSES)]
+        predictions.append(row)
 
-	# Write to CSV
-	with open(output_csv_path, mode='w', newline='') as f:
-		writer = csv.writer(f)
-		writer.writerow(["id"] + CLASS_NAMES_CSV)
-		writer.writerows(predictions)
+    # Write to CSV
+    with open(output_csv_path, mode='w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["id"] + CLASS_NAMES_CSV)
+        writer.writerows(predictions)
 
-	print(f"Submission file saved at: {output_csv_path}")
+    print(f" Submission file saved to: {output_csv_path}")
+
 
 class YOLOTestDataset(Dataset):
 	def __init__(self, img_dir, filenames, transform=None):
