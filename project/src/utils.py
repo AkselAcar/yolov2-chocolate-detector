@@ -406,6 +406,8 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 	for param_group in optimizer.param_groups: 
 		param_group["lr"] = lr 
 
+############################################################ DATASET AND DATA TRANSFORM ############################################################
+
 # Data transform (to update)
 class YoloCompatibleTransform:
     def __init__(self, resized_img_width=640, resized_img_height=640,
@@ -672,6 +674,8 @@ class Dataset(torch.utils.data.Dataset):
 		
 		# Return the image and the target
 		return image, target
+	
+######################################## MODEL ############################################################
 
 class CNNBlock(nn.Module):
 	def __init__(self, in_channels, out_channels, use_batch_norm=True, **kwargs):
@@ -836,6 +840,9 @@ def init_yolo_weights(model):
 					last_conv.bias.data = bias.view(-1)
 	return model
 
+
+########################################## LOSS FUNCTION ############################################################
+
 # Defining YOLO loss class 
 class YOLOLoss(nn.Module): 
 	def __init__(self): 
@@ -920,8 +927,10 @@ class YOLOLoss(nn.Module):
 			+ self.lambda_no_object * no_object_loss 
 			+ self.lambda_class * class_loss 
 		)
+	
+########################################## CSV SUBMISSION ############################################################
 
-def generate_submission_csv(model, test_dataset, output_csv_path="submission.csv", conf_threshold=0.5):
+def generate_submission_csv(model, test_dataset, output_csv_path="submission.csv", conf_threshold=0.6):
 	model.eval()
 	predictions = []
 
@@ -961,7 +970,7 @@ def generate_submission_csv(model, test_dataset, output_csv_path="submission.csv
 		writer.writerow(["id"] + CLASS_NAMES_CSV)
 		writer.writerows(predictions)
 
-	print(f"✅ Submission file saved at: {output_csv_path}")
+	print(f"Submission file saved at: {output_csv_path}")
 
 class YOLOTestDataset(Dataset):
 	def __init__(self, img_dir, filenames, transform=None):
@@ -984,8 +993,11 @@ class YOLOTestDataset(Dataset):
 		else:
 			image = T.ToTensor()(image)
 
-		dummy_boxes = torch.zeros((GRID_HEIGHT, GRID_WIDTH, 2 * 5 + NUM_CLASSES))
-		return image, dummy_boxes, fname
+		#dummy_boxes = torch.zeros((GRID_HEIGHT, GRID_WIDTH, 2 * 5 + NUM_CLASSES))
+		return image, fname # dummy_boxes, fname
+
+
+########################################### TRAINING AND EVALUATION ############################################################
 
 def training_loop(loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE):
 	"""
@@ -1040,6 +1052,9 @@ def evaluate(loader, model, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVIC
 			losses.append(loss.item())
 	mean_loss = sum(losses) / len(losses) if losses else 0
 	return mean_loss
+
+
+############################################ VISUALIZATION OF TRANSFORMS ############################################################
 
 def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations", grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT):
 	"""
