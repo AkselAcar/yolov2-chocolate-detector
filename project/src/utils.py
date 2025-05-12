@@ -52,7 +52,7 @@ BATCH_SIZE = 9
 LEARNING_RATE = 1e-3
 
 # Number of epochs for training 
-NB_EPOCHS = 1
+NB_EPOCHS = 200
 
 # Image sizes
 ORIG_IMG_WIDTH = 6000
