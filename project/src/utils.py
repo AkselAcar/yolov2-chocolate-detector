@@ -863,7 +863,7 @@ class YOLOLoss(nn.Module):
         self.lambda_box = 1.0 # weight for box coordinates loss
         self.lambda_object = 2.0 # weight for object loss
         self.lambda_no_object = 2.0 # weight for no object loss
-        self.lambda_class = 1.0 # weight for class loss
+        self.lambda_class = 3.0 # weight for class loss
     
     def forward(self, pred, target, scaled_anchors=SCALED_ANCHORS):
         """
