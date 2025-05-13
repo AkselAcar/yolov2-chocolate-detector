@@ -410,7 +410,7 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 
 # Data transform (to update)
 class YoloCompatibleTransform:
-    def __init__(self, resized_img_width=640, resized_img_height=640,
+    def __init__(self, resized_img_width=576, resized_img_height=384, # WAS AT 640X640 BEFORE !!!!!!!!
                  train=True, max_rotation=10, max_translation=0.05,
                  brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1,
                  blur_prob=0.5, blur_radius_max=0.5, noise_std=0.05):
@@ -442,14 +442,14 @@ class YoloCompatibleTransform:
         # Resize image
         orig_width, orig_height = image.size
         scale = min(self.resized_img_width / orig_width, self.resized_img_height / orig_height) # = 0.096
+        new_w, new_h = int(orig_width * scale), int(orig_height * scale)
         image = image.resize((self.resized_img_width, self.resized_img_height))
-        x_scale = self.resized_img_width / orig_width
-        y_scale = self.resized_img_height / orig_height
         # Calculate center position for pasting the resized image
-		paste_x = (self.resized_img_width - new_w) // 2
-		paste_y = (self.resized_img_height - new_h) // 2
+        paste_x = (self.resized_img_width - new_w) // 2
+        paste_y = (self.resized_img_height - new_h) // 2
 
-
+        angle = 0
+        dx, dy = 0,0
         if self.train:
             # Random rotation
             angle = np.random.uniform(-self.max_rotation, self.max_rotation)
@@ -513,12 +513,8 @@ class YoloCompatibleTransform:
             x2 += paste_x
             y2 += paste_y
             
-            # Step 3: Apply horizontal flip if needed
-            if do_flip:
-                x1, x2 = self.resized_img_width - x2, self.resized_img_width - x1
-            
             # Step 4: Apply rotation and translation
-            if angle != 0 or translate != (0, 0):
+            if angle != 0 or (dx, dy) != (0, 0):
                 # Convert box to 4 corner points
                 points = [
                     (x1, y1),  # top-left
@@ -543,8 +539,8 @@ class YoloCompatibleTransform:
                     py_rot = px * np.sin(angle_rad) + py * np.cos(angle_rad)
                     
                     # Translate back and apply translation
-                    px = px_rot + cx + translate[0]
-                    py = py_rot + cy + translate[1]
+                    px = px_rot + cx + dx
+                    py = py_rot + cy + dy
                     
                     transformed_points.append((px, py))
                 
@@ -587,15 +583,15 @@ class YoloCompatibleTransform:
                 transformed_bboxes.append([x_center, y_center, w, h, cls])
         
         # Convert to tensor and normalize
-        image_tensor = self.to_tensor(canvas)
+        # image_tensor = self.to_tensor(image)
         
-        return {"image": image_tensor, "bboxes": transformed_bboxes}
+        return {"image": image, "bboxes": transformed_bboxes}
     
 # Create a dataset class to load the images and labels from the folder 
 class Dataset(torch.utils.data.Dataset): 
     def __init__( 
         self, df, image_dir, label_dir, anchors, 
-        resized_img_width=640, resized_img_height=640,
+        resized_img_width=576, resized_img_height=384,
         grid_width=18, grid_height=12,
         num_classes=13, transform=None, ignore_iou_thresh=0.8
     ): 
@@ -769,80 +765,56 @@ class ScalePrediction(nn.Module):
         
 class EfficientYOLO_12x18Grid(nn.Module):
     """
-    Input (tensor): (batch_size, in_channels, height, width) => (batch_size, 3, 384, 576)
-    Output (tensor): (batch_size, num_anchors, grid_height, grid_width, 5 + num_classes) => (batch_size, NUM_ANCHORS, 12, 18, 5 + num_classes)
-    
-    Paramètres: ~12 millions
+    Input: (B, 3, 384, 576)
+    Output: (B, NUM_ANCHORS, 12, 18, 5 + num_classes)
     """
     def __init__(self, in_channels=3, num_classes=NUM_CLASSES):
         super().__init__()
         self.num_classes = num_classes
         
-        # Réduction significative du nombre de filtres partout
         self.backbone = nn.Sequential(
-            # Initial block - commencer avec moins de filtres
             CNNBlock(in_channels, 32, kernel_size=3, stride=1, padding=1),
-            
-            # Premier downsampling (stride=2) -> réduction de 2x
             CNNBlock(32, 64, kernel_size=3, stride=2, padding=1),
-            BottleneckBlock(64, bottleneck_ratio=0.25),  # Ratio plus agressif
-            
-            # Deuxième downsampling (stride=2) -> réduction de 4x
+            BottleneckBlock(64, bottleneck_ratio=0.25),
             CNNBlock(64, 128, kernel_size=3, stride=2, padding=1),
             BottleneckBlock(128, bottleneck_ratio=0.25),
-            
-            # Troisième downsampling (stride=2) -> réduction de 8x
             CNNBlock(128, 256, kernel_size=3, stride=2, padding=1),
             BottleneckBlock(256, bottleneck_ratio=0.25),
-            
-            # Quatrième downsampling (stride=2) -> réduction de 16x
-            CNNBlock(256, 384, kernel_size=3, stride=2, padding=1),  # Reduction de 512 à 384
+            CNNBlock(256, 384, kernel_size=3, stride=2, padding=1),
             BottleneckBlock(384, bottleneck_ratio=0.25),
-            
-            # Cinquième downsampling (stride=2) -> réduction de 32x
-            CNNBlock(384, 512, kernel_size=3, stride=2, padding=1),  # Reduction de 1024 à 512
+            CNNBlock(384, 512, kernel_size=3, stride=2, padding=1),
             BottleneckBlock(512, bottleneck_ratio=0.25),
         )
-        
-        # Feature refinement - dimensions réduites
+
         self.spatial_path = nn.Sequential(
             CNNBlock(512, 256, kernel_size=3, padding=1),
             CNNBlock(256, 256, kernel_size=3, padding=1),
         )
-        
+
         self.context_path = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
             CNNBlock(512, 256, kernel_size=1),
         )
-        
-        # Head de détection simplifié
+
         self.head = nn.Sequential(
-            CNNBlock(512, 384, kernel_size=1),  # Fusion (256 + 256 = 512)
+            CNNBlock(512, 384, kernel_size=1),
             CNNBlock(384, 512, kernel_size=3, padding=1),
             CNNBlock(512, 256, kernel_size=1),
         )
-        
-        # Prédiction
+
         self.scale_pred = nn.Sequential(
             CNNBlock(256, 256, kernel_size=3, padding=1),
-            ScalePrediction(256, num_classes, NUM_ANCHORS)
+            ScalePrediction(256, num_classes, NUM_ANCHORS)  # Must return shape (B, A, 12, 18, 5+C)
         )
-        
+
     def forward(self, x):
-        print("input model shape = ", x.shape)
         features = self.backbone(x)
-        
-        # Two-path processing
         spatial_features = self.spatial_path(features)
         context_features = self.context_path(features)
         context_features = context_features.expand(-1, -1, spatial_features.size(2), spatial_features.size(3))
-        
-        # Feature fusion
         fused_features = torch.cat([spatial_features, context_features], dim=1)
-        
         detection_features = self.head(fused_features)
         output = self.scale_pred(detection_features)
-        print("output model shape = ", output.shape)
         return output
 
 def init_yolo_weights(model):
@@ -950,10 +922,10 @@ class YOLOLoss(nn.Module):
         class_loss = self.cross_entropy((pred[..., 5:][obj]), 
                                          target[..., 5][obj].long()) 
 
-        print("box_loss = ", box_loss)
-        print("object_loss =", object_loss)
-        print("no object_loss =", no_object_loss)
-        print("class_loss =", class_loss)
+        # print("box_loss = ", box_loss)
+        # print("object_loss =", object_loss)
+        # print("no object_loss =", no_object_loss)
+        # print("class_loss =", class_loss)
     
         # Total loss 
         return ( 
@@ -1085,9 +1057,8 @@ def training_loop(loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHO
     model.train()
     # Iterating over the training data 
     for _, (x, y) in enumerate(progress_bar): 
-        x = x.to(device) # x is a tensor of shape (batch_size, 3, 416, 416)
-        y = y.to(device) # y0 is a tensor of shape (batch_size, 9, 26, 26, 6) (num_anchors, grid_size, grid_size, 6)
-
+        x = x.to(device)
+        y = y.to(device)
         # Getting the model predictions 
         outputs = model(x) # tensor (batch_size, 9, grid_size, grid_size, num_classes + 5)
         # Calculating the loss at each scale 
@@ -1147,72 +1118,46 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
     
     for batch_idx, (images, targets) in enumerate(tqdm(loader)):
         # Convert images from tensor to numpy and denormalize
+        images = torch.stack(images, dim=0)  # Stack the list of tensors into a batch tensor
         images = images.permute(0, 2, 3, 1).cpu().numpy() # shape (batch_size, channels, height, width) to (batch_size, height, width, channels)
         images = (images * 255).astype(np.uint8)
-        print('TARGETS', targets.shape)
         
         # Process each image in the batch
         for img_idx in range(images.shape[0]):
             img = images[img_idx]
+            print(np.array(img).shape)
             fig, ax = plt.subplots(1, figsize=(12, 8))
             ax.imshow(img)
-            
-            # Get boxes from the unique scale
-            all_boxes = []
+
             target = targets[img_idx]
-            anchor_indices = torch.where(target[..., 0] == 1)  # Cells with objects
-            
-            for anchor, i, j in zip(*anchor_indices):
-                # for ex anchor = 0, i = 7, j = 15
-                # Get box coordinates : x,y in [0,1] relative to the cell, w,h in [0,grid_width-1] and [0, grid_height-1] so relative to the grid size
-                x, y, w, h = target[anchor, i, j, 1:5]
-                class_id = target[anchor, i, j, 5].int() # in [0, 12]
-                
-                print('Dim : ', x,y,w,h)
-                # Calculate box coordinates normalized to [0,1] with respect to the resized image size
-                x_center = (j + x) / grid_width # normalize to [0,1]
-                y_center = (i + y) / grid_height
-                width = w / grid_width
-                height = h / grid_height
+            boxes = target["boxes"]
+            labels = target["labels"]
 
-                all_boxes.append([
-                    class_id.item(),  # class
-                    1.0,             # confidence (ground truth so 1)
-                    x_center.item(),
-                    y_center.item(),
-                    width.item(),
-                    height.item()
-                ])
-
-            print(all_boxes)
-            
-            # Draw all ground truth boxes
-            for box in all_boxes:
-                class_id, conf, x, y, w, h = box
-                
-                # Calculate coordinates
-                x1 = (x - w/2) * img.shape[1] # finds the upper-left corner of the box in pixels
-                y1 = (y - h/2) * img.shape[0]
-                width = w * img.shape[1]
-                height = h * img.shape[0]
-                
-                # Create rectangle patch
+            # Draw each box
+            for box in boxes:
+                x_min, y_min, x_max, y_max = box.tolist()
+                print('Coord :', box.tolist())
                 rect = patches.Rectangle(
-                    (x1, y1), width, height,
+                    (x_min, y_min),
+                    x_max - x_min,
+                    y_max - y_min,
                     linewidth=2,
-                    edgecolor=colors[int(class_id)],
+                    edgecolor="red",
                     facecolor="none"
                 )
                 ax.add_patch(rect)
+
+            ax.set_title(f"Image {img_idx}")
+            plt.axis("off")
                 
-                # Add label
-                plt.text(
-                    x1, y1,
-                    s=f"{class_names[int(class_id)]} {conf:.2f}",
-                    color="white",
-                    verticalalignment="top",
-                    bbox={"color": colors[int(class_id)], "pad": 0},
-                )
+            # # Add label
+            # plt.text(
+            #     x1, y1,
+            #     s=f"{class_names[int(class_id)]} {conf:.2f}",
+            #     color="white",
+            #     verticalalignment="top",
+            #     bbox={"color": colors[int(class_id)], "pad": 0},
+            # )
             
             # Save image
             plt.axis("off")
