@@ -3,12 +3,12 @@ import csv
 
 image_dir = "../dataset_project_iapr2025/train"
 label_dir = "labels"
-output_csv = "link_images_labels_YOLO_v3.csv"
+output_csv = "link_images_labels_YOLO_v3_combined.csv"
 
 import pandas as pd
 import os
 
-def convert_labels(csv_path, output_dir, img_size=640):
+def convert_labels(csv_path, output_dir, img_width=576, img_height=384):
     df = pd.read_csv(csv_path)
     os.makedirs(output_dir, exist_ok=True)
     
@@ -17,8 +17,8 @@ def convert_labels(csv_path, output_dir, img_size=640):
         orig_w, orig_h = 6000, 4000
         
         # Calculate scaling factors
-        scale_w = img_size / orig_w # so 640/6000 = 0.10666666666666667
-        scale_h = img_size / orig_h # so 640/4000 = 0.16
+        scale_w = img_width / orig_w # so 576/6000 = 0.096
+        scale_h = img_height / orig_h # so 384/4000 = 0.096
         
         # Scale coordinates on resized image
         scaled_cx = cx * scale_w
@@ -27,17 +27,17 @@ def convert_labels(csv_path, output_dir, img_size=640):
         scaled_h = h * scale_h
         
         # Normalize coordinates to [0, 1] !!!
-        norm_cx = scaled_cx / img_size
-        norm_cy = scaled_cy / img_size
-        norm_w = scaled_w / img_size
-        norm_h = scaled_h / img_size
+        norm_cx = scaled_cx / img_width
+        norm_cy = scaled_cy / img_height
+        norm_w = scaled_w / img_width
+        norm_h = scaled_h / img_height
         
         # Write to file : labels/filename.txt => one file per image !!!
         txt_path = os.path.join(output_dir, filename.replace('.JPG', '.txt'))
         with open(txt_path, 'a') as f:
             f.write(f"{cls} {norm_cx} {norm_cy} {norm_w} {norm_h}\n")
 
-convert_labels('../labels_YOLO.csv', 'labels') # ATTENTION TO RUN ONCE PSK SINON CA RAJOUTE DES LIGNES FAUDRAIT LE METTRE DANS UN IF
+convert_labels('../labels_YOLO_combined.csv', 'labels') # ATTENTION TO RUN ONCE PSK SINON CA RAJOUTE DES LIGNES FAUDRAIT LE METTRE DANS UN IF
 
 
 images = sorted([f for f in os.listdir(image_dir) if f.endswith('.JPG')])
