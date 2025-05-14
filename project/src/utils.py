@@ -588,123 +588,89 @@ class YoloCompatibleTransform:
         return {"image": image, "bboxes": transformed_bboxes}
     
 # Create a dataset class to load the images and labels from the folder 
-class Dataset(torch.utils.data.Dataset): 
-    def __init__( 
-        self, df, image_dir, label_dir, anchors, 
-        resized_img_width=576, resized_img_height=384,
-        grid_width=18, grid_height=12,
-        num_classes=13, transform=None, ignore_iou_thresh=0.8
-    ): 
-        self.label_list = df
-        self.image_dir = image_dir 
-        self.label_dir = label_dir 
-        self.resized_img_width = resized_img_width
-        self.resized_img_height = resized_img_height
-        self.grid_width = grid_width
-        self.grid_height = grid_height
-        self.anchors = torch.tensor(anchors)
-        self.num_anchors = len(anchors)
-        self.num_classes = num_classes 
-        self.ignore_iou_thresh = ignore_iou_thresh
-        
-        # Store transforms
-        self.transform = transform
-        self.original_transform = None
-        if self.transform is not None:
-            # Create a non-augmenting transform using the same parameters
-            self.original_transform = YoloCompatibleTransform(
-                resized_img_width=self.transform.resized_img_width,
-                resized_img_height=self.transform.resized_img_height,
-                train=False,
-                max_rotation=self.transform.max_rotation,
-                max_translation=self.transform.max_translation,
-                brightness=self.transform.brightness,
-                contrast=self.transform.contrast,
-                saturation=self.transform.saturation,
-                hue=self.transform.hue,
-                blur_prob=self.transform.blur_prob,
-                blur_radius_max=self.transform.blur_radius_max,
-                noise_std=self.transform.noise_std
-            )
+class YoloDetectionAugmentedDataset(torch.utils.data.Dataset):
+	def __init__(self, image_filenames, image_dir, label_dir, anchors,
+				 transform, num_augmentations=2,
+				 resized_img_width=576, resized_img_height=384,
+				 grid_width=18, grid_height=12,
+				 num_classes=13, ignore_iou_thresh=0.8):
+		"""
+		Create a fixed dataset with N augmentations per image.
 
-    def __len__(self): 
-        return 2 * len(self.label_list) 
+		Args:
+			image_filenames: list of image file names
+			image_dir: path to directory with images
+			label_dir: path to directory with YOLO-format labels (.txt)
+			anchors: list of anchor box sizes
+			transform: YoloCompatibleTransform (with train=True)
+			num_augmentations: number of augmented copies per image
+		"""
+		self.anchors = torch.tensor(anchors)
+		self.num_anchors = len(anchors)
+		self.num_classes = num_classes
+		self.grid_width = grid_width
+		self.grid_height = grid_height
+		self.ignore_iou_thresh = ignore_iou_thresh
 
-    def __getitem__(self, idx):
-        # Getting the label path of the idx
-        label_path = os.path.join(self.label_dir, self.label_list.iloc[idx, 1]) #self.label_list.iloc[idx, 1] gets the value of the first column (label_name) in the row "idx"
-        # We are applying roll to move class label to the last column => 5 columns: x, y, width, height, class_label 
-        bboxes = np.roll(np.loadtxt(fname=label_path, 
-                        delimiter=" ", ndmin=2), 4, axis=1).tolist() # np.loadtxt() loads the file label_path (file .txt) containing the YOLO annotations of the corresponding image.
-                                                                     # ndmin=2 to ensure that even if there is only one box/row, we obtain a 2D table.
-                                                                     # .tolist() makes a list from numpy table.
-        # Getting the image path of the idx
-        img_path = os.path.join(self.image_dir, self.label_list.iloc[idx, 0]) 
-        image = np.array(Image.open(img_path).convert("RGB")) # open the image and convert to numpy array
-        
-        # Augmentations : always resize from 6000x4000 to 576x384 (for our case) and apply randomly flips, translations, rotations
-        if self.transform: 
-            augs = self.transform(image=image, bboxes=bboxes) 
-            image = augs["image"] # image is a tensor of shape (3, 416, 416)
-            bboxes = augs["bboxes"] # bboxes is a list of bounding boxes in the format [x, y, width, height, class_label] with x,y,w,h normalized between 0 and 1
-        
-        
-        # Be carefull : first dimension is vertical cells = Y-axis and second dimension is horizontal cells = X-axis
-        target = torch.zeros((self.num_anchors, self.grid_height, self.grid_width, 6))
-        # targets is a tensor of shape (num_anchors, grid_height, grid_width, 6) and 6 for [probabilities, x, y, width, height, class_label]
+		self.original_transform = YoloCompatibleTransform(
+			resized_img_width=resized_img_width,
+			resized_img_height=resized_img_height,
+			train=False
+		)
+		self.augmenting_transform = transform
+		self.data = []
 
-        # Identify the cell and the best anchor box of the ground truth for each bounding box
-        for box in bboxes: 
-            # Calculate iou of each bounding box WITH ANCHOR BOXES
-            iou_anchors = iou(torch.tensor(box[2:4]), self.anchors, is_pred=False) # iou_anchors is a tensor of shape (9,)
-                                                      
-            # Selecting the best anchor box 
-            anchor_indices = iou_anchors.argsort(descending=True, dim=0) # anchor_indices is a tensor of shape (9,)
-            x, y, width, height, class_label = box
-            # x,y,width,height,class_label are all normalized between 0 and 1 (except class_label between 0 and num_classes-1)
+		print("Preprocessing images with fixed augmentations...")
+		for filename in tqdm(image_filenames):
+			label_filename = os.path.splitext(filename)[0] + ".txt"
+			label_path = os.path.join(label_dir, label_filename)
+			bboxes = np.roll(np.loadtxt(label_path, delimiter=" ", ndmin=2), 4, axis=1).tolist()
 
-            has_anchor = False
-            # Assigning the bounding box to the best matching anchor box
-            for anchor_idx in anchor_indices:
-                # Identifying the cell to which the bounding box belongs
-                # Be carefull : i corresponds to y (rows) and j corresponds to x (columns)
-                i = min(int(self.grid_height * y), self.grid_height - 1)
-                j = min(int(self.grid_width * x), self.grid_width - 1)
-                
-                # Check if the anchor box is already assigned
-                # anchor_taken = target[anchor_idx, i, j, 0] NOT SURE WE CAN REMOVE ???
-                
-                if not has_anchor: # basically it is the first iteration # and not anchor taken ????
-                    # Set the probability to 1 
-                    target[anchor_idx, i, j, 0] = 1
+			img_path = os.path.join(image_dir, filename)
+			image = np.array(Image.open(img_path).convert("RGB"))
 
-                    # Calculating the center of the bounding box relative to the cell (between 0 and 1)
-                    x_cell, y_cell = self.grid_width * x - j, self.grid_height * y - i
+			transforms_all = [self.original_transform] + [self.augmenting_transform] * num_augmentations
+			for tf in transforms_all:
+				transformed = tf(image, bboxes)
+				image_tensor = transformed["image"]
+				transformed_bboxes = transformed["bboxes"]
+				target_tensor = self.encode_targets(transformed_bboxes)
+				self.data.append((image_tensor, target_tensor))
 
-                    # Calculating the width and height of the bounding box relative to the grid 
-                    width_cell, height_cell = (width * self.grid_width, height * self.grid_height)
+	def __len__(self):
+		return len(self.data)
 
-                    # Identify the box coordinates 
-                    box_coordinates = torch.tensor([x_cell, y_cell, width_cell, height_cell])
+	def __getitem__(self, idx):
+		return self.data[idx]
 
-                    # Assigning the box coordinates to the target 
-                    target[anchor_idx, i, j, 1:5] = box_coordinates 
+	def encode_targets(self, bboxes):
+		"""
+		Convert bounding boxes into YOLO-style target tensor.
+		Format: (num_anchors, grid_height, grid_width, 6)
+		"""
+		target = torch.zeros((self.num_anchors, self.grid_height, self.grid_width, 6))
+		for box in bboxes:
+			iou_anchors = iou(torch.tensor(box[2:4]), self.anchors, is_pred=False)
+			anchor_indices = iou_anchors.argsort(descending=True)
 
-                    # Assigning the class label to the target 
-                    target[anchor_idx, i, j, 5] = int(class_label) 
+			x, y, w, h, cls = box
+			has_anchor = False
+			for anchor_idx in anchor_indices:
+				i = min(int(self.grid_height * y), self.grid_height - 1)
+				j = min(int(self.grid_width * x), self.grid_width - 1)
 
-                    # Set the anchor box as assigned
-                    has_anchor = True
-
-                # If the anchor box is already assigned, check if the IoU is greater than the threshold 
-                elif iou_anchors[anchor_idx] > self.ignore_iou_thresh: # and not anchor_taken
-                    # Setting this to -1 will enable in the loss not to penalize if the model has found a good anchor but not the best MAYBE REMOVE IT IF NO MODEL CONVERGES ??????
-                    target[anchor_idx, i, j, 0] = -1
-        
-        # print(target.shape)
-        
-        # Return the image and the target
-        return image, target
+				if not has_anchor:
+					target[anchor_idx, i, j, 0] = 1
+					x_cell = self.grid_width * x - j
+					y_cell = self.grid_height * y - i
+					w_cell = w * self.grid_width
+					h_cell = h * self.grid_height
+					target[anchor_idx, i, j, 1:5] = torch.tensor([x_cell, y_cell, w_cell, h_cell])
+					target[anchor_idx, i, j, 5] = int(cls)
+					has_anchor = True
+				elif iou_anchors[anchor_idx] > self.ignore_iou_thresh:
+					target[anchor_idx, i, j, 0] = -1
+		return target
     
 ######################################## MODEL ############################################################
 
@@ -863,7 +829,7 @@ class YOLOLoss(nn.Module):
         self.lambda_box = 1.0 # weight for box coordinates loss
         self.lambda_object = 2.0 # weight for object loss
         self.lambda_no_object = 2.0 # weight for no object loss
-        self.lambda_class = 3.0 # weight for class loss
+        self.lambda_class = 1.0 # weight for class loss
     
     def forward(self, pred, target, scaled_anchors=SCALED_ANCHORS):
         """
@@ -1018,6 +984,124 @@ def generate_submission_csv_with_nms(
 
     print(f"Submission file saved at: {output_csv_path}")
 
+class Dataset(torch.utils.data.Dataset): 
+    def __init__( 
+        self, df, image_dir, label_dir, anchors, 
+        resized_img_width=576, resized_img_height=384,
+        grid_width=18, grid_height=12,
+        num_classes=13, transform=None, ignore_iou_thresh=0.8
+    ): 
+        self.label_list = df
+        self.image_dir = image_dir 
+        self.label_dir = label_dir 
+        self.resized_img_width = resized_img_width
+        self.resized_img_height = resized_img_height
+        self.grid_width = grid_width
+        self.grid_height = grid_height
+        self.anchors = torch.tensor(anchors)
+        self.num_anchors = len(anchors)
+        self.num_classes = num_classes 
+        self.ignore_iou_thresh = ignore_iou_thresh
+        
+        # Store transforms
+        self.transform = transform
+        self.original_transform = None
+        if self.transform is not None:
+            # Create a non-augmenting transform using the same parameters
+            self.original_transform = YoloCompatibleTransform(
+                resized_img_width=self.transform.resized_img_width,
+                resized_img_height=self.transform.resized_img_height,
+                train=False,
+                max_rotation=self.transform.max_rotation,
+                max_translation=self.transform.max_translation,
+                brightness=self.transform.brightness,
+                contrast=self.transform.contrast,
+                saturation=self.transform.saturation,
+                hue=self.transform.hue,
+                blur_prob=self.transform.blur_prob,
+                blur_radius_max=self.transform.blur_radius_max,
+                noise_std=self.transform.noise_std
+            )
+
+    def __len__(self): 
+        return 2 * len(self.label_list) 
+
+    def __getitem__(self, idx):
+        # Getting the label path of the idx
+        label_path = os.path.join(self.label_dir, self.label_list.iloc[idx, 1]) #self.label_list.iloc[idx, 1] gets the value of the first column (label_name) in the row "idx"
+        # We are applying roll to move class label to the last column => 5 columns: x, y, width, height, class_label 
+        bboxes = np.roll(np.loadtxt(fname=label_path, 
+                        delimiter=" ", ndmin=2), 4, axis=1).tolist() # np.loadtxt() loads the file label_path (file .txt) containing the YOLO annotations of the corresponding image.
+                                                                     # ndmin=2 to ensure that even if there is only one box/row, we obtain a 2D table.
+                                                                     # .tolist() makes a list from numpy table.
+        # Getting the image path of the idx
+        img_path = os.path.join(self.image_dir, self.label_list.iloc[idx, 0]) 
+        image = np.array(Image.open(img_path).convert("RGB")) # open the image and convert to numpy array
+        
+        # Augmentations : always resize from 6000x4000 to 576x384 (for our case) and apply randomly flips, translations, rotations
+        if self.transform: 
+            augs = self.transform(image=image, bboxes=bboxes) 
+            image = augs["image"] # image is a tensor of shape (3, 416, 416)
+            bboxes = augs["bboxes"] # bboxes is a list of bounding boxes in the format [x, y, width, height, class_label] with x,y,w,h normalized between 0 and 1
+        
+        
+        # Be carefull : first dimension is vertical cells = Y-axis and second dimension is horizontal cells = X-axis
+        target = torch.zeros((self.num_anchors, self.grid_height, self.grid_width, 6))
+        # targets is a tensor of shape (num_anchors, grid_height, grid_width, 6) and 6 for [probabilities, x, y, width, height, class_label]
+
+        # Identify the cell and the best anchor box of the ground truth for each bounding box
+        for box in bboxes: 
+            # Calculate iou of each bounding box WITH ANCHOR BOXES
+            iou_anchors = iou(torch.tensor(box[2:4]), self.anchors, is_pred=False) # iou_anchors is a tensor of shape (9,)
+                                                      
+            # Selecting the best anchor box 
+            anchor_indices = iou_anchors.argsort(descending=True, dim=0) # anchor_indices is a tensor of shape (9,)
+            x, y, width, height, class_label = box
+            # x,y,width,height,class_label are all normalized between 0 and 1 (except class_label between 0 and num_classes-1)
+
+            has_anchor = False
+            # Assigning the bounding box to the best matching anchor box
+            for anchor_idx in anchor_indices:
+                # Identifying the cell to which the bounding box belongs
+                # Be carefull : i corresponds to y (rows) and j corresponds to x (columns)
+                i = min(int(self.grid_height * y), self.grid_height - 1)
+                j = min(int(self.grid_width * x), self.grid_width - 1)
+                
+                # Check if the anchor box is already assigned
+                # anchor_taken = target[anchor_idx, i, j, 0] NOT SURE WE CAN REMOVE ???
+                
+                if not has_anchor: # basically it is the first iteration # and not anchor taken ????
+                    # Set the probability to 1 
+                    target[anchor_idx, i, j, 0] = 1
+
+                    # Calculating the center of the bounding box relative to the cell (between 0 and 1)
+                    x_cell, y_cell = self.grid_width * x - j, self.grid_height * y - i
+
+                    # Calculating the width and height of the bounding box relative to the grid 
+                    width_cell, height_cell = (width * self.grid_width, height * self.grid_height)
+
+                    # Identify the box coordinates 
+                    box_coordinates = torch.tensor([x_cell, y_cell, width_cell, height_cell])
+
+                    # Assigning the box coordinates to the target 
+                    target[anchor_idx, i, j, 1:5] = box_coordinates 
+
+                    # Assigning the class label to the target 
+                    target[anchor_idx, i, j, 5] = int(class_label) 
+
+                    # Set the anchor box as assigned
+                    has_anchor = True
+
+                # If the anchor box is already assigned, check if the IoU is greater than the threshold 
+                elif iou_anchors[anchor_idx] > self.ignore_iou_thresh: # and not anchor_taken
+                    # Setting this to -1 will enable in the loss not to penalize if the model has found a good anchor but not the best MAYBE REMOVE IT IF NO MODEL CONVERGES ??????
+                    target[anchor_idx, i, j, 0] = -1
+        
+        # print(target.shape)
+        
+        # Return the image and the target
+        return image, target
+
 class YOLOTestDataset(Dataset):
     def __init__(self, img_dir, filenames, transform=None):
         self.img_dir = img_dir
@@ -1149,15 +1233,6 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
 
             ax.set_title(f"Image {img_idx}")
             plt.axis("off")
-                
-            # # Add label
-            # plt.text(
-            #     x1, y1,
-            #     s=f"{class_names[int(class_id)]} {conf:.2f}",
-            #     color="white",
-            #     verticalalignment="top",
-            #     bbox={"color": colors[int(class_id)], "pad": 0},
-            # )
             
             # Save image
             plt.axis("off")
@@ -1168,3 +1243,196 @@ def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations"
                 dpi=100
             )
             plt.close()
+
+
+def visualize_yolo_predictions(
+    images,
+    targets=None,
+    predictions=None,
+    save_dir=None,
+    class_names=None,
+    anchors=None,
+    resized_img_width=576,
+    resized_img_height=384,
+    grid_width=18,
+    grid_height=12,
+    conf_threshold=0.5,
+    iou_threshold=0.4,
+    max_images=BATCH_SIZE
+):
+    """
+    Visualizes a batch of YOLO images with either targets or predictions.
+    
+    Args:
+        images (Tensor): [B, 3, H, W]
+        targets (Tensor, optional): [B, A, S_H, S_W, 6]
+        predictions (Tensor, optional): [B, A, S_H, S_W, 5+C] (raw logits)
+        save_dir (str, optional): If provided, saves images to this directory
+        class_names (List[str]): Class labels
+        anchors (Tensor): [A, 2] scaled anchors
+        resized_img_*: Image size
+        grid_*: Grid size
+        conf_threshold (float): Threshold for model predictions
+        iou_threshold (float): IOU threshold for NMS
+    """
+    os.makedirs(save_dir, exist_ok=True) if save_dir else None
+
+    B, _, H, W = images.shape
+    images_np = images.permute(0, 2, 3, 1).cpu().numpy()  # B, H, W, C
+    if targets is not None:
+        targets = targets.cpu()
+    if predictions is not None:
+        predictions = predictions.cpu()
+
+    for b in range(min(B, max_images)):
+        fig, ax = plt.subplots(1, figsize=(12, 8))
+        img = (images_np[b] * 255).astype("uint8")
+        ax.imshow(img)
+        ax.set_title(f"Image {b}")
+        ax.axis("off")
+
+        # ---------- Visualize Ground Truth ----------
+        if targets is not None:
+            A = targets.shape[1]
+            for a in range(A):
+                for i in range(grid_height):
+                    for j in range(grid_width):
+                        if targets[b, a, i, j, 0] != 1:
+                            continue
+                        x_cell, y_cell, w_cell, h_cell = targets[b, a, i, j, 1:5]
+                        cls = int(targets[b, a, i, j, 5])
+                        x_center = (j + x_cell.item()) * resized_img_width / grid_width
+                        y_center = (i + y_cell.item()) * resized_img_height / grid_height
+                        w = w_cell.item() * resized_img_width / grid_width
+                        h = h_cell.item() * resized_img_height / grid_height
+                        x1 = x_center - w / 2
+                        y1 = y_center - h / 2
+
+                        rect = patches.Rectangle(
+                            (x1, y1), w, h,
+                            linewidth=2, edgecolor='lime', facecolor='none'
+                        )
+                        ax.add_patch(rect)
+                        ax.text(x1, y1 - 5, f"GT: {class_names[cls]}", color='lime',
+                                bbox=dict(facecolor='black', alpha=0.4))
+
+        # ---------- Visualize Predictions ----------
+        if predictions is not None and anchors is not None:
+            pred = predictions[b]  # (A, S_H, S_W, 5+C)
+            A = pred.size(0)
+            anchors = anchors.to(pred.device)
+            obj_scores = torch.sigmoid(pred[..., 0])
+            pred_xy = torch.sigmoid(pred[..., 1:3])
+            pred_wh = torch.exp(pred[..., 3:5]) * anchors.view(A, 1, 1, 2)
+            class_logits = pred[..., 5:]
+            class_probs = torch.softmax(class_logits, dim=-1)
+            class_conf, class_idx = torch.max(class_probs, dim=-1)
+            confidence = obj_scores * class_conf
+
+            grid_j, grid_i = torch.meshgrid(
+                torch.arange(grid_width),
+                torch.arange(grid_height),
+                indexing="xy"
+            )
+            cell_x = grid_j.unsqueeze(0).unsqueeze(-1).expand(A, -1, -1, -1)
+            cell_y = grid_i.unsqueeze(0).unsqueeze(-1).expand(A, -1, -1, -1)
+
+            x = (pred_xy[..., 0:1] + cell_x) * (resized_img_width / grid_width)
+            y = (pred_xy[..., 1:2] + cell_y) * (resized_img_height / grid_height)
+            w = pred_wh[..., 0:1] * (resized_img_width / grid_width)
+            h = pred_wh[..., 1:2] * (resized_img_height / grid_height)
+
+            boxes = torch.cat([x, y, w, h, confidence.unsqueeze(-1), class_idx.unsqueeze(-1).float()], dim=-1)
+            boxes = boxes.reshape(-1, 6)
+
+            mask = boxes[:, 4] >= conf_threshold
+            boxes = boxes[mask]
+
+            if boxes.size(0) > 0:
+                coords = boxes[:, :4]
+                scores = boxes[:, 4]
+                labels = boxes[:, 5].int()
+
+                boxes_corners = torch.zeros_like(coords)
+                boxes_corners[:, 0] = coords[:, 0] - coords[:, 2]/2
+                boxes_corners[:, 1] = coords[:, 1] - coords[:, 3]/2
+                boxes_corners[:, 2] = coords[:, 0] + coords[:, 2]/2
+                boxes_corners[:, 3] = coords[:, 1] + coords[:, 3]/2
+
+                keep = torch_nms(boxes_corners, scores, iou_threshold)
+                boxes_nms = boxes[keep]
+
+                for box in boxes_nms:
+                    x, y, w, h, score, cls = box
+                    x1 = x - w / 2
+                    y1 = y - h / 2
+                    rect = patches.Rectangle(
+                        (x1, y1), w, h,
+                        linewidth=2, edgecolor='red', facecolor='none'
+                    )
+                    ax.add_patch(rect)
+                    ax.text(x1, y1 - 5, f"PRED: {class_names[int(cls)]} {score:.2f}",
+                            color='red', bbox=dict(facecolor='white', alpha=0.6))
+
+        if save_dir:
+            plt.savefig(os.path.join(save_dir, f"img_{b}.png"), bbox_inches="tight", pad_inches=0, dpi=100)
+            plt.close()
+        else:
+            plt.show()
+
+
+def visualize_dataloader_all(
+    loader,
+    model=None,
+    device=DEVICE,
+    save_dir="visualizations_all",
+    class_names=None,
+    anchors=None,
+    resized_img_width=576,
+    resized_img_height=384,
+    grid_width=18,
+    grid_height=12,
+    conf_threshold=0.5,
+    iou_threshold=0.4
+):
+    """
+    Visualizes all images in a DataLoader using ground truth and/or predictions.
+    
+    Args:
+        loader: PyTorch DataLoader
+        model: model to generate predictions (optional)
+        device: "cuda" or "cpu"
+        save_dir: where to save images
+        (other args: same as visualize_yolo_predictions)
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    model = model.eval() if model else None
+
+    idx = 0
+    for images, targets in loader:
+        images = images.to(device)
+        targets = targets.to(device)
+
+        if model:
+            with torch.no_grad():
+                preds = model(images)
+        else:
+            preds = None
+
+        visualize_yolo_predictions(
+            images=images.cpu(),
+            targets=targets.cpu(),
+            predictions=preds.cpu() if preds is not None else None,
+            save_dir=save_dir,
+            class_names=class_names,
+            anchors=anchors,
+            resized_img_width=resized_img_width,
+            resized_img_height=resized_img_height,
+            grid_width=grid_width,
+            grid_height=grid_height,
+            conf_threshold=conf_threshold,
+            iou_threshold=iou_threshold,
+            max_images=images.size(0)  # visualize entire batch
+        )
+
+        idx += images.size(0)
