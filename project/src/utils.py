@@ -411,8 +411,8 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 # Data transform (to update)
 class YoloCompatibleTransform:
     def __init__(self, resized_img_width=576, resized_img_height=384, # WAS AT 640X640 BEFORE !!!!!!!!
-                 train=True, max_rotation=10, max_translation=0.05,
-                 brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1,
+                 train=True, max_rotation=30, max_translation=0.1,
+                 brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1,
                  blur_prob=0.5, blur_radius_max=0.5, noise_std=0.05):
 
         self.resized_img_width = resized_img_width
