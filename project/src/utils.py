@@ -49,7 +49,7 @@ NUM_ANCHORS = len(ANCHORS)
 BATCH_SIZE = 32
 
 # Learning rate for training 
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-4
 
 # Number of epochs for training 
 NB_EPOCHS = 400
@@ -831,7 +831,7 @@ class YOLOLoss(nn.Module):
         self.lambda_box = 1.0 # weight for box coordinates loss
         self.lambda_object = 2.0 # weight for object loss
         self.lambda_no_object = 2.0 # weight for no object loss
-        self.lambda_class = 1.0 # weight for class loss
+        self.lambda_class = 2.0 # weight for class loss
     
     def forward(self, pred, target, scaled_anchors=SCALED_ANCHORS):
         """
