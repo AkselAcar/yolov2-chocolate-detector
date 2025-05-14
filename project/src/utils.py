@@ -8,6 +8,10 @@ from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
 from torchvision import transforms
+import torchvision
+from torchvision.models.detection import FasterRCNN
+from torchvision.models.detection.rpn import AnchorGenerator
+from torchvision.ops import MultiScaleRoIAlign
 import shutil
 
 # Create a constants.py file to make it cleaner
@@ -88,6 +92,62 @@ def reset_val_dir():
         shutil.rmtree(val_image_dir)
     os.makedirs(val_image_dir)
 
+
+
+
+
+from torchvision.models.detection import FasterRCNN
+from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
+from torchvision.ops import MultiScaleRoIAlign
+from torchvision.models.detection.faster_rcnn import TwoMLPHead, FastRCNNPredictor
+
+class TinyBackbone(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.body = nn.Sequential(
+            nn.Conv2d(3, 32, 3, stride=2, padding=1),  # -> 96x144
+            nn.ReLU(),
+            nn.Conv2d(32, 64, 3, stride=2, padding=1),  # -> 48x72
+            nn.ReLU(),
+            nn.Conv2d(64, 128, 3, stride=2, padding=1),  # -> 24x36
+            nn.ReLU(),
+            nn.Conv2d(128, 256, 3, stride=2, padding=1),  # -> 12x18
+            nn.ReLU(),
+        )
+        self.out_channels = 256
+
+    def forward(self, x):
+        return {"0": self.body(x)}
+
+def ChocolateCounterFasterRCNN(num_classes=13):
+    backbone = TinyBackbone()
+
+    anchor_generator = AnchorGenerator(
+        sizes=((32, 64, 128),),
+        aspect_ratios=((0.5, 1.0, 2.0),)
+    )
+
+    roi_pooler = MultiScaleRoIAlign(
+        featmap_names=["0"],
+        output_size=7,
+        sampling_ratio=2
+    )
+
+    # Create model
+    model = FasterRCNN(
+        backbone,
+        num_classes=num_classes + 1,
+        rpn_anchor_generator=anchor_generator,
+        box_roi_pool=roi_pooler
+    )
+
+    # Reduce box head size
+    in_features = model.roi_heads.box_head.fc6.in_features
+    model.roi_heads.box_head = TwoMLPHead(in_channels=in_features, representation_size=128)
+    model.roi_heads.box_predictor = FastRCNNPredictor(128, num_classes + 1)
+
+    return model
+
 class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
         super().__init__()
@@ -109,6 +169,8 @@ class ResidualBlock(nn.Module):
     def forward(self, x):
         return self.relu(self.block(x) + self.skip(x))
 
+
+
 class ChocolateCounterNetDeep(nn.Module):
     def __init__(self, num_classes=13):
         super().__init__()
@@ -122,14 +184,15 @@ class ChocolateCounterNetDeep(nn.Module):
         self.layer1 = self._make_layer(64, 128, num_blocks=2, stride=2)   # 48x72
         self.layer2 = self._make_layer(128, 256, num_blocks=2, stride=2)  # 24x36
         self.layer3 = self._make_layer(256, 512, num_blocks=2, stride=2)  # 12x18
-        self.layer4 = self._make_layer(512, 1024, num_blocks=2, stride=2) # 6x9
+        # self.layer4 = self._make_layer(512, 1024, num_blocks=2, stride=2) # 6x9
 
         self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(1024, 512),
+            nn.Linear(512, 256),
+            nn.Dropout(0.3),
             nn.ReLU(),
-            nn.Linear(512, num_classes)
+            nn.Linear(256, num_classes)
         )
 
     def _make_layer(self, in_channels, out_channels, num_blocks, stride):
@@ -143,69 +206,57 @@ class ChocolateCounterNetDeep(nn.Module):
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
-        x = self.layer4(x)
+        # x = self.layer4(x)
         x = self.global_pool(x)
         return self.fc(x)
     
 
 class ChocolateCountDataset(Dataset):
-    def __init__(self, image_filenames, image_dir, label_dir, transform=None, augment=False, n_augmentations=3):
+    def __init__(self, image_filenames, image_dir, label_dir=None, transform=None):
         super().__init__()
         self.image_dir = image_dir
         self.label_dir = label_dir
-        self.augment = augment
-        self.n_augmentations = n_augmentations
         self.image_filenames = image_filenames
-
-        self.base_transform = transforms.Compose([
+        self.transform = transform or transforms.Compose([
             transforms.Resize((384, 576)),
             transforms.ToTensor()
         ])
 
-        self.augment_transform = transform or transforms.Compose([
-            transforms.Resize((384, 576)),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(10),
-            transforms.ToTensor(),
-        ])
-
-        if self.augment:
-            self.samples = []
-            for fname in self.image_filenames:
-                img_path = os.path.join(self.image_dir, fname)
-                label_path = os.path.join(self.label_dir, os.path.splitext(fname)[0] + ".txt")
-
-                label_data = np.loadtxt(label_path, ndmin=2)
-                classes = label_data[:, 0].astype(int)
-                class_counts = np.bincount(classes, minlength=NUM_CLASSES)
-
-                image = Image.open(img_path).convert("RGB")
-                base_image = self.base_transform(image)
-                self.samples.append((base_image, torch.tensor(class_counts, dtype=torch.float32)))
-
-                for _ in range(n_augmentations):
-                    augmented_image = self.augment_transform(image)
-                    self.samples.append((augmented_image, torch.tensor(class_counts, dtype=torch.float32)))
-        else:
-            self.samples = self.image_filenames
-
     def __len__(self):
-        return len(self.samples)
+        return len(self.image_filenames)
 
     def __getitem__(self, idx):
-        if self.augment:
-            return self.samples[idx]
-        else:
-            img_name = self.samples[idx]
-            img_path = os.path.join(self.image_dir, img_name)
+        img_name = self.image_filenames[idx]
+        img_path = os.path.join(self.image_dir, img_name)
+        image = Image.open(img_path).convert("RGB")
+        image = self.transform(image)
+
+        if self.label_dir:
             label_path = os.path.join(self.label_dir, os.path.splitext(img_name)[0] + ".txt")
-
-            image = Image.open(img_path).convert("RGB")
-            image = self.base_transform(image)
-
             label_data = np.loadtxt(label_path, ndmin=2)
-            classes = label_data[:, 0].astype(int)
-            class_counts = np.bincount(classes, minlength=NUM_CLASSES)
 
-            return image, torch.tensor(class_counts, dtype=torch.float32)
+            boxes = []
+            labels = []
+
+            for row in label_data:
+                cls, x_center, y_center, width, height = row
+                cls = int(cls) + 1  # 1-based class index for Faster R-CNN
+
+                img_h, img_w = image.shape[1], image.shape[2]
+                x1 = (x_center - width / 2) * img_w
+                y1 = (y_center - height / 2) * img_h
+                x2 = (x_center + width / 2) * img_w
+                y2 = (y_center + height / 2) * img_h
+
+                boxes.append([x1, y1, x2, y2])
+                labels.append(cls)
+
+            target = {
+                "boxes": torch.tensor(boxes, dtype=torch.float32),
+                "labels": torch.tensor(labels, dtype=torch.int64),
+                "image_id": torch.tensor([idx])
+            }
+
+            return image, target
+        else:
+            return image, {}
