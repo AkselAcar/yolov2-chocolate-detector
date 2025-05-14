@@ -31,7 +31,7 @@ import shutil
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load and save model variable 
-LOAD_MODEL = True
+LOAD_MODEL = False
 SAVE_MODEL = True
 
 # model checkpoint file name 
@@ -46,13 +46,13 @@ ANCHORS = [
 NUM_ANCHORS = len(ANCHORS)
 
 # Batch size for training 
-BATCH_SIZE = 9
+BATCH_SIZE = 32
 
 # Learning rate for training 
 LEARNING_RATE = 1e-3
 
 # Number of epochs for training 
-NB_EPOCHS = 200
+NB_EPOCHS = 400
 
 # Image sizes
 ORIG_IMG_WIDTH = 6000
@@ -737,6 +737,7 @@ class EfficientYOLO_12x18Grid(nn.Module):
     def __init__(self, in_channels=3, num_classes=NUM_CLASSES):
         super().__init__()
         self.num_classes = num_classes
+        self.drop = nn.Dropout(0.2)
         
         self.backbone = nn.Sequential(
             CNNBlock(in_channels, 32, kernel_size=3, stride=1, padding=1),
@@ -780,7 +781,8 @@ class EfficientYOLO_12x18Grid(nn.Module):
         context_features = context_features.expand(-1, -1, spatial_features.size(2), spatial_features.size(3))
         fused_features = torch.cat([spatial_features, context_features], dim=1)
         detection_features = self.head(fused_features)
-        output = self.scale_pred(detection_features)
+        dropped = self.drop(detection_features)
+        output = self.scale_pred(dropped)
         return output
 
 def init_yolo_weights(model):
