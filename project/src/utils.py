@@ -3,7 +3,8 @@ from src.Constants import *
 import numpy as np
 from tqdm import tqdm
 import glob
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
+from torchvision.ops import nms as torch_nms
 
 def iou(box1, box2, is_pred=True):
 	"""
