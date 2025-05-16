@@ -1,7 +1,7 @@
 class YoloCompatibleTransform:
 	def __init__(self, resized_img_width = RESIZED_IMG_WIDTH, resized_img_height = RESIZED_IMG_HEIGHT,
 				 train=True, max_rotation=10, max_translation=0.05,
-				 brightness=0.3, contrast=0.3, saturation=0.1, hue=0.01, # or 0.2 0.2 0.2 0.1
+				 brightness=0.3, contrast=0.3, saturation=0.1, hue=0.01,
 				 noise_prob=0.3, noise_intensity=0.02,
 				 blur_prob=0.3, blur_radius=(0.5, 2.5)): 
 		
@@ -153,7 +153,7 @@ class YoloCompatibleTransform:
 			# If no rotation/translation, just paste the image directly
 			canvas.paste(image, (paste_x, paste_y))
 		
-		# ======= COLOR TRANSFORMATIONS AFTER resizing =======
+		# ======= COLOR TRANSFORMATIONS AFTER resizing => better computationnaly =======
 		if self.train:
 			canvas = transforms.ColorJitter(
 				brightness=self.brightness,
@@ -274,7 +274,7 @@ class YoloCompatibleTransform:
 
 ######################################### CHECK THE TRANSFORMATIONS ######################################################
 
-def save_gt_images(loader, class_names=CLASS_NAMES, save_dir="gt_visualizations", grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT):
+def save_transformed_images_for_checking(loader, class_names=CLASS_NAMES, save_dir="transformation_visualizations", grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT):
 	"""
 	Saves images with ground truth bounding boxes from a DataLoader
 	

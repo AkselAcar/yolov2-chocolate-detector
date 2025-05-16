@@ -1,35 +1,3 @@
-import torch 
-import torch.nn as nn 
-import torch.optim as optim 
-
-from PIL import Image, ImageFile, ImageFilter
-ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-import cv2 
-
-import os 
-import numpy as np 
-import pandas as pd 
-
-import matplotlib.pyplot as plt 
-import matplotlib.patches as patches 
-
-from tqdm import tqdm
-
-import torchvision.transforms.functional as F
-from torchvision import transforms
-from torchvision.ops import nms as torch_nms
-
-import csv
-from collections import defaultdict
-
-import random
-
-import glob
-
-
-################################################### HELPER FUNCTIONS ######################################################
-
 def iou(box1, box2, is_pred=True):
 	"""
 	Function to calculate Intersection over Union (IoU).
@@ -96,9 +64,12 @@ def iou(box1, box2, is_pred=True):
 		return iou_score
 	
 
-def convert_cell_to_bboxes(prediction, scaled_anchors=SCALED_ANCHORS, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT, num_classes=NUM_CLASSES, conf_threshold = 0.6):
+def convert_cell_to_bboxes(prediction, scaled_anchors=SCALED_ANCHORS,
+						   grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT,
+						   resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT,
+						   num_classes=NUM_CLASSES, conf_threshold = 0.6):
 	"""
-	Function to convert a prediction (output) of the model to a 
+	Function to convert a prediction (output) of the model to a tensor with all the bounding boxes of dimension 6
 	Input :
 		prediction : tensor of shape ([num_anchors, grid_height, grid_width, 5 + num_classes]) with 5 for (score, x, y, w, h) in different scales (raw output)
 		scaled_anchors : tensor of shape ([num_anchors, 2])
@@ -253,7 +224,9 @@ def plot_image(image, boxes, class_names=CLASS_NAMES, save_dir=None, filename="i
 	plt.close()
 	
 
-def save_val_images(model, loader, device, scaled_anchors, save_dir, epoch, class_names = CLASS_NAMES, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT):
+def save_val_images(model, loader, device, scaled_anchors, save_dir, epoch, class_names = CLASS_NAMES,
+					grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT,
+					resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT):
 	"""
 	Function to save to apply the model on images of a loader, and plot/save them by calling the function plot_image
 	"""
@@ -264,7 +237,7 @@ def save_val_images(model, loader, device, scaled_anchors, save_dir, epoch, clas
 		os.remove(file_path)
 	global_img_idx = 0
 	with torch.no_grad():
-		for batch_idx, (x, _) in enumerate(loader):
+		for _, (x, _) in enumerate(loader):
 			x = x.to(device)
 			outputs = model(x) # shape = (batch_size, num_anchors, grid_height, grid_width, 5 + num_classes)
 
@@ -342,8 +315,7 @@ def load_checkpoint(checkpoint_file, model, optimizer, lr):
 
 
 ################################################### TRAINING AND EVALUATION ############################################################
-
-def training_loop(loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE):
+def train_one_epoch(loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE):
 	"""
 	Function to train the model on one epoch (of the training loader)
 	"""
@@ -397,6 +369,4 @@ def evaluate(loader, model, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVIC
 			losses.append(loss.item())
 	mean_loss = sum(losses) / len(losses) if losses else 0
 	return mean_loss
-
-
 

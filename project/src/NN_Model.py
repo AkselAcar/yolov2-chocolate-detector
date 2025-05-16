@@ -25,7 +25,7 @@ class ScalePrediction(nn.Module):
         output = output.permute(0, 1, 3, 4, 2)
         return output
 
-class YOLO_YOCO_Flexible(nn.Module):
+class YOLO_Model(nn.Module):
     def __init__(self, in_channels=3, num_classes=13, num_anchors=9, grid_ratio=32, scale_factor=1.0):
         super().__init__()
         self.num_classes = num_classes

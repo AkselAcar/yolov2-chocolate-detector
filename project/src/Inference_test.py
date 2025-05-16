@@ -22,7 +22,7 @@ class YOLOTestDataset(Dataset):
 		return image, fname # dummy_boxes, fname
 	
 
-CLASS_NAMES_CSV = [ 
+CLASS_NAMES_FOR_SUBMISSION = [ 
 	"Jelly White","Jelly Milk","Jelly Black","Amandina","Crème brulée",
 	"Triangolo","Tentation noir","Comtesse","Noblesse","Noir authentique",
 	"Passion au lait","Arabia","Stracciatella"
@@ -103,7 +103,7 @@ def generate_submission_csv_with_nms(
 	# Write to CSV
 	with open(output_csv_path, mode='w', newline='') as f:
 		writer = csv.writer(f)
-		writer.writerow(["id"] + CLASS_NAMES_CSV)
+		writer.writerow(["id"] + CLASS_NAMES_FOR_SUBMISSION)
 		writer.writerows(predictions)
 
 	print(f" Submission file saved to: {output_csv_path}")

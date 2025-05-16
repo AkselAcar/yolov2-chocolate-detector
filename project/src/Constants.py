@@ -2,11 +2,13 @@
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load and save model variable 
-LOAD_MODEL = True
+LOAD_MODEL = False
 SAVE_MODEL = True
 
-# model checkpoint file name 
-CHECKPOINT_FILE_LOAD = "checkpoint.pth.tar"
+# model checkpoint file name to load
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_CHECKPOINTS_DIR = os.path.join(CURRENT_DIR, "Model_checkpoints")
+CHECKPOINT_FILE_TO_LOAD = os.path.join(MODEL_CHECKPOINTS_DIR, "checkpoint.pth.tar")
 
 # Anchor boxes scaled between 0 and 1
 ANCHORS = [
