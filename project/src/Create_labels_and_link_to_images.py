@@ -1,5 +1,6 @@
 import os
 import csv
+import glob
 
 image_dir = "../dataset_project_iapr2025/train"
 label_dir = "labels"
@@ -37,9 +38,15 @@ def convert_labels(csv_path, output_dir, img_width=576, img_height=384):
         with open(txt_path, 'a') as f:
             f.write(f"{cls} {norm_cx} {norm_cy} {norm_w} {norm_h}\n")
 
-convert_labels('./raw_anotations_YOLO.csv', 'labels') # ATTENTION TO RUN ONCE PSK SINON CA RAJOUTE DES LIGNES FAUDRAIT LE METTRE DANS UN IF
 
+if os.path.exists(label_dir):
+    # Remove existing labels directory
+    for file_path in glob.glob(os.path.join(label_dir, "*.txt")):
+        os.remove(file_path)
 
+convert_labels('./raw_anotations_YOLO.csv', 'labels')
+
+# Create a CSV file linking images to their labels
 images = sorted([f for f in os.listdir(image_dir) if f.endswith('.JPG')])
 labels = sorted([f for f in os.listdir(label_dir) if f.endswith('.txt')])
 
