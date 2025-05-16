@@ -87,7 +87,7 @@ if LOAD_MODEL:
 # Training the model
 for e in range(1, NB_EPOCHS+1): 
 	print("Epoch:", e) 
-	training_one_epoch(train_loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE) 
+	train_one_epoch(train_loader, model, optimizer, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE) 
 
 	# Validation
 	val_loss = evaluate(val_loader, model, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVICE)
