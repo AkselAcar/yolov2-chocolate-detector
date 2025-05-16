@@ -3,7 +3,7 @@ import csv
 
 image_dir = "../dataset_project_iapr2025/train"
 label_dir = "labels"
-output_csv = "link_images_labels_YOLO_v3_combined.csv"
+output_csv = "link_images_labels_YOLO.csv"
 
 import pandas as pd
 import os
@@ -37,7 +37,7 @@ def convert_labels(csv_path, output_dir, img_width=576, img_height=384):
         with open(txt_path, 'a') as f:
             f.write(f"{cls} {norm_cx} {norm_cy} {norm_w} {norm_h}\n")
 
-convert_labels('../labels_YOLO_combined.csv', 'labels') # ATTENTION TO RUN ONCE PSK SINON CA RAJOUTE DES LIGNES FAUDRAIT LE METTRE DANS UN IF
+convert_labels('./raw_anotations_YOLO.csv', 'labels') # ATTENTION TO RUN ONCE PSK SINON CA RAJOUTE DES LIGNES FAUDRAIT LE METTRE DANS UN IF
 
 
 images = sorted([f for f in os.listdir(image_dir) if f.endswith('.JPG')])

@@ -47,7 +47,7 @@ def kmeans_iou(boxes, k=9, max_iter=100, tol=1e-4, seed=None):
     return centroids
 
 # Load boxes in pixels directly (no scaling)
-df = pd.read_csv('../labels_YOLO_combined.csv')  # Assumes width and height are in pixels
+df = pd.read_csv('./raw_anotations_YOLO.csv')  # Assumes width and height are in pixels
 
 # List of boxes in (w, h) format in original resolution (6000x4000)
 boxes = df[['width', 'height']].values.astype(float)
