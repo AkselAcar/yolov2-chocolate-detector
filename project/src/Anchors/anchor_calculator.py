@@ -59,10 +59,10 @@ anchors = kmeans_iou(boxes, k=k, seed=42)
 # Sort anchors by area
 sorted_anchors = sorted(anchors, key=lambda x: x[0] * x[1])
 
-# Résolution de référence
+
 original_width, original_height = 6000, 4000
 
-# Normaliser les ancres dans [0,1]
+# Normalize anchors to [0, 1] range
 normalized_anchors = [
     (w / original_width, h / original_height) for (w, h) in sorted_anchors
 ]
@@ -81,19 +81,10 @@ for i, (w, h) in enumerate(sorted_anchors):
 print(f"\nAverage IoU with closest anchor: {average_iou:.4f}")
 
 # Save formats
-os.makedirs('output', exist_ok=True)
+os.makedirs('output_anchors', exist_ok=True)
 
-with open('output/yolo_anchors.csv', 'w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['anchor_index', 'width', 'height'])
-    for i, (w, h) in enumerate(sorted_anchors):
-        writer.writerow([i, int(w), int(h)])
-
-with open('output/yolo_anchors.txt', 'w') as f:
-    anchors_str = ", ".join([f"{int(w)},{int(h)}" for w, h in sorted_anchors])
-    f.write(f"anchors = {anchors_str}\n")
-
-with open('output/yolo_anchors.yaml', 'w') as f:
+# 1. Save anchors in pixels format (width, height)
+with open('output_anchors/yolo_anchors.yaml', 'w') as f:
     f.write(f"anchors:\n")
     for i in range(0, len(sorted_anchors), 3):
         layer_anchors = sorted_anchors[i:i+3]
@@ -101,11 +92,7 @@ with open('output/yolo_anchors.yaml', 'w') as f:
         f.write(f"  - {anchors_str}\n")
 
 # 4. Save normalized anchors (YOLO format in [0,1])
-with open('output/yolo_anchors_normalized.txt', 'w') as f:
-    anchors_str = ", ".join([f"{w:.5f},{h:.5f}" for w, h in normalized_anchors])
-    f.write(f"anchors = {anchors_str}\n")
-
-with open('output/yolo_anchors_normalized.yaml', 'w') as f:
+with open('output_anchors/yolo_anchors_normalized.yaml', 'w') as f:
     f.write("anchors:\n")
     for i in range(0, len(normalized_anchors), 3):
         group = normalized_anchors[i:i+3]
@@ -122,5 +109,5 @@ for i, (w, h) in enumerate(sorted_anchors):
 plt.xlabel('Width (pixels)')
 plt.ylabel('Height (pixels)')
 plt.title('Anchors vs Actual Boxes (6000x4000) — Blue=GT, Red=Anchors')
-plt.savefig('output/anchors_visualization.png')
+plt.savefig('output_anchors/anchors_visualization.png')
 plt.close()
