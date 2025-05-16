@@ -1,13 +1,13 @@
 import os
 import csv
 import glob
+import pandas as pd
 
-image_dir = "../dataset_project_iapr2025/train"
+
+image_dir = "../../dataset_project_iapr2025/train"
 label_dir = "labels"
 output_csv = "link_images_labels_YOLO.csv"
 
-import pandas as pd
-import os
 
 def convert_labels(csv_path, output_dir, img_width=576, img_height=384):
     df = pd.read_csv(csv_path)
@@ -33,7 +33,7 @@ def convert_labels(csv_path, output_dir, img_width=576, img_height=384):
         norm_w = scaled_w / img_width
         norm_h = scaled_h / img_height
         
-        # Write to file : labels/filename.txt => one file per image !!!
+        # Write to file : labels/filename.txt => one file per image
         txt_path = os.path.join(output_dir, filename.replace('.JPG', '.txt'))
         with open(txt_path, 'a') as f:
             f.write(f"{cls} {norm_cx} {norm_cy} {norm_w} {norm_h}\n")
@@ -44,7 +44,7 @@ if os.path.exists(label_dir):
     for file_path in glob.glob(os.path.join(label_dir, "*.txt")):
         os.remove(file_path)
 
-convert_labels('./raw_anotations_YOLO.csv', 'labels')
+convert_labels('raw_annotations_YOLO.csv', 'labels')
 
 # Create a CSV file linking images to their labels
 images = sorted([f for f in os.listdir(image_dir) if f.endswith('.JPG')])
