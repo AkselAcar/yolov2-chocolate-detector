@@ -377,3 +377,65 @@ def evaluate(loader, model, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVIC
 	mean_loss = sum(losses) / len(losses) if losses else 0
 	return mean_loss
 
+################################################### HEATMAPS IN THE NETWORK ############################################################
+# Dictionary to store intermediate outputs
+feature_maps = {}
+
+# Hook function
+# def hook_fn(module, input, output):
+#     layer_name = module.__class__.__name__ + "_" + str(id(module))
+#     feature_maps[layer_name] = output.detach().cpu()
+
+# Function to save heatmaps
+def save_feature_maps_as_heatmaps(feature_maps, save_dir="heatmaps", max_maps=4):
+    os.makedirs(save_dir, exist_ok=True)
+
+    for layer_name, fmap in feature_maps.items():  # fmap: [B, C, H, W]
+        batch_size = fmap.size(0)
+
+        for b in range(batch_size):  # For each image in the batch
+            fmap_b = fmap[b]  # [C, H, W]
+
+            for i in range(min(max_maps, fmap_b.shape[0])):  # Limit channels
+                heatmap = fmap_b[i]
+                heatmap = torch.nn.functional.interpolate(heatmap.unsqueeze(0).unsqueeze(0), size=(384, 576), mode='bilinear').squeeze()
+                heatmap = heatmap - heatmap.min()
+                heatmap = heatmap / (heatmap.max() + 1e-6)
+
+                # Create a unique filename
+                filename = f"{layer_name}_img{b}_ch{i}.png"
+                filepath = os.path.join(save_dir, filename)
+
+                plt.imshow(heatmap.numpy(), cmap='hot')
+                plt.axis('off')
+                plt.savefig(filepath, bbox_inches='tight')
+                plt.close()
+
+def register_specific_hooks(model):
+    feature_layers = {
+        "backbone_top": model.backbone[0],     
+        "backbone_mid": model.backbone[6],
+        "backbone_end": model.backbone[9],      
+        "head":  model.head[0],   
+    }
+    
+    for name, module in feature_layers.items():
+        module.register_forward_hook(
+            lambda m, i, o, name=name: feature_maps.update({name: o.detach().cpu()})
+        )
+
+
+def save_heatmaps(model, loader):
+    """
+    Save heatmaps at certain layers of the model.
+    """
+    model.eval()
+    register_specific_hooks(model)
+
+    with torch.no_grad():
+        for batch_idx, (images, labels) in enumerate(loader):
+            feature_maps.clear()  # Clear previous batch hooks
+            _ = model(images)
+
+            batch_dir = f"heatmaps/batch_{batch_idx}"
+            save_feature_maps_as_heatmaps(feature_maps, save_dir=batch_dir)
