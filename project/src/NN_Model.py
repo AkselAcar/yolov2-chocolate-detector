@@ -65,6 +65,7 @@ class YOLO_Model(nn.Module):
 
         self.head = nn.Sequential(
             CNNBlock(feature_channels, s(256), kernel_size=3, padding=1),
+            nn.Dropout(0.1),
             CNNBlock(s(256), s(256), kernel_size=3, padding=1),
         )
 

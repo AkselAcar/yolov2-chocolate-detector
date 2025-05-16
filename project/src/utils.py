@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import glob
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from torchvision.ops import nms as torch_nms
 
 def iou(box1, box2, is_pred=True):

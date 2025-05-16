@@ -5,7 +5,7 @@ import os
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 # Load and save model variable 
-LOAD_MODEL = True
+LOAD_MODEL = False
 SAVE_MODEL = True
 
 # model checkpoint file name to load
@@ -28,7 +28,7 @@ BATCH_SIZE = 5
 LEARNING_RATE = 1e-3
 
 # Number of epochs for training 
-NB_EPOCHS = 1
+NB_EPOCHS = 500
 
 # Image sizes
 ORIG_IMG_WIDTH = 6000
