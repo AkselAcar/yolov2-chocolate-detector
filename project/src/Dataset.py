@@ -1,3 +1,9 @@
+from src.Constants import *
+from src.utils import iou
+import numpy as np
+import torch
+from PIL import Image
+
 # Create a dataset class to load the images and labels from the folder 
 class Dataset(torch.utils.data.Dataset): 
 	def __init__( 
@@ -98,7 +104,7 @@ class Dataset(torch.utils.data.Dataset):
 
 				# If the anchor box is already assigned, check if the IoU is greater than the threshold 
 				elif iou_anchors[anchor_idx] > self.ignore_iou_thresh: # and not anchor_taken
-					# Setting this to -1 will enable in the loss not to penalize if the model has found a good anchor but not the best MAYBE REMOVE IT IF NO MODEL CONVERGES ??????
+					# Setting this to -1 will enable in the loss not to penalize if the model has found a good anchor but not the best
 					target[anchor_idx, i, j, 0] = -1
 		
 		# Return the image and the target
