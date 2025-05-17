@@ -83,7 +83,7 @@ min_val_loss = 100
 if LOAD_MODEL:
 	load_checkpoint(CHECKPOINT_FILE_TO_LOAD, model, optimizer, LEARNING_RATE)
 
-"""
+
 # Training the model
 for e in range(1, NB_EPOCHS+1): 
 	print("Epoch:", e) 
@@ -106,7 +106,7 @@ for e in range(1, NB_EPOCHS+1):
 			os.makedirs(checkpoint_dir, exist_ok=True)
 			checkpoint_file = os.path.join(checkpoint_dir, f"checkpoint_{e}.pth.tar")
 			save_checkpoint(model, optimizer, filename=checkpoint_file)
-"""
+
 
 test_dir = "./dataset_project_iapr2025/test"
 test_files = sorted([f for f in os.listdir(test_dir) if f.endswith(".JPG")])
