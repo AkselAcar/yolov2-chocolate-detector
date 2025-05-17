@@ -83,7 +83,7 @@ min_val_loss = 100
 if LOAD_MODEL:
 	load_checkpoint(CHECKPOINT_FILE_TO_LOAD, model, optimizer, LEARNING_RATE)
 
-
+"""
 # Training the model
 for e in range(1, NB_EPOCHS+1): 
 	print("Epoch:", e) 
@@ -105,7 +105,7 @@ for e in range(1, NB_EPOCHS+1):
 			os.makedirs(checkpoint_dir, exist_ok=True)
 			checkpoint_file = os.path.join(checkpoint_dir, f"checkpoint_{e}.pth.tar")
 			save_checkpoint(model, optimizer, filename=checkpoint_file)
-
+"""
 
 test_dir = "./dataset_project_iapr2025/test"
 test_files = sorted([f for f in os.listdir(test_dir) if f.endswith(".JPG")])
@@ -124,13 +124,13 @@ test_loader = torch.utils.data.DataLoader(
 )
 
 
-save_val_images(model, test_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="test_images", epoch=1000, class_names = CLASS_NAMES, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
+#save_val_images(model, test_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="test_images", epoch=1000, class_names = CLASS_NAMES, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
 
 
 generate_submission_csv_with_nms(
 	model,
 	test_loader,
-	output_csv_path="final_submission.csv",
-	conf_threshold=0.7,  # Adjust based on validation
+	output_csv_path="submission_472_80_40.csv",
+	conf_threshold=0.75,  # Adjust based on validation
 	iou_threshold=0.4    # Same as validation NMS
 )

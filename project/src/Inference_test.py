@@ -6,6 +6,7 @@ from PIL import Image
 from tqdm import tqdm
 from collections import defaultdict
 import csv
+from torchvision.ops import nms as torch_nms
 
 
 class YOLOTestDataset(torch.utils.data.Dataset):
