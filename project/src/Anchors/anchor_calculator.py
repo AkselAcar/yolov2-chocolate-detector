@@ -83,7 +83,7 @@ print(f"\nAverage IoU with closest anchor: {average_iou:.4f}")
 # Save formats
 os.makedirs('output_anchors', exist_ok=True)
 
-# 1. Save anchors in pixels format (width, height)
+# Save anchors in pixels format (width, height)
 with open('output_anchors/yolo_anchors.yaml', 'w') as f:
     f.write(f"anchors:\n")
     for i in range(0, len(sorted_anchors), 3):
@@ -91,7 +91,7 @@ with open('output_anchors/yolo_anchors.yaml', 'w') as f:
         anchors_str = ", ".join([f"[{int(w)}, {int(h)}]" for w, h in layer_anchors])
         f.write(f"  - {anchors_str}\n")
 
-# 4. Save normalized anchors (YOLO format in [0,1])
+# Save normalized anchors (YOLO format in [0,1])
 with open('output_anchors/yolo_anchors_normalized.yaml', 'w') as f:
     f.write("anchors:\n")
     for i in range(0, len(normalized_anchors), 3):

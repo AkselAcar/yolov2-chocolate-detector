@@ -95,7 +95,8 @@ for e in range(1, NB_EPOCHS+1):
 	if e==1:
 		min_val_loss = val_loss
 	# Save validation images
-	save_val_images(model, val_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="src/val_images", epoch=e, class_names = CLASS_NAMES, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
+	save_val_images(model, val_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="src/val_images", epoch=e, class_names = CLASS_NAMES,
+				 	grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
 
 	if val_loss < min_val_loss:
 		min_val_loss = val_loss
@@ -124,7 +125,8 @@ test_loader = torch.utils.data.DataLoader(
 )
 
 
-save_val_images(model, test_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="test_images", epoch=1000, class_names = CLASS_NAMES, grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
+save_val_images(model, test_loader, device=DEVICE, scaled_anchors=SCALED_ANCHORS, save_dir="test_images", epoch=1000, class_names = CLASS_NAMES,
+				grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT, resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT)
 
 
 generate_submission_csv_with_nms(

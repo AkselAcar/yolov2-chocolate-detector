@@ -28,8 +28,7 @@ class YOLOTestDataset(torch.utils.data.Dataset):
 		else:
 			image = T.ToTensor()(image)
 
-		#dummy_boxes = torch.zeros((GRID_HEIGHT, GRID_WIDTH, 2 * 5 + NUM_CLASSES))
-		return image, fname # dummy_boxes, fname
+		return image, fname
 	
 
 CLASS_NAMES_FOR_SUBMISSION = [ 
