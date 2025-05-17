@@ -191,20 +191,20 @@ class YoloCompatibleTransform:
 			x2 = (x_center + w/2) * orig_img_width
 			y2 = (y_center + h/2) * orig_img_height
 			
-			# Step 1: Scale coordinates to resized image
+			# Scale coordinates to resized image
 			x1 = x1 * scale
 			y1 = y1 * scale
 			x2 = x2 * scale
 			y2 = y2 * scale
 			
-			# Step 2: Add padding to center in the image
+			# Add padding to center in the image
 			x1 += paste_x
 			y1 += paste_y
 			x2 += paste_x
 			y2 += paste_y
 			
 			
-			# Step 4: Apply rotation and translation
+			# Apply rotation and translation
 			if angle != 0 or translate != (0, 0):
 				# Convert box to 4 corner points
 				points = [
@@ -235,7 +235,7 @@ class YoloCompatibleTransform:
 					
 					transformed_points.append((px, py))
 				
-				# Get axis-aligned bounding box (AABB) of transformed points
+				# Get axis-aligned bounding box of transformed points
 				# This ensures the box remains aligned with horizontal/vertical axes
 				x_coords = [p[0] for p in transformed_points]
 				y_coords = [p[1] for p in transformed_points]
@@ -270,7 +270,6 @@ class YoloCompatibleTransform:
 			y_center = (y1 + y2) / 2 / self.resized_img_height
 			
 			# Add transformed box if it's still visible
-			#if visibility_ratio >= 0.4:  # Minimum size threshold
 			transformed_bboxes.append([x_center, y_center, w, h, cls])
 		
 		# Convert to tensor and normalize
@@ -281,7 +280,8 @@ class YoloCompatibleTransform:
 
 ######################################### CHECK THE TRANSFORMATIONS ######################################################
 
-def save_transformed_images_for_checking(loader, class_names=CLASS_NAMES, save_dir="transformation_visualizations", grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT):
+def save_transformed_images_for_checking(loader, class_names=CLASS_NAMES, save_dir="transformation_visualizations",
+										 grid_width=GRID_WIDTH, grid_height=GRID_HEIGHT):
 	"""
 	Saves images with ground truth bounding boxes from a DataLoader
 	

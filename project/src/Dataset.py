@@ -78,9 +78,8 @@ class Dataset(torch.utils.data.Dataset):
 				i, j = int(self.grid_height * y), int(self.grid_width * x)
 				
 				# Check if the anchor box is already assigned
-				# anchor_taken = target[anchor_idx, i, j, 0] NOT SURE WE CAN REMOVE ???
 				
-				if not has_anchor: # basically it is the first iteration # and not anchor taken ????
+				if not has_anchor: # basically it is the first iteration
 					# Set the probability to 1 
 					target[anchor_idx, i, j, 0] = 1
 
@@ -103,7 +102,7 @@ class Dataset(torch.utils.data.Dataset):
 					has_anchor = True
 
 				# If the anchor box is already assigned, check if the IoU is greater than the threshold 
-				elif iou_anchors[anchor_idx] > self.ignore_iou_thresh: # and not anchor_taken
+				elif iou_anchors[anchor_idx] > self.ignore_iou_thresh:
 					# Setting this to -1 will enable in the loss not to penalize if the model has found a good anchor but not the best
 					target[anchor_idx, i, j, 0] = -1
 		

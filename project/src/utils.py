@@ -181,9 +181,6 @@ def plot_image(image, boxes, class_names=CLASS_NAMES, save_dir=None, filename="i
 			x2 = max(0, min(x_center + width/2, w - 1))
 			y2 = max(0, min(y_center + height/2, h - 1))
 			
-			# Skip invalid boxes
-			#if x2 <= x1 or y2 <= y1:
-			#	continue
 
 			# Create rectangle with visible parameters
 			rect = patches.Rectangle(
@@ -382,11 +379,6 @@ def evaluate(loader, model, loss_fn, scaled_anchors=SCALED_ANCHORS, device=DEVIC
 ################################################### HEATMAPS IN THE NETWORK ############################################################
 # Dictionary to store intermediate outputs
 feature_maps = {}
-
-# Hook function
-# def hook_fn(module, input, output):
-#     layer_name = module.__class__.__name__ + "_" + str(id(module))
-#     feature_maps[layer_name] = output.detach().cpu()
 
 # Function to save heatmaps
 def save_feature_maps_as_heatmaps(feature_maps, save_dir="heatmaps", max_maps=4):
