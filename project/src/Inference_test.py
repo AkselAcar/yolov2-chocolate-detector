@@ -111,7 +111,7 @@ def generate_submission_csv_with_nms(
 			predictions.append(row)
 
 	# Write to CSV
-	with open(output_csv_path, mode='w', newline='') as f:
+	with open(output_csv_path, mode='w', newline='', encoding='utf-8') as f:
 		writer = csv.writer(f)
 		writer.writerow(["id"] + CLASS_NAMES_FOR_SUBMISSION)
 		writer.writerows(predictions)
