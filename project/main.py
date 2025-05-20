@@ -13,7 +13,8 @@ from tqdm import tqdm
 train_transform = YoloCompatibleTransform(resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT, train=True)
 test_transform = YoloCompatibleTransform(resized_img_width=RESIZED_IMG_WIDTH, resized_img_height=RESIZED_IMG_HEIGHT, train=False)
 
-
+# commented code is usefull only if we want to train a model
+"""
 # Read the full CSV
 full_df = pd.read_csv("./src/Annotations_and_labels/link_images_labels_YOLO.csv")
 # List of images to be used for validation (3 classic backgrounds, 5 noisy)
@@ -57,7 +58,7 @@ val_loader = torch.utils.data.DataLoader(
 	shuffle=False,
 	pin_memory=True,
 )
-"""
+
 # if we want to visualize the transformations
 save_transformed_images_for_checking(
 	loader=train_loader,
@@ -108,6 +109,7 @@ for e in range(1, NB_EPOCHS+1):
 			save_checkpoint(model, optimizer, filename=checkpoint_file)
 """
 
+# TO CHANGE IF THE TEST SET IS MOVED
 test_dir = "./dataset_project_iapr2025/test"
 test_files = sorted([f for f in os.listdir(test_dir) if f.endswith(".JPG")])
 
